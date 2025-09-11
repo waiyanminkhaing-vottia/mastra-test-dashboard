@@ -4,7 +4,53 @@
     "models": "モデル",
     "agents": "エージェント",
     "workflows": "ワークフロー",
-    "tools": "ツール",
-    "analytics": "分析"
+    "tools": "ツール"
+  },
+  "breadcrumbs": {
+    "management": "管理",
+    "models": "モデル",
+    "agents": "エージェント",
+    "workflows": "ワークフロー",
+    "tools": "ツール"
+  },
+  "models": {
+    "title": "モデル",
+    "description": "LLMプロバイダーとモデル設定を管理",
+    "addModel": "モデル追加",
+    "form": {
+      "title": "モデル追加",
+      "description": "LLMプロバイダー用の新しいモデル設定を作成します。",
+      "editTitle": "モデル編集",
+      "editDescription": "モデル設定を更新します。",
+      "name": "名前",
+      "namePlaceholder": "例: gpt-4o-mini, claude-3-haiku",
+      "provider": "プロバイダー",
+      "providerPlaceholder": "プロバイダーを選択",
+      "cancel": "キャンセル",
+      "create": "モデルを作成",
+      "creating": "作成中...",
+      "update": "モデルを更新",
+      "updating": "更新中..."
+    },
+    "table": {
+      "name": "名前",
+      "provider": "プロバイダー",
+      "modelId": "モデルID",
+      "version": "バージョン",
+      "status": "ステータス",
+      "maxTokens": "最大トークン",
+      "created": "作成日",
+      "updated": "更新日",
+      "actions": "操作",
+      "active": "有効",
+      "inactive": "無効",
+      "noModels": "データがありません。"
+    },
+    "validation": {
+      "nameRequired": "名前は必須です",
+      "nameMaxLength": "名前は100文字未満である必要があります",
+      "nameInvalidChars": "名前には文字、数字、ハイフン、アンダースコア、ドットのみ使用できます",
+      "providerRequired": "プロバイダーは必須です"
+    }
   }
 }

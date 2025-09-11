@@ -1,6 +1,7 @@
 'use client';
 
-import { BarChart3, Bot, Cpu, Workflow, Wrench } from 'lucide-react';
+import { Bot, Cpu, Workflow, Wrench } from 'lucide-react';
+import Image from 'next/image';
 import * as React from 'react';
 
 import {
@@ -18,18 +19,27 @@ import {
 import { useLanguage } from '@/contexts/language-context';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { t } = useLanguage();
+  const { t, isLoading: languageLoading } = useLanguage();
+
+  if (languageLoading) {
+    return (
+      <Sidebar {...props}>
+        <SidebarRail />
+      </Sidebar>
+    );
+  }
 
   return (
     <Sidebar {...props}>
       <SidebarHeader>
         <div className="p-2">
           <a href="#">
-            <img
+            <Image
               src="/brand.svg"
               alt="Vottia Brand"
               className="h-8"
-              loading="lazy"
+              width={32}
+              height={32}
             />
           </a>
         </div>
@@ -68,22 +78,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <a href="/tools">
                     <Wrench className="size-4" />
                     <span>{t('menu.tools')}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>{t('menu.analytics')}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/analytics">
-                    <BarChart3 className="size-4" />
-                    <span>{t('menu.analytics')}</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>

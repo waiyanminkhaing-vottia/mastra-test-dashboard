@@ -4,7 +4,53 @@
     "models": "Models",
     "agents": "Agents",
     "workflows": "Workflows",
-    "tools": "Tools",
-    "analytics": "Analytics"
+    "tools": "Tools"
+  },
+  "breadcrumbs": {
+    "management": "Management",
+    "models": "Models",
+    "agents": "Agents",
+    "workflows": "Workflows",
+    "tools": "Tools"
+  },
+  "models": {
+    "title": "Models",
+    "description": "Manage your LLM providers and model configurations",
+    "addModel": "Add Model",
+    "form": {
+      "title": "Add Model",
+      "description": "Create a new model configuration for your LLM provider.",
+      "editTitle": "Edit Model",
+      "editDescription": "Update the model configuration.",
+      "name": "Name",
+      "namePlaceholder": "e.g., gpt-4o-mini, claude-3-haiku",
+      "provider": "Provider",
+      "providerPlaceholder": "Select a provider",
+      "cancel": "Cancel",
+      "create": "Create Model",
+      "creating": "Creating...",
+      "update": "Update Model",
+      "updating": "Updating..."
+    },
+    "table": {
+      "name": "Name",
+      "provider": "Provider",
+      "modelId": "Model ID",
+      "version": "Version",
+      "status": "Status",
+      "maxTokens": "Max Tokens",
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions",
+      "active": "Active",
+      "inactive": "Inactive",
+      "noModels": "No data available."
+    },
+    "validation": {
+      "nameRequired": "Name is required",
+      "nameMaxLength": "Name must be less than 100 characters",
+      "nameInvalidChars": "Name can only contain letters, numbers, hyphens, underscores, and dots",
+      "providerRequired": "Provider is required"
+    }
   }
 }
