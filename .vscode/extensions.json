@@ -7,6 +7,7 @@
     "usernamehw.errorlens",
     "christian-kohler.path-intellisense",
     "formulahendry.auto-rename-tag",
-    "ms-vscode.vscode-json"
+    "ms-vscode.vscode-json",
+    "bradlc.vscode-tailwindcss"
   ]
 }
