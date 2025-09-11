@@ -1,0 +1,10 @@
+{
+  "menu": {
+    "management": "Management",
+    "models": "Models",
+    "agents": "Agents",
+    "workflows": "Workflows",
+    "tools": "Tools",
+    "analytics": "Analytics"
+  }
+}

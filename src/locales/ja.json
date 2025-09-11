@@ -1,0 +1,10 @@
+{
+  "menu": {
+    "management": "管理",
+    "models": "モデル",
+    "agents": "エージェント",
+    "workflows": "ワークフロー",
+    "tools": "ツール",
+    "analytics": "分析"
+  }
+}
