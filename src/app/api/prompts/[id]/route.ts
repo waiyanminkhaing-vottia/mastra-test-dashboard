@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 import { createValidationErrorResponse } from '@/lib/validation-utils';
-import { modelSchema } from '@/lib/validations/model';
+import { updatePromptSchema } from '@/lib/validations/prompt';
 
 export async function PUT(
   request: NextRequest,
@@ -13,7 +13,7 @@ export async function PUT(
     const body = await request.json();
 
     // Validate request body with Zod
-    const schema = modelSchema();
+    const schema = updatePromptSchema();
     const validationResult = schema.safeParse(body);
 
     if (!validationResult.success) {
@@ -23,20 +23,21 @@ export async function PUT(
       );
     }
 
-    const { name, provider } = validationResult.data;
+    const { name, description } = validationResult.data;
 
-    // Update the model
-    const updatedModel = await prisma.model.update({
-      where: { id },
+    const prompt = await prisma.prompt.update({
+      where: {
+        id,
+      },
       data: {
         name,
-        provider,
+        description,
       },
     });
 
-    return NextResponse.json(updatedModel);
+    return NextResponse.json(prompt);
   } catch (error: unknown) {
-    console.error('Error updating model:', error);
+    console.error('Error updating prompt:', error);
 
     if (
       error &&
@@ -44,7 +45,7 @@ export async function PUT(
       'code' in error &&
       error.code === 'P2025'
     ) {
-      return NextResponse.json({ error: 'Model not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
     }
 
     if (
@@ -54,13 +55,13 @@ export async function PUT(
       error.code === 'P2002'
     ) {
       return NextResponse.json(
-        { error: 'A model with this provider and name already exists' },
+        { error: 'A prompt with this name already exists' },
         { status: 409 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to update model' },
+      { error: 'Failed to update prompt' },
       { status: 500 }
     );
   }

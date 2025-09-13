@@ -1,17 +1,16 @@
 {
+  "errors": {
+    "somethingWentWrong": "問題が発生しました"
+  },
   "menu": {
     "management": "管理",
     "models": "モデル",
-    "agents": "エージェント",
-    "workflows": "ワークフロー",
-    "tools": "ツール"
+    "prompts": "プロンプト"
   },
   "breadcrumbs": {
     "management": "管理",
     "models": "モデル",
-    "agents": "エージェント",
-    "workflows": "ワークフロー",
-    "tools": "ツール"
+    "prompts": "プロンプト"
   },
   "models": {
     "title": "モデル",
@@ -22,15 +21,15 @@
       "description": "LLMプロバイダー用の新しいモデル設定を作成します。",
       "editTitle": "モデル編集",
       "editDescription": "モデル設定を更新します。",
-      "name": "名前",
+      "nameField": "名前",
       "namePlaceholder": "例: gpt-4o-mini, claude-3-haiku",
-      "provider": "プロバイダー",
+      "providerField": "プロバイダー",
       "providerPlaceholder": "プロバイダーを選択",
-      "cancel": "キャンセル",
-      "create": "モデルを作成",
-      "creating": "作成中...",
-      "update": "モデルを更新",
-      "updating": "更新中..."
+      "cancelButton": "キャンセル",
+      "createButton": "モデルを作成",
+      "creatingButton": "作成中...",
+      "updateButton": "モデルを更新",
+      "updatingButton": "更新中..."
     },
     "table": {
       "name": "名前",
@@ -51,6 +50,79 @@
       "nameMaxLength": "名前は100文字未満である必要があります",
       "nameInvalidChars": "名前には文字、数字、ハイフン、アンダースコア、ドットのみ使用できます",
       "providerRequired": "プロバイダーは必須です"
+    },
+    "errors": {
+      "modelAlreadyExists": "このプロバイダーと名前のモデルは既に存在します"
+    }
+  },
+  "prompts": {
+    "title": "プロンプト",
+    "addPrompt": "プロンプト追加",
+    "addVersion": "バージョン追加",
+    "backToPrompts": "プロンプト一覧に戻る",
+    "form": {
+      "title": "プロンプト追加",
+      "editTitle": "プロンプト編集",
+      "nameField": "名前",
+      "namePlaceholder": "例：カスタマーサポート、コンテンツ生成",
+      "descriptionField": "説明",
+      "descriptionPlaceholder": "このプロンプトの用途についての説明（任意）",
+      "contentField": "プロンプト",
+      "contentPlaceholder": "プロンプト内容を入力してください...",
+      "cancelButton": "キャンセル",
+      "createButton": "プロンプトを作成",
+      "creatingButton": "作成中...",
+      "updateButton": "プロンプトを更新",
+      "updatingButton": "更新中..."
+    },
+    "table": {
+      "name": "名前",
+      "description": "説明",
+      "versions": "バージョン",
+      "created": "作成日",
+      "updated": "更新日",
+      "actions": "操作",
+      "noPrompts": "データがありません。"
+    },
+    "versions": {
+      "table": {
+        "version": "バージョン",
+        "content": "内容",
+        "label": "ラベル",
+        "changeNote": "変更メモ",
+        "created": "作成日",
+        "actions": "操作",
+        "noVersions": "バージョンがありません。"
+      }
+    },
+    "validation": {
+      "nameRequired": "名前は必須です",
+      "nameMaxLength": "名前は100文字未満である必要があります",
+      "descriptionMaxLength": "説明は500文字未満である必要があります",
+      "contentRequired": "内容は必須です"
+    },
+    "errors": {
+      "promptAlreadyExists": "この名前のプロンプトは既に存在します",
+      "promptNotFound": "プロンプトが見つかりません"
+    }
+  },
+  "labels": {
+    "title": "ラベル（オプション）",
+    "promptVersionLabels": "プロンプトバージョンラベル",
+    "selectLabel": "ラベルを選択...",
+    "none": "なし",
+    "searchPlaceholder": "ラベルを検索...",
+    "addLabel": "ラベルを追加",
+    "enterLabelName": "ラベル名を入力",
+    "add": "追加",
+    "cancel": "キャンセル",
+    "validation": {
+      "nameRequired": "ラベル名は必須です",
+      "nameMaxLength": "ラベル名は50文字以下である必要があります"
+    },
+    "errors": {
+      "labelAlreadyExists": "この名前のラベルは既に存在します",
+      "failedToCreate": "ラベルの作成に失敗しました"
     }
   }
 }

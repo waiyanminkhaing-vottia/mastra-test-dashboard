@@ -1,17 +1,16 @@
 {
+  "errors": {
+    "somethingWentWrong": "Something went wrong"
+  },
   "menu": {
     "management": "Management",
     "models": "Models",
-    "agents": "Agents",
-    "workflows": "Workflows",
-    "tools": "Tools"
+    "prompts": "Prompts"
   },
   "breadcrumbs": {
     "management": "Management",
     "models": "Models",
-    "agents": "Agents",
-    "workflows": "Workflows",
-    "tools": "Tools"
+    "prompts": "Prompts"
   },
   "models": {
     "title": "Models",
@@ -22,15 +21,15 @@
       "description": "Create a new model configuration for your LLM provider.",
       "editTitle": "Edit Model",
       "editDescription": "Update the model configuration.",
-      "name": "Name",
+      "nameField": "Name",
       "namePlaceholder": "e.g., gpt-4o-mini, claude-3-haiku",
-      "provider": "Provider",
+      "providerField": "Provider",
       "providerPlaceholder": "Select a provider",
-      "cancel": "Cancel",
-      "create": "Create Model",
-      "creating": "Creating...",
-      "update": "Update Model",
-      "updating": "Updating..."
+      "cancelButton": "Cancel",
+      "createButton": "Create Model",
+      "creatingButton": "Creating...",
+      "updateButton": "Update Model",
+      "updatingButton": "Updating..."
     },
     "table": {
       "name": "Name",
@@ -51,6 +50,82 @@
       "nameMaxLength": "Name must be less than 100 characters",
       "nameInvalidChars": "Name can only contain letters, numbers, hyphens, underscores, and dots",
       "providerRequired": "Provider is required"
+    },
+    "errors": {
+      "modelAlreadyExists": "A model with this provider and name already exists"
+    }
+  },
+  "prompts": {
+    "title": "Prompts",
+    "description": "Manage your prompt templates and versions",
+    "addPrompt": "Add Prompt",
+    "addVersion": "Add Version",
+    "backToPrompts": "Back to Prompts",
+    "form": {
+      "title": "Add Prompt",
+      "description": "Create a new prompt template.",
+      "editTitle": "Edit Prompt",
+      "editDescription": "Update the prompt template.",
+      "nameField": "Name",
+      "namePlaceholder": "e.g., Customer Support, Content Generation",
+      "descriptionField": "Description",
+      "descriptionPlaceholder": "Optional description of what this prompt does",
+      "contentField": "Prompt",
+      "contentPlaceholder": "Enter the prompt content...",
+      "cancelButton": "Cancel",
+      "createButton": "Create Prompt",
+      "creatingButton": "Creating...",
+      "updateButton": "Update Prompt",
+      "updatingButton": "Updating..."
+    },
+    "table": {
+      "name": "Name",
+      "description": "Description",
+      "versions": "Versions",
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions",
+      "noPrompts": "No data available."
+    },
+    "versions": {
+      "table": {
+        "version": "Version",
+        "content": "Content",
+        "label": "Label",
+        "changeNote": "Change Note",
+        "created": "Created",
+        "actions": "Actions",
+        "noVersions": "No versions available."
+      }
+    },
+    "validation": {
+      "nameRequired": "Name is required",
+      "nameMaxLength": "Name must be less than 100 characters",
+      "descriptionMaxLength": "Description must be less than 500 characters",
+      "contentRequired": "Content is required"
+    },
+    "errors": {
+      "promptAlreadyExists": "A prompt with this name already exists",
+      "promptNotFound": "Prompt not found"
+    }
+  },
+  "labels": {
+    "title": "Label (Optional)",
+    "promptVersionLabels": "Prompt version labels",
+    "selectLabel": "Select label...",
+    "none": "None",
+    "searchPlaceholder": "Search labels...",
+    "addLabel": "Add Label",
+    "enterLabelName": "Enter label name",
+    "add": "Add",
+    "cancel": "Cancel",
+    "validation": {
+      "nameRequired": "Label name is required",
+      "nameMaxLength": "Label name must be 50 characters or less"
+    },
+    "errors": {
+      "labelAlreadyExists": "A label with this name already exists",
+      "failedToCreate": "Failed to create label"
     }
   }
 }

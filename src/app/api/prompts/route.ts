@@ -2,21 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 import { createValidationErrorResponse } from '@/lib/validation-utils';
-import { modelSchema } from '@/lib/validations/model';
+import { createPromptSchema } from '@/lib/validations/prompt';
 
 export async function GET() {
   try {
-    const models = await prisma.model.findMany({
+    const prompts = await prisma.prompt.findMany({
+      include: {
+        versions: true,
+      },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    return NextResponse.json(models);
+    return NextResponse.json(prompts);
   } catch (error) {
-    console.error('Error fetching models:', error);
+    console.error('Error fetching prompts:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch models' },
+      { error: 'Failed to fetch prompts' },
       { status: 500 }
     );
   }
@@ -27,7 +30,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate request body with Zod
-    const schema = modelSchema();
+    const schema = createPromptSchema();
     const validationResult = schema.safeParse(body);
 
     if (!validationResult.success) {
@@ -37,18 +40,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, provider } = validationResult.data;
+    const { name, description, content } = validationResult.data;
 
-    const model = await prisma.model.create({
+    const prompt = await prisma.prompt.create({
       data: {
         name,
-        provider,
+        description,
+        versions: {
+          create: {
+            version: 1,
+            content,
+          },
+        },
+      },
+      include: {
+        versions: true,
       },
     });
 
-    return NextResponse.json(model, { status: 201 });
+    return NextResponse.json(prompt, { status: 201 });
   } catch (error: unknown) {
-    console.error('Error creating model:', error);
+    console.error('Error creating prompt:', error);
 
     if (
       error &&
@@ -57,13 +69,13 @@ export async function POST(request: NextRequest) {
       error.code === 'P2002'
     ) {
       return NextResponse.json(
-        { error: 'A model with this provider and name already exists' },
+        { error: 'A prompt with this name already exists' },
         { status: 409 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to create model' },
+      { error: 'Failed to create prompt' },
       { status: 500 }
     );
   }

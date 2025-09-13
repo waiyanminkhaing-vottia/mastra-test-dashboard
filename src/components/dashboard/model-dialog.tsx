@@ -22,7 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/language-context';
-import { createModelSchema, type Provider } from '@/lib/validations/model';
+import { formatZodErrors } from '@/lib/validation-utils';
+import { modelSchema, type Provider } from '@/lib/validations/model';
 
 const PROVIDERS: { value: Provider; label: string }[] = [
   { value: 'OPENAI', label: 'OpenAI' },
@@ -53,6 +54,7 @@ export function ModelDialog({
   const [provider, setProvider] = useState<Provider | ''>('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState<string | null>(null);
   const isEditing = !!model;
 
   // Reset form when model changes or dialog opens/closes
@@ -68,28 +70,24 @@ export function ModelDialog({
         setProvider('');
       }
       setErrors({});
+      setGeneralError(null);
     }
   }, [model, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    setGeneralError(null);
 
     // Client-side validation with Zod
-    const schema = createModelSchema(t);
+    const schema = modelSchema(t);
     const validationResult = schema.safeParse({
       name: name.trim(),
       provider,
     });
 
     if (!validationResult.success) {
-      const fieldErrors: Record<string, string> = {};
-      validationResult.error.issues.forEach(issue => {
-        if (issue.path.length > 0) {
-          fieldErrors[issue.path[0] as string] = issue.message;
-        }
-      });
-      setErrors(fieldErrors);
+      setErrors(formatZodErrors(validationResult.error));
       return;
     }
 
@@ -112,25 +110,19 @@ export function ModelDialog({
         setErrors({});
         onOpenChange(false);
         onSuccess();
+      } else if (response.status === 409) {
+        // Handle 409 Conflict - model already exists
+        setGeneralError('models.errors.modelAlreadyExists');
       } else {
         const error = await response.json();
         if (error.details) {
-          const fieldErrors: Record<string, string> = {};
-          error.details.forEach(
-            (issue: { path: string[]; message: string }) => {
-              if (issue.path.length > 0) {
-                fieldErrors[issue.path[0]] = issue.message;
-              }
-            }
-          );
-          setErrors(fieldErrors);
+          setErrors(formatZodErrors({ issues: error.details }));
         } else {
-          alert(error.error || 'Failed to create model');
+          setGeneralError('errors.somethingWentWrong');
         }
       }
-    } catch (error) {
-      console.error('Failed to create model:', error);
-      alert('Failed to create model');
+    } catch (_error) {
+      setGeneralError('errors.somethingWentWrong');
     } finally {
       setLoading(false);
     }
@@ -151,9 +143,15 @@ export function ModelDialog({
             </DialogDescription>
           </DialogHeader>
 
+          {generalError && (
+            <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+              {t(generalError)}
+            </div>
+          )}
+
           <div className="grid gap-6 py-6">
             <div className="grid gap-3">
-              <Label htmlFor="provider">{t('models.form.provider')}</Label>
+              <Label htmlFor="provider">{t('models.form.providerField')}</Label>
               <Select
                 value={provider}
                 onValueChange={value => setProvider(value as Provider)}
@@ -180,7 +178,7 @@ export function ModelDialog({
             </div>
 
             <div className="grid gap-3">
-              <Label htmlFor="name">{t('models.form.name')}</Label>
+              <Label htmlFor="name">{t('models.form.nameField')}</Label>
               <Input
                 id="name"
                 value={name}
@@ -202,7 +200,7 @@ export function ModelDialog({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              {t('models.form.cancel')}
+              {t('models.form.cancelButton')}
             </Button>
             <Button
               type="submit"
@@ -210,11 +208,11 @@ export function ModelDialog({
             >
               {loading
                 ? isEditing
-                  ? t('models.form.updating')
-                  : t('models.form.creating')
+                  ? t('models.form.updatingButton')
+                  : t('models.form.creatingButton')
                 : isEditing
-                  ? t('models.form.update')
-                  : t('models.form.create')}
+                  ? t('models.form.updateButton')
+                  : t('models.form.createButton')}
             </Button>
           </DialogFooter>
         </form>

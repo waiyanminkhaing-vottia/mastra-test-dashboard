@@ -19,7 +19,12 @@ export function LanguageSwitcher() {
 
   if (isLoading) {
     return (
-      <Button variant="ghost" size="sm" className="h-9 px-3 gap-2" disabled>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-9 px-3 gap-2 hover:text-primary"
+        disabled
+      >
         <Globe className="size-4" />
         <span className="hidden sm:inline">...</span>
         <span className="sm:hidden">🌐</span>
@@ -33,7 +38,7 @@ export function LanguageSwitcher() {
       <Button
         variant="ghost"
         size="sm"
-        className="h-9 px-3 gap-2"
+        className="h-9 px-3 gap-2 hover:text-primary"
         onClick={() => setIsOpen(!isOpen)}
       >
         <Globe className="size-4" />

@@ -15,8 +15,8 @@ const defaultMessages = {
   providerRequired: 'Provider is required',
 };
 
-// Model creation validation schema factory
-export const createModelSchema = (t?: (key: string) => string) => {
+// Model validation schema factory
+export const modelSchema = (t?: (key: string) => string) => {
   const getMessage = (key: string) => {
     if (t) {
       return t(`models.validation.${key}`);
@@ -35,5 +35,3 @@ export const createModelSchema = (t?: (key: string) => string) => {
     }),
   });
 };
-
-export type CreateModelInput = z.infer<ReturnType<typeof createModelSchema>>;

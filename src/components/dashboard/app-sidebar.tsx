@@ -1,7 +1,9 @@
 'use client';
 
-import { Bot, Cpu, Workflow, Wrench } from 'lucide-react';
+import { Cpu, FileText } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import * as React from 'react';
 
 import {
@@ -20,6 +22,7 @@ import { useLanguage } from '@/contexts/language-context';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t, isLoading: languageLoading } = useLanguage();
+  const pathname = usePathname();
 
   if (languageLoading) {
     return (
@@ -33,15 +36,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar {...props}>
       <SidebarHeader>
         <div className="p-2">
-          <a href="#">
+          <Link href="/">
             <Image
-              src="/brand.svg"
+              src="/brand.png"
               alt="Vottia Brand"
-              className="h-8"
-              width={32}
-              height={32}
+              width="150"
+              height="30"
+              priority
+              className="w-auto h-12"
             />
-          </a>
+          </Link>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -50,35 +54,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/models">
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith('/models')}
+                >
+                  <Link href="/models">
                     <Cpu className="size-4" />
                     <span>{t('menu.models')}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/agents">
-                    <Bot className="size-4" />
-                    <span>{t('menu.agents')}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/workflows">
-                    <Workflow className="size-4" />
-                    <span>{t('menu.workflows')}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/tools">
-                    <Wrench className="size-4" />
-                    <span>{t('menu.tools')}</span>
-                  </a>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith('/prompts')}
+                >
+                  <Link href="/prompts">
+                    <FileText className="size-4" />
+                    <span>{t('menu.prompts')}</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

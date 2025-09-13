@@ -2,21 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 import { createValidationErrorResponse } from '@/lib/validation-utils';
-import { modelSchema } from '@/lib/validations/model';
+import { promptLabelSchema } from '@/lib/validations/prompt-label';
 
 export async function GET() {
   try {
-    const models = await prisma.model.findMany({
+    const promptLabels = await prisma.promptLabel.findMany({
       orderBy: {
-        createdAt: 'desc',
+        name: 'asc',
       },
     });
 
-    return NextResponse.json(models);
+    return NextResponse.json(promptLabels);
   } catch (error) {
-    console.error('Error fetching models:', error);
+    console.error('Error fetching prompt labels:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch models' },
+      { error: 'Failed to fetch prompt labels' },
       { status: 500 }
     );
   }
@@ -27,8 +27,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate request body with Zod
-    const schema = modelSchema();
-    const validationResult = schema.safeParse(body);
+    const validationResult = promptLabelSchema().safeParse(body);
 
     if (!validationResult.success) {
       return NextResponse.json(
@@ -37,18 +36,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, provider } = validationResult.data;
+    const { name } = validationResult.data;
 
-    const model = await prisma.model.create({
+    const promptLabel = await prisma.promptLabel.create({
       data: {
         name,
-        provider,
       },
     });
 
-    return NextResponse.json(model, { status: 201 });
+    return NextResponse.json(promptLabel, { status: 201 });
   } catch (error: unknown) {
-    console.error('Error creating model:', error);
+    console.error('Error creating prompt label:', error);
 
     if (
       error &&
@@ -57,13 +55,13 @@ export async function POST(request: NextRequest) {
       error.code === 'P2002'
     ) {
       return NextResponse.json(
-        { error: 'A model with this provider and name already exists' },
+        { error: 'A label with this name already exists' },
         { status: 409 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to create model' },
+      { error: 'Failed to create prompt label' },
       { status: 500 }
     );
   }
