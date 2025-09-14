@@ -1,27 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { handleAPIError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
+import { createSecureResponse } from '@/lib/security-utils';
 import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { promptLabelSchema } from '@/lib/validations/prompt-label';
 
+/**
+ * GET /api/prompt-labels
+ * Retrieves all prompt labels ordered by creation date (newest first)
+ * @returns JSON response with array of prompt label objects or error message
+ */
 export async function GET() {
   try {
     const promptLabels = await prisma.promptLabel.findMany({
       orderBy: {
-        name: 'asc',
+        createdAt: 'desc',
       },
     });
 
-    return NextResponse.json(promptLabels);
+    return createSecureResponse(promptLabels);
   } catch (error) {
-    console.error('Error fetching prompt labels:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch prompt labels' },
-      { status: 500 }
-    );
+    return handleAPIError(error, 'label');
   }
 }
 
+/**
+ * POST /api/prompt-labels
+ * Creates a new prompt label
+ * @param request - NextRequest containing JSON body with label data
+ * @returns JSON of created prompt label with 201 status, or validation/error responses
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -44,25 +53,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(promptLabel, { status: 201 });
+    return createSecureResponse(promptLabel, { status: 201 });
   } catch (error: unknown) {
-    console.error('Error creating prompt label:', error);
-
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'P2002'
-    ) {
-      return NextResponse.json(
-        { error: 'A label with this name already exists' },
-        { status: 409 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to create prompt label' },
-      { status: 500 }
-    );
+    return handleAPIError(error, 'label');
   }
 }

@@ -1,6 +1,8 @@
 import { Provider } from '@prisma/client';
 import { z } from 'zod';
 
+import { REGEX_PATTERNS } from '@/lib/utils';
+
 // Use Prisma's generated enum with Zod
 export const providerSchema = z.enum(Object.values(Provider));
 
@@ -15,7 +17,11 @@ const defaultMessages = {
   providerRequired: 'Provider is required',
 };
 
-// Model validation schema factory
+/**
+ * Creates a Zod validation schema for model data with provider validation
+ * @param t Optional translation function for localized error messages
+ * @returns Zod schema for validating model name and provider
+ */
 export const modelSchema = (t?: (key: string) => string) => {
   const getMessage = (key: string) => {
     if (t) {
@@ -29,9 +35,9 @@ export const modelSchema = (t?: (key: string) => string) => {
       .string()
       .min(1, getMessage('nameRequired'))
       .max(100, getMessage('nameMaxLength'))
-      .regex(/^[a-zA-Z0-9\-_\.]+$/, getMessage('nameInvalidChars')),
-    provider: providerSchema.refine(val => val, {
-      message: getMessage('providerRequired'),
-    }),
+      .regex(REGEX_PATTERNS.ALPHANUMERIC_WITH_SPECIAL, {
+        message: getMessage('nameInvalidChars'),
+      }),
+    provider: providerSchema,
   });
 };

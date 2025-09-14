@@ -1,20 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { createInvalidIDError, handleAPIError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
+import { createSecureResponse } from '@/lib/security-utils';
+import { isValidUUID } from '@/lib/utils';
 import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { modelSchema } from '@/lib/validations/model';
 
+/**
+ * PUT /api/models/[id]
+ * Updates an existing model and creates a new version
+ * @param request - NextRequest containing JSON body with model updates
+ * @param props - Route parameters containing the model ID
+ * @returns JSON of updated model with new version, or validation/error responses
+ */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+
+    // Validate the ID parameter
+    if (!isValidUUID(id)) {
+      return createInvalidIDError();
+    }
+
     const body = await request.json();
 
     // Validate request body with Zod
-    const schema = modelSchema();
-    const validationResult = schema.safeParse(body);
+    const validationResult = modelSchema().safeParse(body);
 
     if (!validationResult.success) {
       return NextResponse.json(
@@ -34,34 +49,8 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(updatedModel);
+    return createSecureResponse(updatedModel);
   } catch (error: unknown) {
-    console.error('Error updating model:', error);
-
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'P2025'
-    ) {
-      return NextResponse.json({ error: 'Model not found' }, { status: 404 });
-    }
-
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'P2002'
-    ) {
-      return NextResponse.json(
-        { error: 'A model with this provider and name already exists' },
-        { status: 409 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to update model' },
-      { status: 500 }
-    );
+    return handleAPIError(error, 'model');
   }
 }

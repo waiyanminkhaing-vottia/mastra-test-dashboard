@@ -1,12 +1,18 @@
 'use client';
 
-import Editor, { OnMount } from '@monaco-editor/react';
+import { OnMount } from '@monaco-editor/react';
 import { Check, Copy } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useTheme } from 'next-themes';
 import { useCallback, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+
+const Editor = dynamic(() => import('@monaco-editor/react'), {
+  ssr: false,
+  loading: () => <div className="w-full h-48 bg-muted animate-pulse rounded" />,
+});
 
 interface TextEditorProps {
   value: string;
@@ -110,6 +116,14 @@ export function TextEditor({
       </Button>
 
       <div className={isLoaded ? 'opacity-100' : 'opacity-0'}>
+        <style>{`
+          .monaco-editor .margin-view-overlays .line-numbers {
+            border-right: 1px solid hsl(var(--border));
+            margin-right: 8px;
+            padding: 0 8px;
+            color: #6b7280 !important;
+          }
+        `}</style>
         <Editor
           height={editorHeight}
           language={language}

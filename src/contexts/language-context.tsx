@@ -5,22 +5,35 @@ import * as React from 'react';
 import enTranslations from '@/locales/en.json';
 import jaTranslations from '@/locales/ja.json';
 
+/** Supported language codes */
 type Language = 'en' | 'ja';
 
+/** Context type for the Language provider */
 interface LanguageContextType {
+  /** Current active language */
   language: Language;
+  /** Function to change the current language */
   setLanguage: (language: Language) => void;
+  /** Translation function that takes a key and returns the translated text */
   t: (key: string) => string;
+  /** Whether the context is still loading/mounting */
   isLoading: boolean;
 }
 
+/** React context for language and translation functionality */
 const LanguageContext = React.createContext<LanguageContextType | null>(null);
 
+/** Translation data mapping for each supported language */
 const translations = {
   en: enTranslations,
   ja: jaTranslations,
 };
 
+/**
+ * Language provider component that manages language state and provides translation functionality
+ * Handles hydration-safe language loading from cookies and provides translation functions
+ * @param children - Child components to render within the provider
+ */
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = React.useState<Language>('en');
   const [mounted, setMounted] = React.useState(false);
@@ -42,7 +55,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const handleSetLanguage = React.useCallback((newLanguage: Language) => {
     setLanguage(newLanguage);
     // Save to cookie
-    document.cookie = `language=${newLanguage}; path=/; max-age=${60 * 60 * 24 * 365}`;
+    document.cookie = `language=${newLanguage}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Strict${
+      typeof window !== 'undefined' && window.location.protocol === 'https:'
+        ? '; Secure'
+        : ''
+    }`;
   }, []);
 
   const t = React.useCallback(
@@ -76,6 +93,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Hook to access language context and translation functionality
+ * @returns LanguageContextType object with language, setLanguage, t, and isLoading
+ * @throws Error if used outside of LanguageProvider
+ * @example
+ * const { t, language, setLanguage } = useLanguage();
+ * const translatedText = t('common.save');
+ */
 export function useLanguage() {
   const context = React.useContext(LanguageContext);
   if (!context) {

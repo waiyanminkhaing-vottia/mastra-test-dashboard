@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -16,6 +16,10 @@ import { useLanguage } from '@/contexts/language-context';
 import { formatZodErrors } from '@/lib/validation-utils';
 import { createPromptSchema } from '@/lib/validations/prompt';
 
+/**
+ * Page component for creating a new prompt with content, description, and label assignment
+ * @returns JSX element containing the new prompt creation form
+ */
 export default function NewPromptPage() {
   const { t, isLoading: languageLoading } = useLanguage();
   const router = useRouter();
@@ -33,6 +37,7 @@ export default function NewPromptPage() {
       name: formData.get('name') as string,
       description: (formData.get('description') as string) || undefined,
       content: promptContent,
+      promptLabelId: selectedLabel || undefined,
     };
 
     try {
@@ -72,7 +77,7 @@ export default function NewPromptPage() {
           setGeneralError('errors.somethingWentWrong');
         }
       }
-    } catch (_error) {
+    } catch {
       setGeneralError('errors.somethingWentWrong');
     } finally {
       setLoading(false);
@@ -108,14 +113,12 @@ export default function NewPromptPage() {
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <div className="w-full">
           <div className="mb-6 mt-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/prompts">
-                  <ArrowLeft className="size-4" />
-                </Link>
-              </Button>
-              <h1 className="text-xl font-bold">{t('prompts.form.title')}</h1>
-            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/prompts">
+                <ChevronLeft className="size-4 mr-2" />
+                {t('common.back')}
+              </Link>
+            </Button>
           </div>
 
           {generalError && (
@@ -176,6 +179,7 @@ export default function NewPromptPage() {
 
             <div className="pt-4">
               <Button type="submit" disabled={loading} className="w-full">
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {loading
                   ? t('prompts.form.creatingButton')
                   : t('prompts.form.createButton')}

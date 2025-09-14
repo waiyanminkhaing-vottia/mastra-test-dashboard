@@ -1,6 +1,27 @@
 {
   "errors": {
-    "somethingWentWrong": "Something went wrong"
+    "somethingWentWrong": "Something went wrong",
+    "invalidIDFormat": "Invalid ID format",
+    "promptNotFound": "Prompt not found",
+    "promptAlreadyExists": "A prompt with this name already exists",
+    "modelNotFound": "Model not found",
+    "modelAlreadyExists": "A model with this provider and name already exists",
+    "labelNotFound": "Label not found",
+    "labelAlreadyExists": "A label with this name already exists",
+    "promptVersionNotFound": "Prompt version not found",
+    "promptVersionAlreadyExists": "A prompt version with this information already exists",
+    "invalidPromptReference": "Invalid reference in prompt data",
+    "invalidModelReference": "Invalid reference in model data",
+    "invalidLabelReference": "Invalid reference in label data",
+    "invalidPromptVersionReference": "Invalid reference in prompt version data"
+  },
+  "common": {
+    "new": "New",
+    "back": "Back",
+    "copy": "Copy",
+    "copied": "Copied",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   },
   "menu": {
     "management": "Management",
@@ -88,6 +109,13 @@
       "noPrompts": "No data available."
     },
     "versions": {
+      "searchPlaceholder": "Search versions...",
+      "noVersionSelected": "No version selected",
+      "selectVersionMessage": "Select a version from the sidebar to view its content",
+      "confirmLabelChange": "Confirm Label Change",
+      "confirmLabelChangeMessage": "Are you sure you want to change the label for this version to",
+      "labelUpdatedSuccess": "Label updated successfully",
+      "labelUpdateFailed": "Failed to update label",
       "table": {
         "version": "Version",
         "content": "Content",
@@ -118,6 +146,8 @@
     "addLabel": "Add Label",
     "enterLabelName": "Enter label name",
     "add": "Add",
+    "adding": "Adding...",
+    "updating": "Updating...",
     "cancel": "Cancel",
     "validation": {
       "nameRequired": "Label name is required",

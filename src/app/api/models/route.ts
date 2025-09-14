@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { handleAPIError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
+import { createSecureResponse } from '@/lib/security-utils';
 import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { modelSchema } from '@/lib/validations/model';
 
+/**
+ * GET /api/models
+ * Retrieves all models ordered by creation date (newest first)
+ * @returns JSON response with array of model objects or error message
+ */
 export async function GET() {
   try {
     const models = await prisma.model.findMany({
@@ -12,16 +19,18 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(models);
+    return createSecureResponse(models);
   } catch (error) {
-    console.error('Error fetching models:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch models' },
-      { status: 500 }
-    );
+    return handleAPIError(error, 'model');
   }
 }
 
+/**
+ * POST /api/models
+ * Creates a new model
+ * @param request - NextRequest containing JSON body with model data
+ * @returns JSON of created model with 201 status, or validation/error responses
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -46,25 +55,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(model, { status: 201 });
+    return createSecureResponse(model, { status: 201 });
   } catch (error: unknown) {
-    console.error('Error creating model:', error);
-
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'P2002'
-    ) {
-      return NextResponse.json(
-        { error: 'A model with this provider and name already exists' },
-        { status: 409 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to create model' },
-      { status: 500 }
-    );
+    return handleAPIError(error, 'model');
   }
 }

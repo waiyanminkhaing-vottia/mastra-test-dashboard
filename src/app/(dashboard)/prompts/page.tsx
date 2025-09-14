@@ -1,15 +1,15 @@
 'use client';
 
-import type { Prompt, PromptVersion } from '@prisma/client';
+import type { Prompt } from '@prisma/client';
 import { Edit, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { PromptDialog } from '@/components/dashboard/prompt-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -18,40 +18,30 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { useLanguage } from '@/contexts/language-context';
+import { useApi } from '@/hooks/use-api';
+import { formatDate } from '@/lib/utils';
+import type { PromptWithVersions } from '@/types/prompt';
 
-type PromptWithVersions = Prompt & {
-  versions: PromptVersion[];
-};
-
+/**
+ * Main prompts page component that displays a table of all prompts with their versions and metadata
+ * @returns JSX element containing the prompts listing page
+ */
 export default function PromptsPage() {
   const { t, isLoading: languageLoading } = useLanguage();
   const router = useRouter();
-  const [prompts, setPrompts] = useState<PromptWithVersions[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchPrompts = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch('/api/prompts');
-      if (response.ok) {
-        const data = await response.json();
-        setPrompts(data);
-      } else {
-        setError('errors.somethingWentWrong');
-      }
-    } catch (_error) {
-      setError('errors.somethingWentWrong');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: prompts,
+    loading,
+    error,
+    fetchData,
+    setData,
+  } = useApi<PromptWithVersions[]>([]);
 
   useEffect(() => {
-    fetchPrompts();
-  }, []);
+    fetchData('/api/prompts');
+  }, [fetchData]);
 
   if (languageLoading) {
     return null;
@@ -99,34 +89,11 @@ export default function PromptsPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <>
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[120px]" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[200px]" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[50px]" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[90px]" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[90px]" />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Skeleton className="h-8 w-8 rounded-md" />
-                          <Skeleton className="h-8 w-8 rounded-md" />
-                          <Skeleton className="h-8 w-8 rounded-md" />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </>
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    <TableSkeleton rows={3} columns={6} />
+                  </TableCell>
+                </TableRow>
               ) : error ? (
                 <TableRow>
                   <TableCell
@@ -136,7 +103,7 @@ export default function PromptsPage() {
                     {t(error)}
                   </TableCell>
                 </TableRow>
-              ) : prompts.length === 0 ? (
+              ) : !prompts || prompts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-24 text-center">
                     {t('prompts.table.noPrompts')}
@@ -155,18 +122,27 @@ export default function PromptsPage() {
                     <TableCell className="max-w-[300px] truncate">
                       {prompt.description || '-'}
                     </TableCell>
-                    <TableCell>{prompt.versions?.length || 0}</TableCell>
                     <TableCell>
-                      {new Date(prompt.createdAt).toLocaleDateString()}
+                      <Badge variant="outline">
+                        {prompt.versions?.length || 0}
+                      </Badge>
                     </TableCell>
-                    <TableCell>
-                      {new Date(prompt.updatedAt).toLocaleDateString()}
-                    </TableCell>
+                    <TableCell>{formatDate(prompt.createdAt)}</TableCell>
+                    <TableCell>{formatDate(prompt.updatedAt)}</TableCell>
                     <TableCell onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-2">
                         <PromptDialog
                           prompt={prompt}
-                          onSuccess={() => fetchPrompts()}
+                          onSuccess={(updatedPrompt: Prompt) => {
+                            // Update local state without refetching
+                            setData(
+                              prompts?.map(p =>
+                                p.id === updatedPrompt.id
+                                  ? { ...p, ...updatedPrompt }
+                                  : p
+                              ) || []
+                            );
+                          }}
                           trigger={
                             <Button variant="ghost" size="sm">
                               <Edit className="size-4" />

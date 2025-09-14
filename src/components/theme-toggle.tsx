@@ -6,6 +6,10 @@ import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
 
+/**
+ * Theme toggle component that switches between light and dark themes
+ * Handles hydration gracefully and shows appropriate icons
+ */
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);

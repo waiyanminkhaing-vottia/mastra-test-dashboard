@@ -23,6 +23,11 @@ interface DashboardHeaderProps {
   }>;
 }
 
+/**
+ * Dashboard header component that displays breadcrumbs, sidebar trigger, and user controls
+ * @param breadcrumbs Array of breadcrumb objects for navigation
+ * @returns JSX element containing the dashboard header layout
+ */
 export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
   const { t, isLoading: languageLoading } = useLanguage();
 

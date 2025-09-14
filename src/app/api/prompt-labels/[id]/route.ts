@@ -1,55 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ZodError } from 'zod';
 
+import { createInvalidIDError, handleAPIError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
+import { createSecureResponse } from '@/lib/security-utils';
+import { isValidUUID } from '@/lib/utils';
+import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { promptLabelSchema } from '@/lib/validations/prompt-label';
 
+/**
+ * Updates an existing prompt label with new data
+ * @param request The incoming HTTP request containing label data
+ * @param params The route parameters containing the label ID
+ * @returns Updated prompt label data or error response
+ */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const body = await request.json();
-
-    // For now, use English for server-side validation
-    const t = (key: string) => key;
-    const schema = promptLabelSchema(t);
-    const validatedData = schema.parse(body);
-
     const { id } = await params;
 
-    // Update the label
-    const updatedLabel = await prisma.promptLabel.update({
-      where: { id },
-      data: validatedData,
-    });
+    // Validate the ID parameter
+    if (!isValidUUID(id)) {
+      return createInvalidIDError();
+    }
 
-    return NextResponse.json(updatedLabel);
-  } catch (error) {
-    if (error instanceof ZodError) {
+    const body = await request.json();
+
+    // Use default validation messages
+    const schema = promptLabelSchema();
+    const validationResult = schema.safeParse(body);
+
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.issues },
+        createValidationErrorResponse(validationResult.error),
         { status: 400 }
       );
     }
 
-    // Check if it's a unique constraint violation (duplicate name)
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'P2002'
-    ) {
-      return NextResponse.json(
-        { error: 'A label with this name already exists' },
-        { status: 409 }
-      );
-    }
+    // Update the label
+    const updatedLabel = await prisma.promptLabel.update({
+      where: { id },
+      data: validationResult.data,
+    });
 
-    console.error('Error updating prompt label:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return createSecureResponse(updatedLabel);
+  } catch (error) {
+    return handleAPIError(error, 'label');
   }
 }

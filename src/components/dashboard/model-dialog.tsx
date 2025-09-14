@@ -1,6 +1,7 @@
 'use client';
 
 import type { Model } from '@prisma/client';
+import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -39,10 +40,18 @@ const PROVIDERS: { value: Provider; label: string }[] = [
 interface ModelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (model: Model) => void;
   model?: Model | null; // For edit mode
 }
 
+/**
+ * Dialog component for creating and editing AI model configurations
+ * @param open Whether the dialog is currently open
+ * @param onOpenChange Callback function called when dialog open state changes
+ * @param onSuccess Callback function called when model is successfully created or updated
+ * @param model Optional model object for editing existing models
+ * @returns JSX element containing the model creation/editing dialog
+ */
 export function ModelDialog({
   open,
   onOpenChange,
@@ -105,11 +114,12 @@ export function ModelDialog({
       });
 
       if (response.ok) {
+        const savedModel = await response.json();
         setName('');
         setProvider('');
         setErrors({});
         onOpenChange(false);
-        onSuccess();
+        onSuccess(savedModel);
       } else if (response.status === 409) {
         // Handle 409 Conflict - model already exists
         setGeneralError('models.errors.modelAlreadyExists');
@@ -121,7 +131,7 @@ export function ModelDialog({
           setGeneralError('errors.somethingWentWrong');
         }
       }
-    } catch (_error) {
+    } catch {
       setGeneralError('errors.somethingWentWrong');
     } finally {
       setLoading(false);
@@ -206,6 +216,7 @@ export function ModelDialog({
               type="submit"
               disabled={loading || !name.trim() || !provider}
             >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {loading
                 ? isEditing
                   ? t('models.form.updatingButton')

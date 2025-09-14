@@ -1,8 +1,7 @@
 'use client';
 
-import type { PromptLabel } from '@prisma/client';
-import { Check, ChevronsUpDown, Edit, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Check, ChevronsUpDown, Edit, Loader2, X } from 'lucide-react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,161 +11,89 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useLanguage } from '@/contexts/language-context';
-import { formatZodErrors } from '@/lib/validation-utils';
-import { promptLabelSchema } from '@/lib/validations/prompt-label';
+import { useLabelValidation } from '@/hooks/use-label-validation';
+import { usePromptLabels } from '@/hooks/use-prompt-labels';
 
+/** Props for the PromptLabelSelect component */
 interface PromptLabelSelectProps {
   selectedLabel: string;
-  onLabelChange: (labelId: string) => void;
+  onLabelChange: (labelId: string, labelName?: string) => void;
   trigger?: React.ReactNode;
 }
 
+/**
+ * A dropdown component for selecting, creating, and editing prompt labels
+ * Features include:
+ * - Label selection with search/filter
+ * - Inline label creation and editing
+ * - Real-time validation and error handling
+ * - Translation support
+ * @param props - Component props
+ */
 export function PromptLabelSelect({
   selectedLabel,
   onLabelChange,
   trigger,
 }: PromptLabelSelectProps) {
   const { t } = useLanguage();
+  const {
+    promptLabels,
+    fetchError,
+    createLabel,
+    updateLabel,
+    isCreating,
+    isUpdating,
+  } = usePromptLabels();
+  const { error: labelError, validateLabel, clearError } = useLabelValidation();
+
   const [showAddLabelInput, setShowAddLabelInput] = useState(false);
   const [newLabelName, setNewLabelName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [labelError, setLabelError] = useState<string>('');
-  const [promptLabels, setPromptLabels] = useState<PromptLabel[]>([]);
   const [open, setOpen] = useState(false);
-  const [fetchError, setFetchError] = useState(false);
   const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
   const [editLabelName, setEditLabelName] = useState('');
 
-  const fetchPromptLabels = async () => {
-    try {
-      setFetchError(false);
-      const response = await fetch('/api/prompt-labels');
-      if (response.ok) {
-        const data = await response.json();
-        setPromptLabels(data);
-      } else {
-        setFetchError(true);
-      }
-    } catch (_error) {
-      setFetchError(true);
-    }
-  };
-
   const handleAddLabel = async () => {
-    // Client-side validation with Zod
-    const validationResult = promptLabelSchema(t).safeParse({
-      name: newLabelName,
-    });
-
-    if (!validationResult.success) {
-      const errors = formatZodErrors(validationResult.error);
-      setLabelError(errors.name || 'Validation error');
+    if (!validateLabel(newLabelName, t)) {
       return;
     }
 
-    setLabelError('');
-
-    try {
-      const response = await fetch('/api/prompt-labels', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(validationResult.data),
-      });
-
-      if (response.ok) {
-        const newLabel = await response.json();
-        setPromptLabels(prev => [...prev, newLabel]);
-        setNewLabelName('');
-        setShowAddLabelInput(false);
-        setLabelError('');
-      } else if (response.status === 409) {
-        // Handle 409 Conflict - label already exists
-        setLabelError('labels.errors.labelAlreadyExists');
-      } else {
-        const error = await response.json();
-        if (error.details && Array.isArray(error.details)) {
-          // Handle validation errors from server
-          const errors = formatZodErrors({ issues: error.details });
-          setLabelError(errors.name || 'Validation error');
-        } else {
-          setLabelError('labels.errors.failedToCreate');
-        }
-      }
-    } catch (_error) {
-      setLabelError('labels.errors.failedToCreate');
+    const newLabel = await createLabel(newLabelName);
+    if (newLabel) {
+      setNewLabelName('');
+      setShowAddLabelInput(false);
+      clearError();
     }
   };
 
   const handleEditLabel = async (labelId: string) => {
-    // Client-side validation with Zod
-    const validationResult = promptLabelSchema(t).safeParse({
-      name: editLabelName,
-    });
-
-    if (!validationResult.success) {
-      const errors = formatZodErrors(validationResult.error);
-      setLabelError(errors.name || 'Validation error');
+    if (!validateLabel(editLabelName, t)) {
       return;
     }
 
-    setLabelError('');
-
-    try {
-      const response = await fetch(`/api/prompt-labels/${labelId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(validationResult.data),
-      });
-
-      if (response.ok) {
-        const updatedLabel = await response.json();
-        setPromptLabels(prev =>
-          prev.map(label => (label.id === labelId ? updatedLabel : label))
-        );
-        setEditingLabelId(null);
-        setEditLabelName('');
-        setLabelError('');
-      } else if (response.status === 409) {
-        // Handle 409 Conflict - label already exists
-        setLabelError('labels.errors.labelAlreadyExists');
-      } else {
-        const error = await response.json();
-        if (error.details && Array.isArray(error.details)) {
-          // Handle validation errors from server
-          const errors = formatZodErrors({ issues: error.details });
-          setLabelError(errors.name || 'Validation error');
-        } else {
-          setLabelError('labels.errors.failedToCreate');
-        }
-      }
-    } catch (_error) {
-      setLabelError('labels.errors.failedToCreate');
+    const updatedLabel = await updateLabel(labelId, editLabelName);
+    if (updatedLabel) {
+      setEditingLabelId(null);
+      setEditLabelName('');
+      clearError();
     }
   };
 
   const startEditLabel = (label: { id: string; name: string }) => {
     setEditingLabelId(label.id);
     setEditLabelName(label.name);
-    setLabelError('');
+    clearError();
   };
 
   const cancelEditLabel = () => {
     setEditingLabelId(null);
     setEditLabelName('');
-    setLabelError('');
+    clearError();
   };
 
   const filteredLabels = promptLabels.filter(label =>
     label.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  useEffect(() => {
-    fetchPromptLabels();
-  }, []);
 
   const defaultTrigger = (
     <Button variant="outline" className="w-64 justify-between">
@@ -195,9 +122,9 @@ export function PromptLabelSelect({
             className="h-8 text-xs"
           />
           <div
-            className="flex items-center space-x-2 p-2 hover:text-primary cursor-pointer rounded"
+            className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-primary cursor-pointer rounded"
             onClick={() => {
-              onLabelChange('');
+              onLabelChange('', 'None');
               setOpen(false);
             }}
           >
@@ -211,8 +138,8 @@ export function PromptLabelSelect({
               key={label.id}
               className={`group flex items-center space-x-2 p-2 rounded ${
                 editingLabelId === label.id
-                  ? 'text-primary'
-                  : 'hover:text-primary'
+                  ? 'bg-accent text-primary'
+                  : 'hover:bg-accent hover:text-primary'
               }`}
             >
               {editingLabelId === label.id ? (
@@ -235,16 +162,22 @@ export function PromptLabelSelect({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 text-primary hover:text-primary/80"
+                      className="h-6 w-6 p-0 text-primary hover:text-primary/80 hover:bg-transparent"
                       onClick={() => handleEditLabel(label.id)}
+                      disabled={isUpdating}
                     >
-                      <Check className="h-3 w-3" />
+                      {isUpdating ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Check className="h-3 w-3" />
+                      )}
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 text-primary hover:text-primary/80"
+                      className="h-6 w-6 p-0 text-primary hover:text-primary/80 hover:bg-transparent"
                       onClick={cancelEditLabel}
+                      disabled={isUpdating}
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -259,7 +192,7 @@ export function PromptLabelSelect({
                   <div
                     className="flex items-center space-x-2 flex-1 cursor-pointer"
                     onClick={() => {
-                      onLabelChange(label.id);
+                      onLabelChange(label.id, label.name);
                       setOpen(false);
                     }}
                   >
@@ -271,7 +204,7 @@ export function PromptLabelSelect({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-transparent"
                     onClick={e => {
                       e.stopPropagation();
                       startEditLabel(label);
@@ -312,8 +245,12 @@ export function PromptLabelSelect({
                     size="sm"
                     className="h-8 text-xs flex-1"
                     onClick={handleAddLabel}
+                    disabled={isCreating}
                   >
-                    {t('labels.add')}
+                    {isCreating && (
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    )}
+                    {isCreating ? t('labels.adding') : t('labels.add')}
                   </Button>
                   <Button
                     type="button"
@@ -323,8 +260,9 @@ export function PromptLabelSelect({
                     onClick={() => {
                       setShowAddLabelInput(false);
                       setNewLabelName('');
-                      setLabelError('');
+                      clearError();
                     }}
+                    disabled={isCreating}
                   >
                     {t('labels.cancel')}
                   </Button>

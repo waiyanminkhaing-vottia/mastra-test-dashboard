@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Default fallback messages for server-side validation
+/** Default fallback validation messages for server-side validation when no translation function is provided */
 const defaultMessages = {
   nameRequired: 'Name is required',
   nameMaxLength: 'Name must be less than 100 characters',
@@ -8,7 +8,14 @@ const defaultMessages = {
   contentRequired: 'Content is required',
 };
 
-// Prompt creation validation schema factory
+/**
+ * Creates a Zod validation schema for prompt creation
+ * @param t - Optional translation function for localized error messages
+ * @returns Zod schema for validating { name, description?, content, promptLabelId? }
+ * @example
+ * const schema = createPromptSchema(t);
+ * const result = schema.safeParse(formData);
+ */
 export const createPromptSchema = (t?: (key: string) => string) => {
   const getMessage = (key: string) => {
     if (t) {
@@ -31,7 +38,14 @@ export const createPromptSchema = (t?: (key: string) => string) => {
   });
 };
 
-// Prompt update validation schema factory (only name and description)
+/**
+ * Creates a Zod validation schema for prompt updates (excludes content and label)
+ * @param t - Optional translation function for localized error messages
+ * @returns Zod schema for validating { name, description? }
+ * @example
+ * const schema = updatePromptSchema(t);
+ * const result = schema.safeParse(updateData);
+ */
 export const updatePromptSchema = (t?: (key: string) => string) => {
   const getMessage = (key: string) => {
     if (t) {

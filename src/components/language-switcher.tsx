@@ -4,6 +4,7 @@ import { ChevronDown, Globe } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/language-context';
 
 const languages = [
@@ -11,6 +12,10 @@ const languages = [
   { code: 'ja' as const, name: '日本語', flag: '🇯🇵' },
 ];
 
+/**
+ * Language switcher component that allows users to change the application language
+ * Shows current language with flag and provides dropdown menu for language selection
+ */
 export function LanguageSwitcher() {
   const { language, setLanguage, isLoading } = useLanguage();
   const [isOpen, setIsOpen] = React.useState(false);
@@ -19,17 +24,12 @@ export function LanguageSwitcher() {
 
   if (isLoading) {
     return (
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-9 px-3 gap-2 hover:text-primary"
-        disabled
-      >
+      <div className="flex items-center gap-2 h-9 px-3">
         <Globe className="size-4" />
-        <span className="hidden sm:inline">...</span>
+        <Skeleton className="hidden sm:inline h-4 w-16" />
         <span className="sm:hidden">🌐</span>
         <ChevronDown className="size-3" />
-      </Button>
+      </div>
     );
   }
 

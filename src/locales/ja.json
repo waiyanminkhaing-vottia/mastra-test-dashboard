@@ -1,6 +1,27 @@
 {
   "errors": {
-    "somethingWentWrong": "問題が発生しました"
+    "somethingWentWrong": "問題が発生しました",
+    "invalidIDFormat": "不正なID形式です",
+    "promptNotFound": "プロンプトが見つかりません",
+    "promptAlreadyExists": "この名前のプロンプトは既に存在します",
+    "modelNotFound": "モデルが見つかりません",
+    "modelAlreadyExists": "このプロバイダーと名前のモデルは既に存在します",
+    "labelNotFound": "ラベルが見つかりません",
+    "labelAlreadyExists": "この名前のラベルは既に存在します",
+    "promptVersionNotFound": "プロンプトバージョンが見つかりません",
+    "promptVersionAlreadyExists": "この情報のプロンプトバージョンは既に存在します",
+    "invalidPromptReference": "プロンプトデータに無効な参照があります",
+    "invalidModelReference": "モデルデータに無効な参照があります",
+    "invalidLabelReference": "ラベルデータに無効な参照があります",
+    "invalidPromptVersionReference": "プロンプトバージョンデータに無効な参照があります"
+  },
+  "common": {
+    "new": "新規",
+    "back": "戻る",
+    "copy": "コピー",
+    "copied": "コピー済み",
+    "cancel": "キャンセル",
+    "confirm": "確認"
   },
   "menu": {
     "management": "管理",
@@ -85,6 +106,13 @@
       "noPrompts": "データがありません。"
     },
     "versions": {
+      "searchPlaceholder": "バージョンを検索...",
+      "noVersionSelected": "バージョンが選択されていません",
+      "selectVersionMessage": "サイドバーからバージョンを選択して内容を表示してください",
+      "confirmLabelChange": "ラベル変更の確認",
+      "confirmLabelChangeMessage": "このバージョンのラベルを次に変更してもよろしいですか",
+      "labelUpdatedSuccess": "ラベルが正常に更新されました",
+      "labelUpdateFailed": "ラベルの更新に失敗しました",
       "table": {
         "version": "バージョン",
         "content": "内容",
@@ -115,6 +143,8 @@
     "addLabel": "ラベルを追加",
     "enterLabelName": "ラベル名を入力",
     "add": "追加",
+    "adding": "追加中...",
+    "updating": "更新中...",
     "cancel": "キャンセル",
     "validation": {
       "nameRequired": "ラベル名は必須です",

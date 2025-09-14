@@ -1,6 +1,7 @@
 'use client';
 
 import type { Prompt } from '@prisma/client';
+import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -21,10 +22,17 @@ import { updatePromptSchema } from '@/lib/validations/prompt';
 
 interface PromptDialogProps {
   prompt: Prompt; // Required for edit mode only
-  onSuccess?: () => void;
+  onSuccess?: (prompt: Prompt) => void;
   trigger?: React.ReactNode;
 }
 
+/**
+ * Dialog component for editing existing prompt information
+ * @param onSuccess Optional callback function called when prompt is successfully updated
+ * @param prompt The prompt object to be edited
+ * @param trigger Optional React node to use as dialog trigger element
+ * @returns JSX element containing the prompt editing dialog
+ */
 export function PromptDialog({
   onSuccess,
   prompt,
@@ -81,12 +89,13 @@ export function PromptDialog({
       });
 
       if (response.ok) {
+        const updatedPrompt = await response.json();
         setName('');
         setDescription('');
         setErrors({});
         setGeneralError(null);
         setOpen(false);
-        onSuccess?.();
+        onSuccess?.(updatedPrompt);
       } else if (response.status === 409) {
         // Handle 409 Conflict - prompt already exists
         setGeneralError('prompts.errors.promptAlreadyExists');
@@ -99,7 +108,7 @@ export function PromptDialog({
           setGeneralError('errors.somethingWentWrong');
         }
       }
-    } catch (_error) {
+    } catch {
       setGeneralError('errors.somethingWentWrong');
     } finally {
       setLoading(false);
@@ -164,6 +173,7 @@ export function PromptDialog({
               {t('prompts.form.cancelButton')}
             </Button>
             <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {loading
                 ? t('prompts.form.updatingButton')
                 : t('prompts.form.updateButton')}

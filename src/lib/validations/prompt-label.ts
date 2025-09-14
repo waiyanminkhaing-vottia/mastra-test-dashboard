@@ -6,6 +6,11 @@ const defaultMessages = {
   nameMaxLength: 'Label name must be 50 characters or less',
 };
 
+/**
+ * Creates a Zod validation schema for prompt label data
+ * @param t Optional translation function for localized error messages
+ * @returns Zod schema for validating prompt label name with trimming
+ */
 export const promptLabelSchema = (t?: (key: string) => string) => {
   const getMessage = (key: string) => {
     if (t) {

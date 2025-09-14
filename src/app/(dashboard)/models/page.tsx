@@ -8,7 +8,6 @@ import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { ModelDialog } from '@/components/dashboard/model-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -17,37 +16,31 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { useLanguage } from '@/contexts/language-context';
+import { useApi } from '@/hooks/use-api';
+import { formatDate } from '@/lib/utils';
 
+/**
+ * Models management page component
+ * Displays a table of all models with create, edit, and view functionality
+ * @returns Models page with table, dialogs, and CRUD operations
+ */
 export default function ModelsPage() {
   const { t, isLoading: languageLoading } = useLanguage();
-  const [models, setModels] = useState<Model[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: models,
+    loading,
+    error,
+    fetchData,
+    setData,
+  } = useApi<Model[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingModel, setEditingModel] = useState<Model | null>(null);
 
-  const fetchModels = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch('/api/models');
-      if (response.ok) {
-        const data = await response.json();
-        setModels(data);
-      } else {
-        setError('errors.somethingWentWrong');
-      }
-    } catch (_error) {
-      setError(t('errors.somethingWentWrong'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchModels();
-  }, []);
+    fetchData('/api/models');
+  }, [fetchData]);
 
   if (languageLoading) {
     return null;
@@ -96,30 +89,11 @@ export default function ModelsPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <>
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[120px]" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-[80px] rounded-full" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[90px]" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[90px]" />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Skeleton className="h-8 w-8 rounded-md" />
-                          <Skeleton className="h-8 w-8 rounded-md" />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </>
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    <TableSkeleton rows={3} columns={5} />
+                  </TableCell>
+                </TableRow>
               ) : error ? (
                 <TableRow>
                   <TableCell
@@ -129,7 +103,7 @@ export default function ModelsPage() {
                     {t(error)}
                   </TableCell>
                 </TableRow>
-              ) : models.length === 0 ? (
+              ) : !models || models.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">
                     {t('models.table.noModels')}
@@ -142,12 +116,8 @@ export default function ModelsPage() {
                     <TableCell>
                       <Badge variant="outline">{model.provider}</Badge>
                     </TableCell>
-                    <TableCell>
-                      {new Date(model.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(model.updatedAt).toLocaleDateString()}
-                    </TableCell>
+                    <TableCell>{formatDate(model.createdAt)}</TableCell>
+                    <TableCell>{formatDate(model.updatedAt)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button
@@ -176,9 +146,17 @@ export default function ModelsPage() {
           }
         }}
         model={editingModel}
-        onSuccess={() => {
-          // Refetch models after successful creation/update
-          fetchModels();
+        onSuccess={(savedModel: Model) => {
+          // Update local state without refetching
+          if (editingModel) {
+            // Update existing model
+            setData(
+              models?.map(m => (m.id === savedModel.id ? savedModel : m)) || []
+            );
+          } else {
+            // Add new model
+            setData([savedModel, ...(models || [])]);
+          }
           setEditingModel(null);
         }}
       />

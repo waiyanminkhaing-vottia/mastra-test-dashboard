@@ -20,6 +20,12 @@ import {
 } from '@/components/ui/sidebar';
 import { useLanguage } from '@/contexts/language-context';
 
+/**
+ * Main application sidebar component
+ * Provides navigation menu with branding and route-based active states
+ * @param props - Sidebar component props
+ * @returns Sidebar component with navigation menu
+ */
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t, isLoading: languageLoading } = useLanguage();
   const pathname = usePathname();
