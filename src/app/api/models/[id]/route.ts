@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createInvalidIDError, handleAPIError } from '@/lib/error-handler';
+import { handleAPIError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
 import { createSecureResponse } from '@/lib/security-utils';
-import { isValidUUID } from '@/lib/utils';
 import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { modelSchema } from '@/lib/validations/model';
 
@@ -11,7 +10,8 @@ import { modelSchema } from '@/lib/validations/model';
  * PUT /api/models/[id]
  * Updates an existing model and creates a new version
  * @param request - NextRequest containing JSON body with model updates
- * @param props - Route parameters containing the model ID
+ * @param props - Route parameters object
+ * @param props.params - Route parameters containing the model ID
  * @returns JSON of updated model with new version, or validation/error responses
  */
 export async function PUT(
@@ -20,11 +20,6 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-
-    // Validate the ID parameter
-    if (!isValidUUID(id)) {
-      return createInvalidIDError();
-    }
 
     const body = await request.json();
 

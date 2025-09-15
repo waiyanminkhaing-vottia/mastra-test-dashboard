@@ -17,8 +17,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
+import { TableSortButton } from '@/components/ui/table-sort-button';
 import { useLanguage } from '@/contexts/language-context';
 import { useApi } from '@/hooks/use-api';
+import { useTableSort } from '@/hooks/use-table-sort';
 import { formatDate } from '@/lib/utils';
 
 /**
@@ -31,12 +33,22 @@ export default function ModelsPage() {
   const {
     data: models,
     loading,
-    error,
+    errorStatus,
     fetchData,
     setData,
   } = useApi<Model[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingModel, setEditingModel] = useState<Model | null>(null);
+
+  const {
+    sortedData: sortedModels,
+    sortField,
+    sortDirection,
+    handleSort,
+  } = useTableSort(models, {
+    defaultSortField: 'createdAt',
+    defaultSortDirection: 'asc',
+  });
 
   useEffect(() => {
     fetchData('/api/models');
@@ -78,10 +90,37 @@ export default function ModelsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('models.table.name')}</TableHead>
+                <TableHead>
+                  <TableSortButton
+                    field="name"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    {t('models.table.name')}
+                  </TableSortButton>
+                </TableHead>
                 <TableHead>{t('models.table.provider')}</TableHead>
-                <TableHead>{t('models.table.created')}</TableHead>
-                <TableHead>{t('models.table.updated')}</TableHead>
+                <TableHead>
+                  <TableSortButton
+                    field="createdAt"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    {t('models.table.created')}
+                  </TableSortButton>
+                </TableHead>
+                <TableHead>
+                  <TableSortButton
+                    field="updatedAt"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    {t('models.table.updated')}
+                  </TableSortButton>
+                </TableHead>
                 <TableHead className="w-[100px]">
                   {t('models.table.actions')}
                 </TableHead>
@@ -89,18 +128,14 @@ export default function ModelsPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <TableSkeleton rows={3} columns={5} />
-                  </TableCell>
-                </TableRow>
-              ) : error ? (
+                <TableSkeleton rows={3} columns={5} />
+              ) : errorStatus ? (
                 <TableRow>
                   <TableCell
                     colSpan={5}
                     className="h-24 text-center text-red-600"
                   >
-                    {t(error)}
+                    {t('errors.somethingWentWrong')}
                   </TableCell>
                 </TableRow>
               ) : !models || models.length === 0 ? (
@@ -110,7 +145,7 @@ export default function ModelsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                models.map((model: Model) => (
+                sortedModels.map((model: Model) => (
                   <TableRow key={model.id}>
                     <TableCell className="font-medium">{model.name}</TableCell>
                     <TableCell>

@@ -32,7 +32,8 @@ const translations = {
 /**
  * Language provider component that manages language state and provides translation functionality
  * Handles hydration-safe language loading from cookies and provides translation functions
- * @param children - Child components to render within the provider
+ * @param props Component properties
+ * @param props.children Child components to render within the provider
  */
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = React.useState<Language>('en');

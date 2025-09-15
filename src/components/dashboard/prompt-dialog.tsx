@@ -28,9 +28,10 @@ interface PromptDialogProps {
 
 /**
  * Dialog component for editing existing prompt information
- * @param onSuccess Optional callback function called when prompt is successfully updated
- * @param prompt The prompt object to be edited
- * @param trigger Optional React node to use as dialog trigger element
+ * @param props Component properties
+ * @param props.onSuccess Optional callback function called when prompt is successfully updated
+ * @param props.prompt The prompt object to be edited
+ * @param props.trigger Optional React node to use as dialog trigger element
  * @returns JSX element containing the prompt editing dialog
  */
 export function PromptDialog({

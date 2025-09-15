@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import { HtmlLangWrapper } from '@/components/html-lang-wrapper';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ToasterProvider } from '@/components/toaster-provider';
 import { LanguageProvider } from '@/contexts/language-context';
 
 const geistSans = Geist({
@@ -17,6 +18,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+/** Metadata configuration for the application */
 export const metadata: Metadata = {
   title: 'vottia',
   description: 'Maintenance Screen',
@@ -25,6 +27,13 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Root layout component that wraps the entire application
+ * Provides theme, language, and toast providers
+ * @param props Component properties
+ * @param props.children Child components to render in the application
+ * @returns JSX element containing the root application structure
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,6 +52,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <ToasterProvider />
           </ThemeProvider>
         </body>
       </HtmlLangWrapper>

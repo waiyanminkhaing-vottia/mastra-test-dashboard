@@ -28,7 +28,10 @@ interface PromptLabelSelectProps {
  * - Inline label creation and editing
  * - Real-time validation and error handling
  * - Translation support
- * @param props - Component props
+ * @param props Component properties
+ * @param props.selectedLabel Current selected label ID
+ * @param props.onLabelChange Callback function when label selection changes
+ * @param props.trigger Optional React node to use as dropdown trigger
  */
 export function PromptLabelSelect({
   selectedLabel,
@@ -124,7 +127,7 @@ export function PromptLabelSelect({
           <div
             className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-primary cursor-pointer rounded"
             onClick={() => {
-              onLabelChange('', 'None');
+              onLabelChange('', t('labels.none'));
               setOpen(false);
             }}
           >

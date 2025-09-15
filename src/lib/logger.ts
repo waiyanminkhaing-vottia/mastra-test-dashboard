@@ -34,7 +34,7 @@ const createLogger = () => {
   return pino(config);
 };
 
-// Create the main logger instance
+/** Create the main logger instance */
 export const logger = createLogger();
 
 /**

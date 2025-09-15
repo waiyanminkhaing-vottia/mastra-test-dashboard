@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createInvalidIDError, handleAPIError } from '@/lib/error-handler';
+import { handleAPIError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
 import { createSecureResponse } from '@/lib/security-utils';
-import { isValidUUID } from '@/lib/utils';
 import { updatePromptVersionSchema } from '@/lib/validations/prompt-version';
 
 /**
  * Updates a prompt version's label assignment
  * @param request The incoming HTTP request containing label assignment data
- * @param params The route parameters containing the prompt version ID
+ * @param params Route parameters object
+ * @param params.params The route parameters containing the prompt version ID
  * @returns Updated prompt version with label information or error response
  */
 export async function PUT(
@@ -18,11 +18,6 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-
-    // Validate the ID parameter
-    if (!isValidUUID(id)) {
-      return createInvalidIDError();
-    }
 
     const body = await request.json();
 
@@ -41,11 +36,18 @@ export async function PUT(
     const { labelId } = validationResult.data;
 
     const promptVersion = await prisma.$transaction(async tx => {
-      // If setting a label, first remove that label from any other versions
+      // Get the current prompt version to find the promptId
+      const currentVersion = await tx.promptVersion.findUniqueOrThrow({
+        where: { id: id },
+        select: { promptId: true },
+      });
+
+      // If setting a label, first remove that label from any other versions of the same prompt
       if (labelId) {
         await tx.promptVersion.updateMany({
           where: {
             labelId: labelId,
+            promptId: currentVersion.promptId,
             NOT: { id: id },
           },
           data: {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { logError } from './logger';
+import { logError, logger } from './logger';
 
 /**
  * Common error types that can occur in API routes
@@ -22,30 +22,51 @@ export function handleAPIError(
   resourceName: string,
   t: (key: string) => string = (key: string) => key
 ): NextResponse {
-  // Log error with structured logging
-  if (error instanceof Error) {
-    logError(`API error in ${resourceName}`, error);
-  } else {
-    logError(
-      `API error in ${resourceName}: ${String(error)}`,
-      new Error(String(error))
-    );
-  }
-
+  // Map resource names to their translation namespace
+  const getNamespace = (resource: string) => {
+    if (resource.startsWith('prompt')) {
+      return 'prompts';
+    }
+    if (resource === 'model') {
+      return 'models';
+    }
+    if (resource === 'label') {
+      return 'labels';
+    }
+    return `${resource}s`; // fallback
+  };
   // Handle Prisma errors
   if (error && typeof error === 'object' && 'code' in error) {
     switch (error.code) {
       case 'P2025':
         // Record not found
+        logger.info({
+          msg: `${resourceName} not found`,
+          resourceName,
+          errorCode: 'P2025',
+        });
         return NextResponse.json(
-          { error: t(`errors.${resourceName}NotFound`) },
+          {
+            error: t(
+              `${getNamespace(resourceName)}.errors.${resourceName}NotFound`
+            ),
+          },
           { status: 404 }
         );
 
       case 'P2002':
         // Unique constraint violation
+        logger.info({
+          msg: `${resourceName} already exists`,
+          resourceName,
+          errorCode: 'P2002',
+        });
         return NextResponse.json(
-          { error: t(`errors.${resourceName}AlreadyExists`) },
+          {
+            error: t(
+              `${getNamespace(resourceName)}.errors.${resourceName}AlreadyExists`
+            ),
+          },
           { status: 409 }
         );
 
@@ -54,7 +75,7 @@ export function handleAPIError(
         return NextResponse.json(
           {
             error: t(
-              `errors.invalid${resourceName.charAt(0).toUpperCase() + resourceName.slice(1)}Reference`
+              `${getNamespace(resourceName)}.errors.invalid${resourceName.charAt(0).toUpperCase() + resourceName.slice(1)}Reference`
             ),
           },
           { status: 400 }
@@ -63,6 +84,16 @@ export function handleAPIError(
       default:
         break;
     }
+  }
+
+  // Log error with structured logging for actual errors (not business logic)
+  if (error instanceof Error) {
+    logError(`API error in ${resourceName}`, error);
+  } else {
+    logError(
+      `API error in ${resourceName}: ${String(error)}`,
+      new Error(String(error))
+    );
   }
 
   // Default server error

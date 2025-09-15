@@ -15,7 +15,7 @@ export async function GET() {
   try {
     const promptLabels = await prisma.promptLabel.findMany({
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'asc',
       },
     });
 

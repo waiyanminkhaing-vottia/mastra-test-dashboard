@@ -5,6 +5,8 @@
 import type { PromptLabel } from '@prisma/client';
 import { useCallback, useEffect, useState } from 'react';
 
+import { apiGet, apiPost, apiPut } from '@/lib/api-client';
+
 export interface UsePromptLabelsReturn {
   /** Array of prompt labels */
   promptLabels: PromptLabel[];
@@ -38,13 +40,8 @@ export function usePromptLabels(): UsePromptLabelsReturn {
   const fetchPromptLabels = useCallback(async () => {
     try {
       setFetchError(false);
-      const response = await fetch('/api/prompt-labels');
-      if (response.ok) {
-        const data = await response.json();
-        setPromptLabels(data);
-      } else {
-        setFetchError(true);
-      }
+      const data = await apiGet<PromptLabel[]>('/api/prompt-labels');
+      setPromptLabels(data);
     } catch {
       setFetchError(true);
     } finally {
@@ -61,20 +58,11 @@ export function usePromptLabels(): UsePromptLabelsReturn {
     async (name: string): Promise<PromptLabel | null> => {
       setIsCreating(true);
       try {
-        const response = await fetch('/api/prompt-labels', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name }),
+        const newLabel = await apiPost<PromptLabel>('/api/prompt-labels', {
+          name,
         });
-
-        if (response.ok) {
-          const newLabel = await response.json();
-          setPromptLabels(prev => [...prev, newLabel]);
-          return newLabel;
-        }
-        return null;
+        setPromptLabels(prev => [...prev, newLabel]);
+        return newLabel;
       } catch {
         return null;
       } finally {
@@ -88,22 +76,14 @@ export function usePromptLabels(): UsePromptLabelsReturn {
     async (id: string, name: string): Promise<PromptLabel | null> => {
       setIsUpdating(true);
       try {
-        const response = await fetch(`/api/prompt-labels/${id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name }),
-        });
-
-        if (response.ok) {
-          const updatedLabel = await response.json();
-          setPromptLabels(prev =>
-            prev.map(label => (label.id === id ? updatedLabel : label))
-          );
-          return updatedLabel;
-        }
-        return null;
+        const updatedLabel = await apiPut<PromptLabel>(
+          `/api/prompt-labels/${id}`,
+          { name }
+        );
+        setPromptLabels(prev =>
+          prev.map(label => (label.id === id ? updatedLabel : label))
+        );
+        return updatedLabel;
       } catch {
         return null;
       } finally {

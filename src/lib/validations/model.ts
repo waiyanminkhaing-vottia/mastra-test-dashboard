@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { REGEX_PATTERNS } from '@/lib/utils';
 
-// Use Prisma's generated enum with Zod
+/** Use Prisma's generated enum with Zod */
 export const providerSchema = z.enum(Object.values(Provider));
 
 export type { Provider };

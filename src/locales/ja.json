@@ -1,19 +1,7 @@
 {
   "errors": {
-    "somethingWentWrong": "問題が発生しました",
-    "invalidIDFormat": "不正なID形式です",
-    "promptNotFound": "プロンプトが見つかりません",
-    "promptAlreadyExists": "この名前のプロンプトは既に存在します",
-    "modelNotFound": "モデルが見つかりません",
-    "modelAlreadyExists": "このプロバイダーと名前のモデルは既に存在します",
-    "labelNotFound": "ラベルが見つかりません",
-    "labelAlreadyExists": "この名前のラベルは既に存在します",
-    "promptVersionNotFound": "プロンプトバージョンが見つかりません",
-    "promptVersionAlreadyExists": "この情報のプロンプトバージョンは既に存在します",
-    "invalidPromptReference": "プロンプトデータに無効な参照があります",
-    "invalidModelReference": "モデルデータに無効な参照があります",
-    "invalidLabelReference": "ラベルデータに無効な参照があります",
-    "invalidPromptVersionReference": "プロンプトバージョンデータに無効な参照があります"
+    "somethingWentWrong": "エラーが発生しました",
+    "invalidIDFormat": "不正なID形式です"
   },
   "common": {
     "new": "新規",
@@ -21,7 +9,9 @@
     "copy": "コピー",
     "copied": "コピー済み",
     "cancel": "キャンセル",
-    "confirm": "確認"
+    "confirm": "確認",
+    "error": "エラー",
+    "notFound": "見つかりませんでした"
   },
   "menu": {
     "management": "管理",
@@ -35,7 +25,6 @@
   },
   "models": {
     "title": "モデル",
-    "description": "LLMプロバイダーとモデル設定を管理",
     "addModel": "モデル追加",
     "form": {
       "title": "モデル追加",
@@ -55,15 +44,9 @@
     "table": {
       "name": "名前",
       "provider": "プロバイダー",
-      "modelId": "モデルID",
-      "version": "バージョン",
-      "status": "ステータス",
-      "maxTokens": "最大トークン",
       "created": "作成日",
       "updated": "更新日",
       "actions": "操作",
-      "active": "有効",
-      "inactive": "無効",
       "noModels": "データがありません。"
     },
     "validation": {
@@ -73,14 +56,15 @@
       "providerRequired": "プロバイダーは必須です"
     },
     "errors": {
-      "modelAlreadyExists": "このプロバイダーと名前のモデルは既に存在します"
+      "modelNotFound": "モデルが見つかりません",
+      "modelAlreadyExists": "このプロバイダーと名前のモデルは既に存在します",
+      "invalidModelReference": "モデルデータに無効な参照があります"
     }
   },
   "prompts": {
     "title": "プロンプト",
     "addPrompt": "プロンプト追加",
     "addVersion": "バージョン追加",
-    "backToPrompts": "プロンプト一覧に戻る",
     "form": {
       "title": "プロンプト追加",
       "editTitle": "プロンプト編集",
@@ -130,8 +114,13 @@
       "contentRequired": "内容は必須です"
     },
     "errors": {
+      "promptNotFound": "プロンプトが見つかりません",
+      "promptNotFoundDescription": "お探しのプロンプトが存在しないか、削除されました。",
       "promptAlreadyExists": "この名前のプロンプトは既に存在します",
-      "promptNotFound": "プロンプトが見つかりません"
+      "promptVersionNotFound": "プロンプトバージョンが見つかりません",
+      "promptVersionAlreadyExists": "この情報のプロンプトバージョンは既に存在します",
+      "invalidPromptReference": "プロンプトデータに無効な参照があります",
+      "invalidPromptVersionReference": "プロンプトバージョンデータに無効な参照があります"
     }
   },
   "labels": {
@@ -151,8 +140,10 @@
       "nameMaxLength": "ラベル名は50文字以下である必要があります"
     },
     "errors": {
+      "labelNotFound": "ラベルが見つかりません",
       "labelAlreadyExists": "この名前のラベルは既に存在します",
-      "failedToCreate": "ラベルの作成に失敗しました"
+      "failedToCreate": "ラベルの作成に失敗しました",
+      "invalidLabelReference": "ラベルデータに無効な参照があります"
     }
   }
 }

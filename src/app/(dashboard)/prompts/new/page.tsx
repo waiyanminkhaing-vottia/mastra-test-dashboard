@@ -40,48 +40,42 @@ export default function NewPromptPage() {
       promptLabelId: selectedLabel || undefined,
     };
 
-    try {
-      setLoading(true);
-      setErrors({});
-      setGeneralError(null);
+    setErrors({});
+    setGeneralError(null);
+    setLoading(true);
 
-      // Client-side validation with Zod
-      const schema = createPromptSchema(t);
-      const validationResult = schema.safeParse(data);
+    // Client-side validation with Zod
+    const schema = createPromptSchema(t);
+    const validationResult = schema.safeParse(data);
 
-      if (!validationResult.success) {
-        setErrors(formatZodErrors(validationResult.error));
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch('/api/prompts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(validationResult.data),
-      });
-
-      if (response.ok) {
-        router.push('/prompts');
-      } else if (response.status === 409) {
-        // Handle 409 Conflict - prompt already exists
-        setGeneralError('prompts.errors.promptAlreadyExists');
-      } else {
-        const error = await response.json();
-        if (error.details && Array.isArray(error.details)) {
-          // Handle validation errors from server
-          setErrors(formatZodErrors({ issues: error.details }));
-        } else {
-          setGeneralError('errors.somethingWentWrong');
-        }
-      }
-    } catch {
-      setGeneralError('errors.somethingWentWrong');
-    } finally {
+    if (!validationResult.success) {
+      setErrors(formatZodErrors(validationResult.error));
       setLoading(false);
+      return;
     }
+
+    const response = await fetch('/api/prompts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(validationResult.data),
+    });
+
+    if (response.ok) {
+      // Success - navigate to prompts page
+      router.push('/prompts');
+    } else {
+      if (response.status === 409) {
+        // Handle 409 Conflict - prompt already exists, show as name field error
+        setErrors({ name: t('prompts.errors.promptAlreadyExists') });
+      } else {
+        // Handle other errors
+        setGeneralError('errors.somethingWentWrong');
+      }
+    }
+
+    setLoading(false);
   };
 
   if (languageLoading) {

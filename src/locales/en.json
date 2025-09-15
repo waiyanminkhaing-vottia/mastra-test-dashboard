@@ -1,19 +1,7 @@
 {
   "errors": {
     "somethingWentWrong": "Something went wrong",
-    "invalidIDFormat": "Invalid ID format",
-    "promptNotFound": "Prompt not found",
-    "promptAlreadyExists": "A prompt with this name already exists",
-    "modelNotFound": "Model not found",
-    "modelAlreadyExists": "A model with this provider and name already exists",
-    "labelNotFound": "Label not found",
-    "labelAlreadyExists": "A label with this name already exists",
-    "promptVersionNotFound": "Prompt version not found",
-    "promptVersionAlreadyExists": "A prompt version with this information already exists",
-    "invalidPromptReference": "Invalid reference in prompt data",
-    "invalidModelReference": "Invalid reference in model data",
-    "invalidLabelReference": "Invalid reference in label data",
-    "invalidPromptVersionReference": "Invalid reference in prompt version data"
+    "invalidIDFormat": "Invalid ID format"
   },
   "common": {
     "new": "New",
@@ -21,7 +9,9 @@
     "copy": "Copy",
     "copied": "Copied",
     "cancel": "Cancel",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "error": "Error",
+    "notFound": "Not Found"
   },
   "menu": {
     "management": "Management",
@@ -35,7 +25,6 @@
   },
   "models": {
     "title": "Models",
-    "description": "Manage your LLM providers and model configurations",
     "addModel": "Add Model",
     "form": {
       "title": "Add Model",
@@ -55,15 +44,9 @@
     "table": {
       "name": "Name",
       "provider": "Provider",
-      "modelId": "Model ID",
-      "version": "Version",
-      "status": "Status",
-      "maxTokens": "Max Tokens",
       "created": "Created",
       "updated": "Updated",
       "actions": "Actions",
-      "active": "Active",
-      "inactive": "Inactive",
       "noModels": "No data available."
     },
     "validation": {
@@ -73,15 +56,15 @@
       "providerRequired": "Provider is required"
     },
     "errors": {
-      "modelAlreadyExists": "A model with this provider and name already exists"
+      "modelNotFound": "Model not found",
+      "modelAlreadyExists": "A model with this provider and name already exists",
+      "invalidModelReference": "Invalid reference in model data"
     }
   },
   "prompts": {
     "title": "Prompts",
-    "description": "Manage your prompt templates and versions",
     "addPrompt": "Add Prompt",
     "addVersion": "Add Version",
-    "backToPrompts": "Back to Prompts",
     "form": {
       "title": "Add Prompt",
       "description": "Create a new prompt template.",
@@ -133,8 +116,13 @@
       "contentRequired": "Content is required"
     },
     "errors": {
+      "promptNotFound": "Prompt not found",
+      "promptNotFoundDescription": "The prompt you're looking for doesn't exist or has been removed.",
       "promptAlreadyExists": "A prompt with this name already exists",
-      "promptNotFound": "Prompt not found"
+      "promptVersionNotFound": "Prompt version not found",
+      "promptVersionAlreadyExists": "A prompt version with this information already exists",
+      "invalidPromptReference": "Invalid reference in prompt data",
+      "invalidPromptVersionReference": "Invalid reference in prompt version data"
     }
   },
   "labels": {
@@ -154,8 +142,10 @@
       "nameMaxLength": "Label name must be 50 characters or less"
     },
     "errors": {
+      "labelNotFound": "Label not found",
       "labelAlreadyExists": "A label with this name already exists",
-      "failedToCreate": "Failed to create label"
+      "failedToCreate": "Failed to create label",
+      "invalidLabelReference": "Invalid reference in label data"
     }
   }
 }

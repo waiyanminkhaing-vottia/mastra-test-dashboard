@@ -6,42 +6,66 @@ import { useCallback, useState } from 'react';
 interface UseApiState<T> {
   data: T | null;
   loading: boolean;
-  error: string | null;
+  errorStatus: number | null;
+  errorMessage: string | null;
 }
 
 /**
  * Hook for managing API calls with loading, error states, and data
  * @param initialData Initial data value
- * @returns Object with data, loading, error states and fetch function
+ * @returns Object with data, loading, errorStatus, errorMessage states and fetch function
  */
 export function useApi<T>(initialData: T | null = null) {
   const [state, setState] = useState<UseApiState<T>>({
     data: initialData,
     loading: false,
-    error: null,
+    errorStatus: null,
+    errorMessage: null,
   });
 
   const fetchData = useCallback(async (url: string, options?: RequestInit) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState(prev => ({
+      ...prev,
+      loading: true,
+      errorStatus: null,
+      errorMessage: null,
+    }));
 
     try {
       const response = await fetch(url, options);
 
-      if (!response.ok) {
+      if (response.ok) {
+        const data = await response.json();
+        setState({
+          data,
+          loading: false,
+          errorStatus: null,
+          errorMessage: null,
+        });
+      } else {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error || `HTTP error! status: ${response.status}`
-        );
-      }
+        const statusCode = response.status;
+        const errorMessage =
+          errorData.error || `HTTP error! status: ${response.status}`;
 
-      const data = await response.json();
-      setState({ data, loading: false, error: null });
-      return data;
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          errorStatus: statusCode,
+          errorMessage: errorMessage,
+        }));
+      }
     } catch (error) {
+      const statusCode = (error as { status?: number }).status || 500;
       const errorMessage =
         error instanceof Error ? error.message : 'An error occurred';
-      setState(prev => ({ ...prev, loading: false, error: errorMessage }));
-      throw error;
+
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        errorStatus: statusCode,
+        errorMessage: errorMessage,
+      }));
     }
   }, []);
 
@@ -50,7 +74,7 @@ export function useApi<T>(initialData: T | null = null) {
   }, []);
 
   const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }));
+    setState(prev => ({ ...prev, errorStatus: null, errorMessage: null }));
   }, []);
 
   return {

@@ -19,8 +19,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
+import { TableSortButton } from '@/components/ui/table-sort-button';
 import { useLanguage } from '@/contexts/language-context';
 import { useApi } from '@/hooks/use-api';
+import { useTableSort } from '@/hooks/use-table-sort';
 import { formatDate } from '@/lib/utils';
 import type { PromptWithVersions } from '@/types/prompt';
 
@@ -34,10 +36,20 @@ export default function PromptsPage() {
   const {
     data: prompts,
     loading,
-    error,
+    errorStatus,
     fetchData,
     setData,
   } = useApi<PromptWithVersions[]>([]);
+
+  const {
+    sortedData: sortedPrompts,
+    sortField,
+    sortDirection,
+    handleSort,
+  } = useTableSort(prompts, {
+    defaultSortField: 'createdAt',
+    defaultSortDirection: 'desc',
+  });
 
   useEffect(() => {
     fetchData('/api/prompts');
@@ -77,11 +89,38 @@ export default function PromptsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('prompts.table.name')}</TableHead>
+                <TableHead>
+                  <TableSortButton
+                    field="name"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    {t('prompts.table.name')}
+                  </TableSortButton>
+                </TableHead>
                 <TableHead>{t('prompts.table.description')}</TableHead>
                 <TableHead>{t('prompts.table.versions')}</TableHead>
-                <TableHead>{t('prompts.table.created')}</TableHead>
-                <TableHead>{t('prompts.table.updated')}</TableHead>
+                <TableHead>
+                  <TableSortButton
+                    field="createdAt"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    {t('prompts.table.created')}
+                  </TableSortButton>
+                </TableHead>
+                <TableHead>
+                  <TableSortButton
+                    field="updatedAt"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    {t('prompts.table.updated')}
+                  </TableSortButton>
+                </TableHead>
                 <TableHead className="w-[150px]">
                   {t('prompts.table.actions')}
                 </TableHead>
@@ -89,18 +128,14 @@ export default function PromptsPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <TableSkeleton rows={3} columns={6} />
-                  </TableCell>
-                </TableRow>
-              ) : error ? (
+                <TableSkeleton rows={3} columns={6} />
+              ) : errorStatus ? (
                 <TableRow>
                   <TableCell
                     colSpan={6}
                     className="h-24 text-center text-red-600"
                   >
-                    {t(error)}
+                    {t('errors.somethingWentWrong')}
                   </TableCell>
                 </TableRow>
               ) : !prompts || prompts.length === 0 ? (
@@ -110,7 +145,7 @@ export default function PromptsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                prompts.map((prompt: PromptWithVersions) => (
+                sortedPrompts.map((prompt: PromptWithVersions) => (
                   <TableRow
                     key={prompt.id}
                     className="cursor-pointer hover:bg-muted/50"

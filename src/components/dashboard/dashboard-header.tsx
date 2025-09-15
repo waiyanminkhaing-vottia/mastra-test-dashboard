@@ -25,7 +25,8 @@ interface DashboardHeaderProps {
 
 /**
  * Dashboard header component that displays breadcrumbs, sidebar trigger, and user controls
- * @param breadcrumbs Array of breadcrumb objects for navigation
+ * @param props Component properties
+ * @param props.breadcrumbs Array of breadcrumb objects for navigation
  * @returns JSX element containing the dashboard header layout
  */
 export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
@@ -44,7 +45,10 @@ export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
           <Breadcrumb>
             <BreadcrumbList>
               {breadcrumbs.map((breadcrumb, index) => (
-                <div key={index} className="flex items-center">
+                <div
+                  key={`breadcrumb-${breadcrumb.href || breadcrumb.label}-${breadcrumb.translationKey || ''}`}
+                  className="flex items-center"
+                >
                   {index > 0 && (
                     <BreadcrumbSeparator className="hidden md:block" />
                   )}

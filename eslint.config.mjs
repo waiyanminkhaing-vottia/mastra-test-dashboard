@@ -19,6 +19,7 @@ const eslintConfig = [
         .default,
       'unused-imports': (await import('eslint-plugin-unused-imports')).default,
       import: (await import('eslint-plugin-import')).default,
+      jsdoc: (await import('eslint-plugin-jsdoc')).default,
     },
     rules: {
       'prettier/prettier': 'error',
@@ -40,6 +41,60 @@ const eslintConfig = [
       'import/first': 'error',
       'import/newline-after-import': 'error',
       'import/no-duplicates': 'error',
+      // JSDoc rules
+      'jsdoc/require-jsdoc': [
+        'warn',
+        {
+          require: {
+            FunctionDeclaration: true,
+            MethodDefinition: true,
+            ClassDeclaration: true,
+            ArrowFunctionExpression: true,
+            FunctionExpression: true,
+          },
+          contexts: [
+            'ExportNamedDeclaration[declaration.type="FunctionDeclaration"]',
+            'ExportDefaultDeclaration[declaration.type="FunctionDeclaration"]',
+            'ExportNamedDeclaration[declaration.type="VariableDeclaration"]',
+          ],
+          exemptEmptyFunctions: true,
+          checkConstructors: false,
+          publicOnly: true,
+        },
+      ],
+      'jsdoc/require-description': 'warn',
+      'jsdoc/require-param-description': 'warn',
+      'jsdoc/require-returns-description': 'warn',
+      'jsdoc/check-param-names': 'error',
+      'jsdoc/check-tag-names': 'error',
+      'jsdoc/valid-types': 'error',
+      // Security & Quality Rules
+      'no-console': 'warn',
+      'no-debugger': 'error',
+      'no-alert': 'error',
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+      'no-script-url': 'error',
+      'no-var': 'error',
+      'prefer-const': 'error',
+      'no-unused-vars': 'off', // Disabled in favor of unused-imports plugin
+      // React Rules (built into next/core-web-vitals but adding specific ones)
+      'react-hooks/exhaustive-deps': 'error',
+      'react/jsx-no-target-blank': 'error',
+      'react/no-array-index-key': 'warn',
+      'react/jsx-boolean-value': 'error',
+      'react/self-closing-comp': 'error',
+      // TypeScript Rules
+      '@typescript-eslint/no-unused-vars': 'off', // Handled by unused-imports
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+    },
+  },
+  {
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'jsdoc/require-jsdoc': 'off',
     },
   },
   {

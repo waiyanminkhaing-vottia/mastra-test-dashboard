@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/language-context';
+import { apiPost, apiPut } from '@/lib/api-client';
 import { formatZodErrors } from '@/lib/validation-utils';
 import { modelSchema, type Provider } from '@/lib/validations/model';
 
@@ -46,10 +47,11 @@ interface ModelDialogProps {
 
 /**
  * Dialog component for creating and editing AI model configurations
- * @param open Whether the dialog is currently open
- * @param onOpenChange Callback function called when dialog open state changes
- * @param onSuccess Callback function called when model is successfully created or updated
- * @param model Optional model object for editing existing models
+ * @param props Component properties
+ * @param props.open Whether the dialog is currently open
+ * @param props.onOpenChange Callback function called when dialog open state changes
+ * @param props.onSuccess Callback function called when model is successfully created or updated
+ * @param props.model Optional model object for editing existing models
  * @returns JSX element containing the model creation/editing dialog
  */
 export function ModelDialog({
@@ -102,37 +104,34 @@ export function ModelDialog({
 
     setLoading(true);
     try {
-      const url = isEditing ? `/api/models/${model!.id}` : '/api/models';
-      const method = isEditing ? 'PUT' : 'POST';
+      const savedModel =
+        isEditing && model
+          ? await apiPut<Model>(
+              `/api/models/${model.id}`,
+              validationResult.data
+            )
+          : await apiPost<Model>('/api/models', validationResult.data);
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(validationResult.data),
-      });
-
-      if (response.ok) {
-        const savedModel = await response.json();
-        setName('');
-        setProvider('');
-        setErrors({});
-        onOpenChange(false);
-        onSuccess(savedModel);
-      } else if (response.status === 409) {
-        // Handle 409 Conflict - model already exists
+      setName('');
+      setProvider('');
+      setErrors({});
+      onOpenChange(false);
+      onSuccess(savedModel);
+    } catch (error: unknown) {
+      const apiError = error as {
+        status?: number;
+        data?: { details?: unknown };
+      };
+      if (apiError.status === 409) {
         setGeneralError('models.errors.modelAlreadyExists');
+      } else if (
+        apiError.data?.details &&
+        Array.isArray(apiError.data.details)
+      ) {
+        setErrors(formatZodErrors({ issues: apiError.data.details }));
       } else {
-        const error = await response.json();
-        if (error.details) {
-          setErrors(formatZodErrors({ issues: error.details }));
-        } else {
-          setGeneralError('errors.somethingWentWrong');
-        }
+        setGeneralError('errors.somethingWentWrong');
       }
-    } catch {
-      setGeneralError('errors.somethingWentWrong');
     } finally {
       setLoading(false);
     }

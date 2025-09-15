@@ -1,26 +1,23 @@
 import { Skeleton } from '@/components/ui/skeleton';
+import { TableCell, TableRow } from '@/components/ui/table';
 
-/**
- * Reusable table skeleton loader component
- * @param rows Number of skeleton rows to display
- * @param columns Number of columns in each row
- * @returns JSX element with table skeleton structure
- */
 interface TableSkeletonProps {
   rows?: number;
   columns?: number;
 }
 
-export function TableSkeleton({ rows = 5, columns = 4 }: TableSkeletonProps) {
+export function TableSkeleton({ rows = 3, columns = 4 }: TableSkeletonProps) {
   return (
-    <div className="space-y-3">
-      {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="flex space-x-4">
-          {Array.from({ length: columns }, (_, j) => (
-            <Skeleton key={j} className="h-12 flex-1" />
+    <>
+      {Array.from({ length: rows }, (_, i) => i).map(i => (
+        <TableRow key={`skeleton-row-${i}`}>
+          {Array.from({ length: columns }, (_, j) => j).map(j => (
+            <TableCell key={`skeleton-cell-${i}-${j}`}>
+              <Skeleton className="h-6 w-full" />
+            </TableCell>
           ))}
-        </div>
+        </TableRow>
       ))}
-    </div>
+    </>
   );
 }

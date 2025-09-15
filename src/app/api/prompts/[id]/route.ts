@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createInvalidIDError, handleAPIError } from '@/lib/error-handler';
+import { handleAPIError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
 import { createSecureResponse } from '@/lib/security-utils';
-import { isValidUUID } from '@/lib/utils';
 import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { updatePromptSchema } from '@/lib/validations/prompt';
 
 /**
  * Retrieves a specific prompt with its versions and labels
  * @param _request The incoming HTTP request (unused)
- * @param params The route parameters containing the prompt ID
+ * @param props Route parameters object
+ * @param props.params The route parameters containing the prompt ID
  * @returns Prompt data with versions and labels or error response
  */
 export async function GET(
@@ -20,12 +20,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // Validate the ID parameter
-    if (!isValidUUID(id)) {
-      return createInvalidIDError();
-    }
-
-    const prompt = await prisma.prompt.findUnique({
+    const prompt = await prisma.prompt.findUniqueOrThrow({
       where: {
         id,
       },
@@ -41,10 +36,6 @@ export async function GET(
       },
     });
 
-    if (!prompt) {
-      return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
-    }
-
     return createSecureResponse(prompt);
   } catch (error) {
     return handleAPIError(error, 'prompt');
@@ -54,7 +45,8 @@ export async function GET(
 /**
  * Updates an existing prompt's basic information
  * @param request The incoming HTTP request containing updated prompt data
- * @param params The route parameters containing the prompt ID
+ * @param props Route parameters object
+ * @param props.params The route parameters containing the prompt ID
  * @returns Updated prompt data or error response
  */
 export async function PUT(
@@ -63,11 +55,6 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-
-    // Validate the ID parameter
-    if (!isValidUUID(id)) {
-      return createInvalidIDError();
-    }
 
     const body = await request.json();
 
