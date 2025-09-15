@@ -4,40 +4,26 @@ import pino from 'pino';
 // Create the base logger configuration
 const createLogger = () => {
   const isProduction = process.env.NODE_ENV === 'production';
-  const isDevelopment = process.env.NODE_ENV === 'development';
 
   // Base configuration
   const config: pino.LoggerOptions = {
     name: 'mastra-dashboard',
-    level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
+    level: process.env.LOG_LEVEL || (isProduction ? 'warn' : 'info'),
     timestamp: pino.stdTimeFunctions.isoTime,
 
     // Add useful base fields
     base: {
       service: 'mastra-dashboard',
       version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
+      environment:
+        process.env.NODE_ENV || (isProduction ? 'production' : 'development'),
       aws_region: process.env.AWS_REGION,
       aws_account_id: process.env.AWS_ACCOUNT_ID,
     },
   };
 
-  // Development configuration with pino-pretty
-  if (isDevelopment) {
-    config.transport = {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'HH:MM:ss Z',
-        ignore:
-          'pid,hostname,service,version,environment,aws_region,aws_account_id',
-        singleLine: false,
-        sync: true, // Synchronous for Next.js compatibility
-      },
-    };
-  }
   // Production configuration optimized for AWS CloudWatch
-  else if (isProduction) {
+  if (isProduction) {
     config.formatters = {
       level: label => ({ level: label }),
     };
