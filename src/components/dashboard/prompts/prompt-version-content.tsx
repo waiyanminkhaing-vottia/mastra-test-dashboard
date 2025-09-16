@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/contexts/language-context';
+import { usePromptLabelsStore } from '@/stores/prompt-labels-store';
 import type {
   PromptVersionWithLabel,
   PromptWithVersions,
@@ -33,7 +34,14 @@ export function PromptVersionContent({
   onLabelChange,
 }: PromptVersionContentProps) {
   const { t } = useLanguage();
+  const { labels } = usePromptLabelsStore();
   const [copied, setCopied] = useState(false);
+
+  // Get the current label name from the labels store to ensure it's up-to-date
+  const currentLabelName = selectedVersion.labelId
+    ? labels.find(label => label.id === selectedVersion.labelId)?.name ||
+      selectedVersion.label?.name
+    : undefined;
 
   const handleCopyPrompt = async () => {
     if (!selectedVersion?.content) return;
@@ -55,12 +63,12 @@ export function PromptVersionContent({
             #{selectedVersion.version}
           </Badge>
           <h2 className="text-lg font-semibold">{prompt.name}</h2>
-          {selectedVersion.label && (
+          {currentLabelName && (
             <Badge
               variant="outline"
               className="text-sm px-2 py-1 border-primary text-primary"
             >
-              {selectedVersion.label.name}
+              {currentLabelName}
             </Badge>
           )}
           <PromptLabelSelect

@@ -6,6 +6,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { formatDate } from '@/lib/utils';
+import { usePromptLabelsStore } from '@/stores/prompt-labels-store';
 import type { PromptVersionWithLabel } from '@/types/prompt';
 
 interface PromptVersionItemProps {
@@ -19,6 +20,14 @@ interface PromptVersionItemProps {
  */
 export const PromptVersionItem = React.memo<PromptVersionItemProps>(
   ({ version, isSelected, onSelect }) => {
+    const { labels } = usePromptLabelsStore();
+
+    // Get the current label name from the labels store to ensure it's up-to-date
+    const currentLabelName = version.labelId
+      ? labels.find(label => label.id === version.labelId)?.name ||
+        version.label?.name
+      : undefined;
+
     const handleClick = React.useCallback(() => {
       onSelect(version.id);
     }, [version.id, onSelect]);
@@ -36,12 +45,12 @@ export const PromptVersionItem = React.memo<PromptVersionItemProps>(
             <Badge variant="outline" className="text-xs">
               #{version.version}
             </Badge>
-            {version.label && (
+            {currentLabelName && (
               <Badge
                 variant="outline"
                 className="text-xs border-primary text-primary"
               >
-                {version.label.name}
+                {currentLabelName}
               </Badge>
             )}
           </div>

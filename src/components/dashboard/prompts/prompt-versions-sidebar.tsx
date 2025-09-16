@@ -71,19 +71,33 @@ export function PromptVersionsSidebar({
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        version =>
+      filtered = filtered.filter(version => {
+        // Get current label name from labels store
+        const currentLabelName = version.labelId
+          ? labels.find(label => label.id === version.labelId)?.name ||
+            version.label?.name
+          : undefined;
+
+        return (
           version.version.toString().includes(query) ||
-          version.label?.name?.toLowerCase().includes(query) ||
+          currentLabelName?.toLowerCase().includes(query) ||
           version.changeNote?.toLowerCase().includes(query)
-      );
+        );
+      });
     }
 
     if (filterBy !== 'all') {
       if (filterBy === 'unlabeled') {
-        filtered = filtered.filter(version => !version.label);
+        filtered = filtered.filter(version => !version.labelId);
       } else {
-        filtered = filtered.filter(version => version.label?.name === filterBy);
+        filtered = filtered.filter(version => {
+          // Get current label name from labels store for filtering
+          const currentLabelName = version.labelId
+            ? labels.find(label => label.id === version.labelId)?.name ||
+              version.label?.name
+            : undefined;
+          return currentLabelName === filterBy;
+        });
       }
     }
 
@@ -94,7 +108,7 @@ export function PromptVersionsSidebar({
     }
 
     return filtered;
-  }, [versions, searchQuery, filterBy, sortDirection]);
+  }, [versions, searchQuery, filterBy, sortDirection, labels]);
 
   return (
     <Sidebar
