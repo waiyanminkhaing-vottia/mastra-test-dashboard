@@ -13,8 +13,9 @@ import { Label } from '@/components/ui/label';
 import { TextEditor } from '@/components/ui/text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/language-context';
-import { formatZodErrors } from '@/lib/validation-utils';
+import { formatZodErrors, validateClientSide } from '@/lib/validation-utils';
 import { createPromptSchema } from '@/lib/validations/prompt';
+import { usePromptsStore } from '@/stores/prompts-store';
 
 /**
  * Page component for creating a new prompt with content, description, and label assignment
@@ -23,7 +24,7 @@ import { createPromptSchema } from '@/lib/validations/prompt';
 export default function NewPromptPage() {
   const { t, isLoading: languageLoading } = useLanguage();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const { createPrompt, isCreating } = usePromptsStore();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [promptContent, setPromptContent] = useState('');
@@ -42,40 +43,38 @@ export default function NewPromptPage() {
 
     setErrors({});
     setGeneralError(null);
-    setLoading(true);
 
-    // Client-side validation with Zod
-    const schema = createPromptSchema(t);
-    const validationResult = schema.safeParse(data);
+    // Client-side validation with common utility
+    const validation = validateClientSide(createPromptSchema(t), data);
 
-    if (!validationResult.success) {
-      setErrors(formatZodErrors(validationResult.error));
-      setLoading(false);
+    if (!validation.success) {
+      setErrors(validation.errors);
       return;
     }
 
-    const response = await fetch('/api/prompts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(validationResult.data),
-    });
-
-    if (response.ok) {
-      // Success - navigate to prompts page
+    try {
+      await createPrompt(validation.data);
+      // If we reach here, the operation was successful
       router.push('/prompts');
-    } else {
-      if (response.status === 409) {
+    } catch (error: unknown) {
+      const apiError = error as {
+        status?: number;
+        data?: { details?: unknown };
+      };
+      if (apiError.status === 409) {
         // Handle 409 Conflict - prompt already exists, show as name field error
         setErrors({ name: t('prompts.errors.promptAlreadyExists') });
+      } else if (
+        apiError.data?.details &&
+        Array.isArray(apiError.data.details)
+      ) {
+        // Handle validation errors from server
+        setErrors(formatZodErrors({ issues: apiError.data.details }));
       } else {
-        // Handle other errors
+        // Handle other API errors
         setGeneralError('errors.somethingWentWrong');
       }
     }
-
-    setLoading(false);
   };
 
   if (languageLoading) {
@@ -109,7 +108,7 @@ export default function NewPromptPage() {
           <div className="mb-6 mt-4">
             <Button variant="outline" size="sm" asChild>
               <Link href="/prompts">
-                <ChevronLeft className="size-4 mr-2" />
+                <ChevronLeft className="size-4" />
                 {t('common.back')}
               </Link>
             </Button>
@@ -172,9 +171,11 @@ export default function NewPromptPage() {
             </div>
 
             <div className="pt-4">
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {loading
+              <Button type="submit" disabled={isCreating} className="w-full">
+                {isCreating && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {isCreating
                   ? t('prompts.form.creatingButton')
                   : t('prompts.form.createButton')}
               </Button>

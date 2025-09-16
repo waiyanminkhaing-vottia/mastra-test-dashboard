@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-import { handleAPIError } from '@/lib/error-handler';
+import {
+  createSuccessResponse,
+  validateRequestBody,
+  withErrorHandling,
+} from '@/lib/api-utils';
 import { prisma } from '@/lib/prisma';
-import { createSecureResponse } from '@/lib/security-utils';
-import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { promptLabelSchema } from '@/lib/validations/prompt-label';
 
 /**
@@ -11,19 +13,15 @@ import { promptLabelSchema } from '@/lib/validations/prompt-label';
  * Retrieves all prompt labels ordered by creation date (newest first)
  * @returns JSON response with array of prompt label objects or error message
  */
-export async function GET() {
-  try {
-    const promptLabels = await prisma.promptLabel.findMany({
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+export const GET = withErrorHandling(async () => {
+  const promptLabels = await prisma.promptLabel.findMany({
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
 
-    return createSecureResponse(promptLabels);
-  } catch (error) {
-    return handleAPIError(error, 'label');
-  }
-}
+  return createSuccessResponse(promptLabels);
+});
 
 /**
  * POST /api/prompt-labels
@@ -31,30 +29,20 @@ export async function GET() {
  * @param request - NextRequest containing JSON body with label data
  * @returns JSON of created prompt label with 201 status, or validation/error responses
  */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const { data, error } = await validateRequestBody(
+    request,
+    promptLabelSchema()
+  );
+  if (error) return error;
 
-    // Validate request body with Zod
-    const validationResult = promptLabelSchema().safeParse(body);
+  const { name } = data;
 
-    if (!validationResult.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(validationResult.error),
-        { status: 400 }
-      );
-    }
+  const promptLabel = await prisma.promptLabel.create({
+    data: {
+      name,
+    },
+  });
 
-    const { name } = validationResult.data;
-
-    const promptLabel = await prisma.promptLabel.create({
-      data: {
-        name,
-      },
-    });
-
-    return createSecureResponse(promptLabel, { status: 201 });
-  } catch (error: unknown) {
-    return handleAPIError(error, 'label');
-  }
-}
+  return createSuccessResponse(promptLabel, 201);
+});

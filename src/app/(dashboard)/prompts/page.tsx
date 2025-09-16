@@ -1,6 +1,5 @@
 'use client';
 
-import type { Prompt } from '@prisma/client';
 import { Edit, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -21,9 +20,9 @@ import {
 import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { TableSortButton } from '@/components/ui/table-sort-button';
 import { useLanguage } from '@/contexts/language-context';
-import { useApi } from '@/hooks/use-api';
 import { useTableSort } from '@/hooks/use-table-sort';
 import { formatDate } from '@/lib/utils';
+import { usePromptsStore } from '@/stores/prompts-store';
 import type { PromptWithVersions } from '@/types/prompt';
 
 /**
@@ -33,13 +32,7 @@ import type { PromptWithVersions } from '@/types/prompt';
 export default function PromptsPage() {
   const { t, isLoading: languageLoading } = useLanguage();
   const router = useRouter();
-  const {
-    data: prompts,
-    loading,
-    errorStatus,
-    fetchData,
-    setData,
-  } = useApi<PromptWithVersions[]>([]);
+  const { prompts, loading, error, fetchPrompts } = usePromptsStore();
 
   const {
     sortedData: sortedPrompts,
@@ -52,8 +45,8 @@ export default function PromptsPage() {
   });
 
   useEffect(() => {
-    fetchData('/api/prompts');
-  }, [fetchData]);
+    fetchPrompts();
+  }, [fetchPrompts]);
 
   if (languageLoading) {
     return null;
@@ -129,7 +122,7 @@ export default function PromptsPage() {
             <TableBody>
               {loading ? (
                 <TableSkeleton rows={3} columns={6} />
-              ) : errorStatus ? (
+              ) : error ? (
                 <TableRow>
                   <TableCell
                     colSpan={6}
@@ -168,15 +161,8 @@ export default function PromptsPage() {
                       <div className="flex items-center gap-2">
                         <PromptDialog
                           prompt={prompt}
-                          onSuccess={(updatedPrompt: Prompt) => {
-                            // Update local state without refetching
-                            setData(
-                              prompts?.map(p =>
-                                p.id === updatedPrompt.id
-                                  ? { ...p, ...updatedPrompt }
-                                  : p
-                              ) || []
-                            );
+                          onSuccess={() => {
+                            // Store will automatically update via refetch
                           }}
                           trigger={
                             <Button variant="ghost" size="sm">

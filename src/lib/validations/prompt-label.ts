@@ -1,9 +1,11 @@
 import { z } from 'zod';
 
+import { VALIDATION_LIMITS } from '@/lib/constants';
+
 // Default fallback messages for server-side validation
 const defaultMessages = {
   nameRequired: 'Label name is required',
-  nameMaxLength: 'Label name must be 50 characters or less',
+  nameMaxLength: `Label name must be ${VALIDATION_LIMITS.LABEL_NAME_MAX_LENGTH} characters or less`,
 };
 
 /**
@@ -23,7 +25,7 @@ export const promptLabelSchema = (t?: (key: string) => string) => {
     name: z
       .string()
       .min(1, getMessage('nameRequired'))
-      .max(50, getMessage('nameMaxLength'))
+      .max(VALIDATION_LIMITS.LABEL_NAME_MAX_LENGTH, getMessage('nameMaxLength'))
       .trim(),
   });
 };

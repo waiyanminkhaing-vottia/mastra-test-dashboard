@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-import { handleAPIError } from '@/lib/error-handler';
+import {
+  createSuccessResponse,
+  validateRequestBody,
+  withErrorHandling,
+} from '@/lib/api-utils';
 import { prisma } from '@/lib/prisma';
-import { createSecureResponse } from '@/lib/security-utils';
-import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { modelSchema } from '@/lib/validations/model';
 
 /**
@@ -11,19 +13,15 @@ import { modelSchema } from '@/lib/validations/model';
  * Retrieves all models ordered by creation date (newest first)
  * @returns JSON response with array of model objects or error message
  */
-export async function GET() {
-  try {
-    const models = await prisma.model.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+export const GET = withErrorHandling(async () => {
+  const models = await prisma.model.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
-    return createSecureResponse(models);
-  } catch (error) {
-    return handleAPIError(error, 'model');
-  }
-}
+  return createSuccessResponse(models);
+});
 
 /**
  * POST /api/models
@@ -31,32 +29,18 @@ export async function GET() {
  * @param request - NextRequest containing JSON body with model data
  * @returns JSON of created model with 201 status, or validation/error responses
  */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const { data, error } = await validateRequestBody(request, modelSchema());
+  if (error) return error;
 
-    // Validate request body with Zod
-    const schema = modelSchema();
-    const validationResult = schema.safeParse(body);
+  const { name, provider } = data;
 
-    if (!validationResult.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(validationResult.error),
-        { status: 400 }
-      );
-    }
+  const model = await prisma.model.create({
+    data: {
+      name,
+      provider,
+    },
+  });
 
-    const { name, provider } = validationResult.data;
-
-    const model = await prisma.model.create({
-      data: {
-        name,
-        provider,
-      },
-    });
-
-    return createSecureResponse(model, { status: 201 });
-  } catch (error: unknown) {
-    return handleAPIError(error, 'model');
-  }
-}
+  return createSuccessResponse(model, 201);
+});

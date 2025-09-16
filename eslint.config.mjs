@@ -20,6 +20,7 @@ const eslintConfig = [
       'unused-imports': (await import('eslint-plugin-unused-imports')).default,
       import: (await import('eslint-plugin-import')).default,
       jsdoc: (await import('eslint-plugin-jsdoc')).default,
+      sonarjs: (await import('eslint-plugin-sonarjs')).default,
     },
     rules: {
       'prettier/prettier': 'error',
@@ -89,12 +90,55 @@ const eslintConfig = [
       '@typescript-eslint/no-unused-vars': 'off', // Handled by unused-imports
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-non-null-assertion': 'warn',
+      // Cognitive Complexity & Code Quality Rules
+      'sonarjs/cognitive-complexity': ['error', 15], // Max cognitive complexity of 15
+      'sonarjs/no-duplicate-string': ['warn', { threshold: 3 }], // Warn on 3+ duplicate strings
+      'sonarjs/no-identical-functions': 'warn', // Detect identical functions
+      'sonarjs/no-collapsible-if': 'warn', // Suggest collapsing nested ifs
+      'sonarjs/prefer-immediate-return': 'warn', // Prefer immediate returns
+      'sonarjs/prefer-object-literal': 'warn', // Prefer object literals
+      'sonarjs/prefer-single-boolean-return': 'warn', // Simplify boolean returns
+      'sonarjs/no-small-switch': 'warn', // Suggest if-else for small switches
+      'sonarjs/no-redundant-boolean': 'warn', // Remove redundant boolean casts
+      'sonarjs/no-inverted-boolean-check': 'warn', // Avoid inverted boolean checks
+      // Deprecated usage detection (generic for all libraries)
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'CallExpression[callee.name=/.*[Dd]eprecated.*/]',
+          message: 'Do not use deprecated functions.',
+        },
+        {
+          selector: 'MemberExpression[property.name=/.*[Dd]eprecated.*/]',
+          message: 'Do not use deprecated properties or methods.',
+        },
+        {
+          selector: 'ImportDeclaration[source.value=/.*deprecated.*/i]',
+          message: 'Do not import from deprecated modules.',
+        },
+      ],
+      'no-restricted-imports': [
+        'warn',
+        {
+          patterns: [
+            {
+              group: ['**/deprecated/**'],
+              message: 'Do not import from deprecated modules.',
+            },
+            {
+              group: ['**/*deprecated*'],
+              message: 'Do not import deprecated functions or modules.',
+            },
+          ],
+        },
+      ],
     },
   },
   {
     files: ['src/components/ui/**/*.{ts,tsx}'],
     rules: {
       'jsdoc/require-jsdoc': 'off',
+      'sonarjs/no-duplicate-string': 'off',
     },
   },
   {

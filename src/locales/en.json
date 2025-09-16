@@ -3,6 +3,9 @@
     "somethingWentWrong": "Something went wrong",
     "invalidIDFormat": "Invalid ID format"
   },
+  "validation": {
+    "error": "Validation error"
+  },
   "common": {
     "new": "New",
     "back": "Back",
@@ -99,6 +102,19 @@
       "confirmLabelChangeMessage": "Are you sure you want to change the label for this version to",
       "labelUpdatedSuccess": "Label updated successfully",
       "labelUpdateFailed": "Failed to update label",
+      "noMatchingVersions": "No versions match the current filters",
+      "filter": {
+        "label": "Filter:",
+        "all": "All Versions",
+        "unlabeled": "Unlabeled"
+      },
+      "sort": {
+        "label": "Sort:",
+        "newest": "Newest",
+        "oldest": "Oldest",
+        "versionDesc": "V# High-Low",
+        "versionAsc": "V# Low-High"
+      },
       "table": {
         "version": "Version",
         "content": "Content",
@@ -136,7 +152,6 @@
     "add": "Add",
     "adding": "Adding...",
     "updating": "Updating...",
-    "cancel": "Cancel",
     "validation": {
       "nameRequired": "Label name is required",
       "nameMaxLength": "Label name must be 50 characters or less"

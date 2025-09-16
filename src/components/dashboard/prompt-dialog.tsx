@@ -17,8 +17,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/language-context';
-import { formatZodErrors } from '@/lib/validation-utils';
+import { formatZodErrors, validateClientSide } from '@/lib/validation-utils';
 import { updatePromptSchema } from '@/lib/validations/prompt';
+import { usePromptsStore } from '@/stores/prompts-store';
 
 interface PromptDialogProps {
   prompt: Prompt; // Required for edit mode only
@@ -40,10 +41,10 @@ export function PromptDialog({
   trigger,
 }: PromptDialogProps) {
   const { t } = useLanguage();
+  const { updatePrompt, isUpdating } = usePromptsStore();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
 
@@ -63,56 +64,45 @@ export function PromptDialog({
     setErrors({});
     setGeneralError(null);
 
-    // Client-side validation with Zod
-    const schema = updatePromptSchema(t);
-    const validationResult = schema.safeParse({
+    // Client-side validation with common utility
+    const validation = validateClientSide(updatePromptSchema(t), {
       name: name.trim(),
       description: description.trim() || undefined,
     });
 
-    if (!validationResult.success) {
-      setErrors(formatZodErrors(validationResult.error));
+    if (!validation.success) {
+      setErrors(validation.errors);
       return;
     }
 
     try {
-      setLoading(true);
-
-      const url = `/api/prompts/${prompt.id}`;
-      const method = 'PUT';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(validationResult.data),
+      const updatedPrompt = await updatePrompt(prompt.id, {
+        name: validation.data.name,
+        description: validation.data.description,
       });
 
-      if (response.ok) {
-        const updatedPrompt = await response.json();
-        setName('');
-        setDescription('');
-        setErrors({});
-        setGeneralError(null);
-        setOpen(false);
-        onSuccess?.(updatedPrompt);
-      } else if (response.status === 409) {
-        // Handle 409 Conflict - prompt already exists
-        setGeneralError('prompts.errors.promptAlreadyExists');
+      // If we reach here, the operation was successful
+      setName('');
+      setDescription('');
+      setErrors({});
+      setGeneralError(null);
+      setOpen(false);
+      onSuccess?.(updatedPrompt);
+    } catch (error: unknown) {
+      const apiError = error as {
+        status?: number;
+        data?: { details?: unknown };
+      };
+      if (apiError.status === 409) {
+        setErrors({ name: t('prompts.errors.promptAlreadyExists') });
+      } else if (
+        apiError.data?.details &&
+        Array.isArray(apiError.data.details)
+      ) {
+        setErrors(formatZodErrors({ issues: apiError.data.details }));
       } else {
-        const error = await response.json();
-        if (error.details && Array.isArray(error.details)) {
-          // Handle validation errors from server
-          setErrors(formatZodErrors({ issues: error.details }));
-        } else {
-          setGeneralError('errors.somethingWentWrong');
-        }
+        setGeneralError('errors.somethingWentWrong');
       }
-    } catch {
-      setGeneralError('errors.somethingWentWrong');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -169,13 +159,13 @@ export function PromptDialog({
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={loading}
+              disabled={isUpdating}
             >
               {t('prompts.form.cancelButton')}
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading
+            <Button type="submit" disabled={isUpdating}>
+              {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isUpdating
                 ? t('prompts.form.updatingButton')
                 : t('prompts.form.updateButton')}
             </Button>

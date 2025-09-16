@@ -23,9 +23,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/language-context';
-import { apiPost, apiPut } from '@/lib/api-client';
-import { formatZodErrors } from '@/lib/validation-utils';
+import { formatZodErrors, validateClientSide } from '@/lib/validation-utils';
 import { modelSchema, type Provider } from '@/lib/validations/model';
+import { useModelsStore } from '@/stores/models-store';
 
 const PROVIDERS: { value: Provider; label: string }[] = [
   { value: 'OPENAI', label: 'OpenAI' },
@@ -41,7 +41,7 @@ const PROVIDERS: { value: Provider; label: string }[] = [
 interface ModelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (model: Model) => void;
+  onSuccess: () => void;
   model?: Model | null; // For edit mode
 }
 
@@ -61,12 +61,13 @@ export function ModelDialog({
   model,
 }: ModelDialogProps) {
   const { t } = useLanguage();
+  const { createModel, updateModel, isCreating, isUpdating } = useModelsStore();
   const [name, setName] = useState('');
   const [provider, setProvider] = useState<Provider | ''>('');
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const isEditing = !!model;
+  const loading = isCreating || isUpdating;
 
   // Reset form when model changes or dialog opens/closes
   useEffect(() => {
@@ -90,40 +91,38 @@ export function ModelDialog({
     setErrors({});
     setGeneralError(null);
 
-    // Client-side validation with Zod
-    const schema = modelSchema(t);
-    const validationResult = schema.safeParse({
+    // Client-side validation with common utility
+    const validation = validateClientSide(modelSchema(t), {
       name: name.trim(),
       provider,
     });
 
-    if (!validationResult.success) {
-      setErrors(formatZodErrors(validationResult.error));
+    if (!validation.success) {
+      setErrors(validation.errors);
       return;
     }
 
-    setLoading(true);
     try {
-      const savedModel =
-        isEditing && model
-          ? await apiPut<Model>(
-              `/api/models/${model.id}`,
-              validationResult.data
-            )
-          : await apiPost<Model>('/api/models', validationResult.data);
+      if (isEditing && model) {
+        await updateModel(model.id, validation.data);
+      } else {
+        await createModel(validation.data);
+      }
 
+      // If we reach here, the operation was successful
       setName('');
       setProvider('');
       setErrors({});
+      setGeneralError(null);
       onOpenChange(false);
-      onSuccess(savedModel);
+      onSuccess();
     } catch (error: unknown) {
       const apiError = error as {
         status?: number;
         data?: { details?: unknown };
       };
       if (apiError.status === 409) {
-        setGeneralError('models.errors.modelAlreadyExists');
+        setErrors({ name: t('models.errors.modelAlreadyExists') });
       } else if (
         apiError.data?.details &&
         Array.isArray(apiError.data.details)
@@ -132,8 +131,6 @@ export function ModelDialog({
       } else {
         setGeneralError('errors.somethingWentWrong');
       }
-    } finally {
-      setLoading(false);
     }
   };
 

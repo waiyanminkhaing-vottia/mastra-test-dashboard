@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-import { handleAPIError } from '@/lib/error-handler';
+import {
+  createSuccessResponse,
+  validateRequestBody,
+  withErrorHandling,
+} from '@/lib/api-utils';
 import { prisma } from '@/lib/prisma';
-import { createSecureResponse } from '@/lib/security-utils';
-import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { createPromptSchema } from '@/lib/validations/prompt';
 
 /**
@@ -11,22 +13,18 @@ import { createPromptSchema } from '@/lib/validations/prompt';
  * Retrieves all prompts with their versions, ordered by creation date (newest first)
  * @returns JSON array of prompts with embedded versions
  */
-export async function GET() {
-  try {
-    const prompts = await prisma.prompt.findMany({
-      include: {
-        versions: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+export const GET = withErrorHandling(async () => {
+  const prompts = await prisma.prompt.findMany({
+    include: {
+      versions: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
-    return createSecureResponse(prompts);
-  } catch (error) {
-    return handleAPIError(error, 'prompt');
-  }
-}
+  return createSuccessResponse(prompts);
+});
 
 /**
  * POST /api/prompts
@@ -34,45 +32,34 @@ export async function GET() {
  * @param request - NextRequest containing JSON body with { name, description?, content, promptLabelId? }
  * @returns JSON of created prompt with 201 status, or validation/conflict errors
  */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const { data, error } = await validateRequestBody(
+    request,
+    createPromptSchema()
+  );
+  if (error) return error;
 
-    // Validate request body with Zod
-    const schema = createPromptSchema();
-    const validationResult = schema.safeParse(body);
-
-    if (!validationResult.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(validationResult.error),
-        { status: 400 }
-      );
-    }
-
-    const { name, description, content, promptLabelId } = validationResult.data;
-    const prompt = await prisma.prompt.create({
-      data: {
-        name,
-        description,
-        versions: {
-          create: {
-            version: 1,
-            content,
-            labelId: promptLabelId || null,
-          },
+  const { name, description, content, promptLabelId } = data;
+  const prompt = await prisma.prompt.create({
+    data: {
+      name,
+      description,
+      versions: {
+        create: {
+          version: 1,
+          content,
+          labelId: promptLabelId || null,
         },
       },
-      include: {
-        versions: {
-          include: {
-            label: true,
-          },
+    },
+    include: {
+      versions: {
+        include: {
+          label: true,
         },
       },
-    });
+    },
+  });
 
-    return createSecureResponse(prompt, { status: 201 });
-  } catch (error: unknown) {
-    return handleAPIError(error, 'prompt');
-  }
-}
+  return createSuccessResponse(prompt, 201);
+});

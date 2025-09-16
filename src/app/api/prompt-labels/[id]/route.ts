@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-import { handleAPIError } from '@/lib/error-handler';
+import {
+  createSuccessResponse,
+  validateRequestBody,
+  withErrorHandling,
+} from '@/lib/api-utils';
 import { prisma } from '@/lib/prisma';
-import { createSecureResponse } from '@/lib/security-utils';
-import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { promptLabelSchema } from '@/lib/validations/prompt-label';
 
 /**
@@ -13,34 +15,24 @@ import { promptLabelSchema } from '@/lib/validations/prompt-label';
  * @param params.params The route parameters containing the label ID
  * @returns Updated prompt label data or error response
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withErrorHandling(
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
-
-    const body = await request.json();
-
-    // Use default validation messages
-    const schema = promptLabelSchema();
-    const validationResult = schema.safeParse(body);
-
-    if (!validationResult.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(validationResult.error),
-        { status: 400 }
-      );
-    }
+    const { data, error } = await validateRequestBody(
+      request,
+      promptLabelSchema()
+    );
+    if (error) return error;
 
     // Update the label
     const updatedLabel = await prisma.promptLabel.update({
       where: { id },
-      data: validationResult.data,
+      data,
     });
 
-    return createSecureResponse(updatedLabel);
-  } catch (error) {
-    return handleAPIError(error, 'label');
+    return createSuccessResponse(updatedLabel);
   }
-}
+);

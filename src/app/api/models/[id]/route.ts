@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-import { handleAPIError } from '@/lib/error-handler';
+import {
+  createSuccessResponse,
+  validateRequestBody,
+  withErrorHandling,
+} from '@/lib/api-utils';
 import { prisma } from '@/lib/prisma';
-import { createSecureResponse } from '@/lib/security-utils';
-import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { modelSchema } from '@/lib/validations/model';
 
 /**
@@ -14,26 +16,16 @@ import { modelSchema } from '@/lib/validations/model';
  * @param props.params - Route parameters containing the model ID
  * @returns JSON of updated model with new version, or validation/error responses
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withErrorHandling(
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
+    const { data, error } = await validateRequestBody(request, modelSchema());
+    if (error) return error;
 
-    const body = await request.json();
-
-    // Validate request body with Zod
-    const validationResult = modelSchema().safeParse(body);
-
-    if (!validationResult.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(validationResult.error),
-        { status: 400 }
-      );
-    }
-
-    const { name, provider } = validationResult.data;
+    const { name, provider } = data;
 
     // Update the model
     const updatedModel = await prisma.model.update({
@@ -44,8 +36,6 @@ export async function PUT(
       },
     });
 
-    return createSecureResponse(updatedModel);
-  } catch (error: unknown) {
-    return handleAPIError(error, 'model');
+    return createSuccessResponse(updatedModel);
   }
-}
+);

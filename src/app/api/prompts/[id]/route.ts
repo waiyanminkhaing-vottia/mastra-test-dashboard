@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-import { handleAPIError } from '@/lib/error-handler';
+import {
+  createSuccessResponse,
+  validateRequestBody,
+  withErrorHandling,
+} from '@/lib/api-utils';
 import { prisma } from '@/lib/prisma';
-import { createSecureResponse } from '@/lib/security-utils';
-import { createValidationErrorResponse } from '@/lib/validation-utils';
 import { updatePromptSchema } from '@/lib/validations/prompt';
 
 /**
@@ -13,11 +15,11 @@ import { updatePromptSchema } from '@/lib/validations/prompt';
  * @param props.params The route parameters containing the prompt ID
  * @returns Prompt data with versions and labels or error response
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const GET = withErrorHandling(
+  async (
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
 
     const prompt = await prisma.prompt.findUniqueOrThrow({
@@ -36,11 +38,9 @@ export async function GET(
       },
     });
 
-    return createSecureResponse(prompt);
-  } catch (error) {
-    return handleAPIError(error, 'prompt');
+    return createSuccessResponse(prompt);
   }
-}
+);
 
 /**
  * Updates an existing prompt's basic information
@@ -49,27 +49,19 @@ export async function GET(
  * @param props.params The route parameters containing the prompt ID
  * @returns Updated prompt data or error response
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withErrorHandling(
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
+    const { data, error } = await validateRequestBody(
+      request,
+      updatePromptSchema()
+    );
+    if (error) return error;
 
-    const body = await request.json();
-
-    // Validate request body with Zod
-    const schema = updatePromptSchema();
-    const validationResult = schema.safeParse(body);
-
-    if (!validationResult.success) {
-      return NextResponse.json(
-        createValidationErrorResponse(validationResult.error),
-        { status: 400 }
-      );
-    }
-
-    const { name, description } = validationResult.data;
+    const { name, description } = data;
 
     const prompt = await prisma.prompt.update({
       where: {
@@ -79,10 +71,18 @@ export async function PUT(
         name,
         description,
       },
+      include: {
+        versions: {
+          include: {
+            label: true,
+          },
+          orderBy: {
+            version: 'desc',
+          },
+        },
+      },
     });
 
-    return createSecureResponse(prompt);
-  } catch (error: unknown) {
-    return handleAPIError(error, 'prompt');
+    return createSuccessResponse(prompt);
   }
-}
+);

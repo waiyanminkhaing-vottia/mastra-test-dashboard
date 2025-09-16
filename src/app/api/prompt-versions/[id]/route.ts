@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-import { handleAPIError } from '@/lib/error-handler';
+import {
+  createSuccessResponse,
+  validateRequestBody,
+  withErrorHandling,
+} from '@/lib/api-utils';
 import { prisma } from '@/lib/prisma';
-import { createSecureResponse } from '@/lib/security-utils';
 import { updatePromptVersionSchema } from '@/lib/validations/prompt-version';
 
 /**
@@ -12,28 +15,20 @@ import { updatePromptVersionSchema } from '@/lib/validations/prompt-version';
  * @param params.params The route parameters containing the prompt version ID
  * @returns Updated prompt version with label information or error response
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+export const PUT = withErrorHandling(
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
 
-    const body = await request.json();
+    const { data, error } = await validateRequestBody(
+      request,
+      updatePromptVersionSchema()
+    );
+    if (error) return error;
 
-    // Validate request body
-    const validationResult = updatePromptVersionSchema().safeParse(body);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: 'Invalid request body',
-          details: validationResult.error.issues,
-        },
-        { status: 400 }
-      );
-    }
-
-    const { labelId } = validationResult.data;
+    const { labelId } = data;
 
     const promptVersion = await prisma.$transaction(async tx => {
       // Get the current prompt version to find the promptId
@@ -68,8 +63,6 @@ export async function PUT(
       });
     });
 
-    return createSecureResponse(promptVersion);
-  } catch (error: unknown) {
-    return handleAPIError(error, 'promptVersion');
+    return createSuccessResponse(promptVersion);
   }
-}
+);

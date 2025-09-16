@@ -10,6 +10,13 @@ const DEFAULT_HEADERS = {
 } as const;
 
 /**
+ * Common error messages to avoid duplication
+ */
+const ERROR_MESSAGES = {
+  REQUEST_FAILED: 'Request failed',
+} as const;
+
+/**
  * Custom error for API requests
  */
 export class ApiError extends Error {
@@ -42,7 +49,7 @@ export async function apiPost<T = unknown>(
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new ApiError(
-      errorData.error || 'Request failed',
+      errorData.error || ERROR_MESSAGES.REQUEST_FAILED,
       response.status,
       errorData
     );
@@ -70,7 +77,7 @@ export async function apiPut<T = unknown>(
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new ApiError(
-      errorData.error || 'Request failed',
+      errorData.error || ERROR_MESSAGES.REQUEST_FAILED,
       response.status,
       errorData
     );
@@ -90,7 +97,7 @@ export async function apiGet<T = unknown>(url: string): Promise<T> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new ApiError(
-      errorData.error || 'Request failed',
+      errorData.error || ERROR_MESSAGES.REQUEST_FAILED,
       response.status,
       errorData
     );

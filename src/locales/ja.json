@@ -3,6 +3,9 @@
     "somethingWentWrong": "エラーが発生しました",
     "invalidIDFormat": "不正なID形式です"
   },
+  "validation": {
+    "error": "検証エラー"
+  },
   "common": {
     "new": "新規",
     "back": "戻る",
@@ -67,6 +70,7 @@
     "addVersion": "バージョン追加",
     "form": {
       "title": "プロンプト追加",
+      "description": "新しいプロンプトテンプレートを作成します。",
       "editTitle": "プロンプト編集",
       "nameField": "名前",
       "namePlaceholder": "例：カスタマーサポート、コンテンツ生成",
@@ -97,6 +101,19 @@
       "confirmLabelChangeMessage": "このバージョンのラベルを次に変更してもよろしいですか",
       "labelUpdatedSuccess": "ラベルが正常に更新されました",
       "labelUpdateFailed": "ラベルの更新に失敗しました",
+      "noMatchingVersions": "現在のフィルターに一致するバージョンがありません",
+      "filter": {
+        "label": "フィルター:",
+        "all": "すべてのバージョン",
+        "unlabeled": "ラベルなし"
+      },
+      "sort": {
+        "label": "並び順:",
+        "newest": "新しい順",
+        "oldest": "古い順",
+        "versionDesc": "バージョン降順",
+        "versionAsc": "バージョン昇順"
+      },
       "table": {
         "version": "バージョン",
         "content": "内容",
@@ -134,7 +151,6 @@
     "add": "追加",
     "adding": "追加中...",
     "updating": "更新中...",
-    "cancel": "キャンセル",
     "validation": {
       "nameRequired": "ラベル名は必須です",
       "nameMaxLength": "ラベル名は50文字以下である必要があります"

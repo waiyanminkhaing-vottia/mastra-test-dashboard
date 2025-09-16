@@ -2,8 +2,8 @@
 
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { memo, useEffect, useState } from 'react';
 
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { PromptVersionContent } from '@/components/dashboard/prompts/prompt-version-content';
@@ -13,10 +13,14 @@ import { PromptVersionsLoadingSkeleton } from '@/components/dashboard/prompts/pr
 import { PromptVersionsSidebar } from '@/components/dashboard/prompts/prompt-versions-sidebar';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
-import { useApi } from '@/hooks/use-api';
-import { usePromptVersionLabelUpdate } from '@/hooks/use-prompt-version-label-update';
+import { usePromptVersionLabelChange } from '@/hooks/use-prompt-version-label-change';
+import { usePromptVersionRouter } from '@/hooks/use-prompt-version-router';
 import { usePromptVersionSelection } from '@/hooks/use-prompt-version-selection';
-import type { PromptWithVersions } from '@/types/prompt';
+import { usePromptsStore } from '@/stores/prompts-store';
+
+// Memoized components for performance optimization
+const MemoizedPromptVersionsSidebar = memo(PromptVersionsSidebar);
+const MemoizedPromptVersionContent = memo(PromptVersionContent);
 
 /**
  * Page component that displays different versions of a prompt with their content and labels
@@ -25,54 +29,63 @@ import type { PromptWithVersions } from '@/types/prompt';
 export default function PromptVersionsPage() {
   const { t, isLoading: languageLoading } = useLanguage();
   const params = useParams();
+  const searchParams = useSearchParams();
   const {
-    data: prompt,
-    loading,
-    errorStatus,
-    fetchData: fetchPrompt,
-    setData: setPrompt,
-  } = useApi<PromptWithVersions>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const promptId = params.id as string;
-
-  const { selectedVersion, handleVersionSelect } = usePromptVersionSelection({
-    prompt,
-    promptId,
-  });
-
+    currentPrompt: prompt,
+    currentPromptLoading: loading,
+    currentPromptError: error,
+    currentPromptErrorStatus: errorStatus,
+    fetchPromptById,
+    updatePromptVersionLabel,
+  } = usePromptsStore();
   const {
     pendingLabelChange,
     isUpdatingLabel,
-    handleLabelChange,
-    handleConfirmLabelChange,
+    handleLabelChange: handleLabelChangeHook,
+    handleConfirmLabelChange: handleConfirmLabelChangeHook,
     closeLabelDialog,
-  } = usePromptVersionLabelUpdate({
-    prompt: prompt || null,
-    selectedVersion,
-    onPromptUpdate: setPrompt,
-  });
+  } = usePromptVersionLabelChange(updatePromptVersionLabel);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const loadPrompt = useCallback(async () => {
-    await fetchPrompt(`/api/prompts/${promptId}`);
-  }, [promptId, fetchPrompt]);
+  const promptId = params.id as string;
+  const selectedVersionId = searchParams.get('version');
+
+  // Use custom hooks for version management
+  const selectedVersion = usePromptVersionSelection(
+    prompt?.versions,
+    selectedVersionId
+  );
+  const { handleVersionSelect } = usePromptVersionRouter(
+    promptId,
+    searchParams
+  );
+
+  // Create wrapper functions for the hook handlers
+  const handleLabelChange = (labelId: string, labelName: string) => {
+    handleLabelChangeHook(selectedVersion, labelId, labelName);
+  };
+
+  const handleConfirmLabelChange = () => {
+    handleConfirmLabelChangeHook(selectedVersion);
+  };
 
   useEffect(() => {
     if (promptId) {
-      loadPrompt();
+      fetchPromptById(promptId);
     }
-  }, [promptId, loadPrompt]);
+  }, [promptId, fetchPromptById]);
 
   if (languageLoading) {
     return null;
   }
 
+  // Consolidated loading and error states
   if (loading) {
     return <PromptVersionsLoadingSkeleton />;
   }
 
-  if (errorStatus || !prompt) {
-    return <PromptVersionsErrorState errorStatus={errorStatus} />;
+  if (error || !prompt) {
+    return <PromptVersionsErrorState errorStatus={errorStatus || 404} />;
   }
 
   return (
@@ -99,15 +112,15 @@ export default function PromptVersionsPage() {
         <div className="flex items-center gap-4 mt-4">
           <Button variant="outline" size="sm" asChild>
             <Link href="/prompts">
-              <ChevronLeft className="size-4 mr-2" />
+              <ChevronLeft className="size-4" />
               {t('common.back')}
             </Link>
           </Button>
         </div>
 
         <div className="grid grid-cols-[320px_1fr] gap-4 h-[calc(100vh-200px)]">
-          <PromptVersionsSidebar
-            versions={prompt?.versions || []}
+          <MemoizedPromptVersionsSidebar
+            versions={prompt.versions || []}
             selectedVersionId={selectedVersion?.id}
             onVersionSelect={handleVersionSelect}
             searchQuery={searchQuery}
@@ -115,7 +128,7 @@ export default function PromptVersionsPage() {
           />
 
           {selectedVersion ? (
-            <PromptVersionContent
+            <MemoizedPromptVersionContent
               prompt={prompt}
               selectedVersion={selectedVersion}
               onLabelChange={handleLabelChange}

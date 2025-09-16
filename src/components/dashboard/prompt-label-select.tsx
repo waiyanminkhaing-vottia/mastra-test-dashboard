@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, ChevronsUpDown, Edit, Loader2, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,15 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useLanguage } from '@/contexts/language-context';
-import { useLabelValidation } from '@/hooks/use-label-validation';
-import { usePromptLabels } from '@/hooks/use-prompt-labels';
+import { formatZodErrors, validateClientSide } from '@/lib/validation-utils';
+import { promptLabelSchema } from '@/lib/validations/prompt-label';
+import { usePromptLabelsStore } from '@/stores/prompt-labels-store';
+
+// Translation key constants to avoid duplication
+const TRANSLATION_KEYS = {
+  LABELS_NONE: 'labels.none',
+  SELECT_LABEL: 'labels.selectLabel',
+} as const;
 
 /** Props for the PromptLabelSelect component */
 interface PromptLabelSelectProps {
@@ -40,14 +47,17 @@ export function PromptLabelSelect({
 }: PromptLabelSelectProps) {
   const { t } = useLanguage();
   const {
-    promptLabels,
-    fetchError,
+    labels: promptLabels,
+    error: fetchError,
     createLabel,
     updateLabel,
     isCreating,
     isUpdating,
-  } = usePromptLabels();
-  const { error: labelError, validateLabel, clearError } = useLabelValidation();
+    fetchLabels,
+  } = usePromptLabelsStore();
+  // Local error state management
+  const [labelError, setLabelError] = useState<string>('');
+  const clearLabelError = () => setLabelError('');
 
   const [showAddLabelInput, setShowAddLabelInput] = useState(false);
   const [newLabelName, setNewLabelName] = useState('');
@@ -56,42 +66,97 @@ export function PromptLabelSelect({
   const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
   const [editLabelName, setEditLabelName] = useState('');
 
+  // Fetch labels on mount
+  useEffect(() => {
+    fetchLabels();
+  }, [fetchLabels]);
+
   const handleAddLabel = async () => {
-    if (!validateLabel(newLabelName, t)) {
+    // Client-side validation with common utility
+    const validation = validateClientSide(promptLabelSchema(t), {
+      name: newLabelName,
+    });
+
+    if (!validation.success) {
+      setLabelError(validation.errors.name || t('validation.error'));
       return;
     }
 
-    const newLabel = await createLabel(newLabelName);
-    if (newLabel) {
+    try {
+      await createLabel(newLabelName);
       setNewLabelName('');
       setShowAddLabelInput(false);
-      clearError();
+      clearLabelError();
+    } catch (error: unknown) {
+      const apiError = error as {
+        status?: number;
+        data?: { details?: unknown };
+      };
+      if (apiError.status === 409) {
+        // Handle 409 Conflict - label already exists
+        setLabelError(t('labels.errors.labelAlreadyExists'));
+      } else if (
+        apiError.data?.details &&
+        Array.isArray(apiError.data.details)
+      ) {
+        // Handle validation errors from server
+        const errors = formatZodErrors({ issues: apiError.data.details });
+        setLabelError(errors.name || t('validation.error'));
+      } else {
+        // Handle other API errors
+        setLabelError(t('errors.somethingWentWrong'));
+      }
     }
   };
 
   const handleEditLabel = async (labelId: string) => {
-    if (!validateLabel(editLabelName, t)) {
+    // Client-side validation with common utility
+    const validation = validateClientSide(promptLabelSchema(t), {
+      name: editLabelName,
+    });
+
+    if (!validation.success) {
+      setLabelError(validation.errors.name || t('validation.error'));
       return;
     }
 
-    const updatedLabel = await updateLabel(labelId, editLabelName);
-    if (updatedLabel) {
+    try {
+      await updateLabel(labelId, editLabelName);
       setEditingLabelId(null);
       setEditLabelName('');
-      clearError();
+      clearLabelError();
+    } catch (error: unknown) {
+      const apiError = error as {
+        status?: number;
+        data?: { details?: unknown };
+      };
+      if (apiError.status === 409) {
+        // Handle 409 Conflict - label already exists
+        setLabelError(t('labels.errors.labelAlreadyExists'));
+      } else if (
+        apiError.data?.details &&
+        Array.isArray(apiError.data.details)
+      ) {
+        // Handle validation errors from server
+        const errors = formatZodErrors({ issues: apiError.data.details });
+        setLabelError(errors.name || t('validation.error'));
+      } else {
+        // Handle other API errors
+        setLabelError(t('errors.somethingWentWrong'));
+      }
     }
   };
 
   const startEditLabel = (label: { id: string; name: string }) => {
     setEditingLabelId(label.id);
     setEditLabelName(label.name);
-    clearError();
+    clearLabelError();
   };
 
   const cancelEditLabel = () => {
     setEditingLabelId(null);
     setEditLabelName('');
-    clearError();
+    clearLabelError();
   };
 
   const filteredLabels = promptLabels.filter(label =>
@@ -102,8 +167,8 @@ export function PromptLabelSelect({
     <Button variant="outline" className="w-64 justify-between">
       {selectedLabel
         ? promptLabels.find(label => label.id === selectedLabel)?.name ||
-          t('labels.none')
-        : t('labels.selectLabel')}
+          t(TRANSLATION_KEYS.LABELS_NONE)
+        : t(TRANSLATION_KEYS.SELECT_LABEL)}
       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
     </Button>
   );
@@ -127,14 +192,14 @@ export function PromptLabelSelect({
           <div
             className="flex items-center space-x-2 p-2 hover:bg-accent hover:text-primary cursor-pointer rounded"
             onClick={() => {
-              onLabelChange('', t('labels.none'));
+              onLabelChange('', t(TRANSLATION_KEYS.LABELS_NONE));
               setOpen(false);
             }}
           >
             <Check
               className={`h-4 w-4 ${selectedLabel === '' ? 'opacity-100' : 'opacity-0'}`}
             />
-            <span>{t('labels.none')}</span>
+            <span>{t(TRANSLATION_KEYS.LABELS_NONE)}</span>
           </div>
           {filteredLabels.map(label => (
             <div
@@ -263,11 +328,11 @@ export function PromptLabelSelect({
                     onClick={() => {
                       setShowAddLabelInput(false);
                       setNewLabelName('');
-                      clearError();
+                      clearLabelError();
                     }}
                     disabled={isCreating}
                   >
-                    {t('labels.cancel')}
+                    {t('common.cancel')}
                   </Button>
                 </div>
               </div>

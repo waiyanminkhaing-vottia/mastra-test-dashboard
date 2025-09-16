@@ -7,6 +7,21 @@ import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
 
+// Breadcrumb constants to avoid duplication
+const BREADCRUMB_KEYS = {
+  MANAGEMENT: 'breadcrumbs.management',
+  PROMPTS: 'breadcrumbs.prompts',
+  ERROR: 'common.error',
+} as const;
+
+// Translation keys for consistency
+const ERROR_KEYS = {
+  PROMPT_NOT_FOUND: 'prompts.errors.promptNotFound',
+  PROMPT_NOT_FOUND_DESCRIPTION: 'prompts.errors.promptNotFoundDescription',
+  SOMETHING_WENT_WRONG: 'errors.somethingWentWrong',
+  BACK: 'common.back',
+} as const;
+
 interface PromptVersionsErrorStateProps {
   errorStatus?: number | null;
 }
@@ -29,12 +44,12 @@ export function PromptVersionsErrorState({
           breadcrumbs={[
             {
               label: 'Management',
-              translationKey: 'breadcrumbs.management',
+              translationKey: BREADCRUMB_KEYS.MANAGEMENT,
               href: '/',
             },
             {
               label: 'Prompts',
-              translationKey: 'breadcrumbs.prompts',
+              translationKey: BREADCRUMB_KEYS.PROMPTS,
               href: '/prompts',
             },
             {
@@ -48,16 +63,16 @@ export function PromptVersionsErrorState({
             <Button variant="outline" size="sm" asChild>
               <Link href="/prompts">
                 <ChevronLeft className="size-4 mr-2" />
-                {t('common.back')}
+                {t(ERROR_KEYS.BACK)}
               </Link>
             </Button>
           </div>
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <h2 className="text-xl font-semibold mb-2">
-              {t('prompts.errors.promptNotFound')}
+              {t(ERROR_KEYS.PROMPT_NOT_FOUND)}
             </h2>
             <p className="text-muted-foreground mt-4">
-              {t('prompts.errors.promptNotFoundDescription')}
+              {t(ERROR_KEYS.PROMPT_NOT_FOUND_DESCRIPTION)}
             </p>
           </div>
         </div>
@@ -72,17 +87,17 @@ export function PromptVersionsErrorState({
         breadcrumbs={[
           {
             label: 'Management',
-            translationKey: 'breadcrumbs.management',
+            translationKey: BREADCRUMB_KEYS.MANAGEMENT,
             href: '/',
           },
           {
             label: 'Prompts',
-            translationKey: 'breadcrumbs.prompts',
+            translationKey: BREADCRUMB_KEYS.PROMPTS,
             href: '/prompts',
           },
           {
             label: 'Error',
-            translationKey: 'common.error',
+            translationKey: BREADCRUMB_KEYS.ERROR,
             isCurrentPage: true,
           },
         ]}
@@ -91,12 +106,12 @@ export function PromptVersionsErrorState({
         <div className="flex items-center justify-center h-64">
           <p className="text-red-600">
             {errorStatus === 404
-              ? t('prompts.errors.promptNotFound')
+              ? t(ERROR_KEYS.PROMPT_NOT_FOUND)
               : errorStatus === 500
-                ? t('errors.somethingWentWrong')
+                ? t(ERROR_KEYS.SOMETHING_WENT_WRONG)
                 : errorStatus
-                  ? `${t('errors.somethingWentWrong')} (${errorStatus})`
-                  : t('errors.somethingWentWrong')}
+                  ? `${t(ERROR_KEYS.SOMETHING_WENT_WRONG)} (${errorStatus})`
+                  : t(ERROR_KEYS.SOMETHING_WENT_WRONG)}
           </p>
         </div>
       </div>

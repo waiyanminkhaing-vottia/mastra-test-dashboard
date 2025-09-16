@@ -2,7 +2,7 @@
 
 import type { Model } from '@prisma/client';
 import { Edit, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { ModelDialog } from '@/components/dashboard/model-dialog';
@@ -19,9 +19,10 @@ import {
 import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { TableSortButton } from '@/components/ui/table-sort-button';
 import { useLanguage } from '@/contexts/language-context';
-import { useApi } from '@/hooks/use-api';
 import { useTableSort } from '@/hooks/use-table-sort';
 import { formatDate } from '@/lib/utils';
+import { useModelDialog } from '@/stores/dialog-store';
+import { useModelsStore } from '@/stores/models-store';
 
 /**
  * Models management page component
@@ -30,15 +31,15 @@ import { formatDate } from '@/lib/utils';
  */
 export default function ModelsPage() {
   const { t, isLoading: languageLoading } = useLanguage();
+  const { models, loading, error, fetchModels } = useModelsStore();
   const {
-    data: models,
-    loading,
-    errorStatus,
-    fetchData,
-    setData,
-  } = useApi<Model[]>([]);
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [editingModel, setEditingModel] = useState<Model | null>(null);
+    isCreateOpen,
+    isEditOpen,
+    editingModel,
+    openCreate,
+    openEdit,
+    close,
+  } = useModelDialog();
 
   const {
     sortedData: sortedModels,
@@ -51,8 +52,8 @@ export default function ModelsPage() {
   });
 
   useEffect(() => {
-    fetchData('/api/models');
-  }, [fetchData]);
+    fetchModels();
+  }, [fetchModels]);
 
   if (languageLoading) {
     return null;
@@ -79,7 +80,7 @@ export default function ModelsPage() {
           <Button
             variant="outline"
             className="hover:text-primary"
-            onClick={() => setShowAddDialog(true)}
+            onClick={openCreate}
           >
             <Plus className="size-4 mr-2" />
             {t('models.addModel')}
@@ -129,7 +130,7 @@ export default function ModelsPage() {
             <TableBody>
               {loading ? (
                 <TableSkeleton rows={3} columns={5} />
-              ) : errorStatus ? (
+              ) : error ? (
                 <TableRow>
                   <TableCell
                     colSpan={5}
@@ -158,7 +159,7 @@ export default function ModelsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setEditingModel(model)}
+                          onClick={() => openEdit(model)}
                         >
                           <Edit className="size-4" />
                         </Button>
@@ -173,27 +174,14 @@ export default function ModelsPage() {
       </div>
 
       <ModelDialog
-        open={showAddDialog || !!editingModel}
+        open={isCreateOpen || isEditOpen}
         onOpenChange={open => {
           if (!open) {
-            setShowAddDialog(false);
-            setEditingModel(null);
+            close();
           }
         }}
         model={editingModel}
-        onSuccess={(savedModel: Model) => {
-          // Update local state without refetching
-          if (editingModel) {
-            // Update existing model
-            setData(
-              models?.map(m => (m.id === savedModel.id ? savedModel : m)) || []
-            );
-          } else {
-            // Add new model
-            setData([savedModel, ...(models || [])]);
-          }
-          setEditingModel(null);
-        }}
+        onSuccess={close}
       />
     </>
   );
