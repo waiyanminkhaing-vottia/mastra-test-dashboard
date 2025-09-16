@@ -7,11 +7,12 @@ import { useTheme } from 'next-themes';
 import { useCallback, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
-  loading: () => <div className="w-full h-48 bg-muted animate-pulse rounded" />,
+  loading: () => (
+    <div className="w-full h-full bg-muted animate-pulse rounded" />
+  ),
 });
 
 interface TextEditorProps {
@@ -35,6 +36,7 @@ export function TextEditor({
   const [editorHeight, setEditorHeight] = useState(minHeight);
   const [copied, setCopied] = useState(false);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const updateHeight = useCallback(() => {
     const editor = editorRef.current;
@@ -89,10 +91,14 @@ export function TextEditor({
   }, [value]);
 
   return (
-    <div className="border border-input rounded-md overflow-hidden relative">
+    <div
+      ref={containerRef}
+      className="border border-input rounded-md overflow-hidden relative"
+      style={{ minHeight }}
+    >
       {!isLoaded && (
-        <Skeleton
-          className="w-full absolute inset-0 z-10"
+        <div
+          className="w-full bg-muted animate-pulse rounded absolute inset-0 z-10"
           style={{ height: minHeight }}
         />
       )}
@@ -142,7 +148,7 @@ export function TextEditor({
             folding: false,
             wordWrap: 'on',
             automaticLayout: true,
-            scrollbar: { vertical: 'hidden', horizontal: 'hidden' },
+            scrollbar: { vertical: 'auto', horizontal: 'auto' },
             padding: { top: 12, bottom: 12 },
             renderLineHighlight: 'none',
           }}

@@ -120,6 +120,7 @@ export default function PromptVersionsPage() {
 
         <div className="grid grid-cols-[320px_1fr] gap-4 h-[calc(100vh-200px)]">
           <MemoizedPromptVersionsSidebar
+            promptId={promptId}
             versions={prompt.versions || []}
             selectedVersionId={selectedVersion?.id}
             onVersionSelect={handleVersionSelect}

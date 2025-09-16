@@ -41,6 +41,12 @@ interface PromptsActions {
     versionId: string,
     labelId: string
   ) => Promise<boolean>;
+  createPromptVersion: (data: {
+    promptId: string;
+    content: string;
+    changeNote?: string;
+    labelId?: string | null;
+  }) => Promise<PromptVersionWithLabel>;
   updateCurrentPrompt: (prompt: PromptWithVersions) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: boolean) => void;
@@ -51,7 +57,7 @@ type PromptsStore = PromptsState & PromptsActions;
 /**
  * Zustand store for managing prompts state
  */
-export const usePromptsStore = create<PromptsStore>(set => ({
+export const usePromptsStore = create<PromptsStore>((set, get) => ({
   prompts: [],
   currentPrompt: null,
   loading: false,
@@ -151,34 +157,54 @@ export const usePromptsStore = create<PromptsStore>(set => ({
 
   updatePromptVersionLabel: async (versionId: string, labelId: string) => {
     try {
-      const updatedVersion = await apiPut<PromptVersionWithLabel>(
+      await apiPut<PromptVersionWithLabel>(
         `${API_ENDPOINTS.PROMPT_VERSIONS}/${versionId}`,
         { labelId }
       );
 
-      // Update the current prompt in store if it contains this version
+      // Re-fetch the entire prompt to ensure consistency
+      const state = get();
+      const currentPromptId = state.currentPrompt?.id;
+      if (currentPromptId) {
+        const refreshedPrompt = await apiGet<PromptWithVersions>(
+          `${API_ENDPOINTS.PROMPTS}/${currentPromptId}`
+        );
+        set({ currentPrompt: refreshedPrompt });
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  createPromptVersion: async (data: {
+    promptId: string;
+    content: string;
+    changeNote?: string;
+    labelId?: string | null;
+  }) => {
+    try {
+      const newVersion = await apiPost<PromptVersionWithLabel>(
+        API_ENDPOINTS.PROMPT_VERSIONS,
+        data
+      );
+
+      // Update the current prompt in store if it matches the promptId
       set(state => {
-        if (state.currentPrompt) {
+        if (state.currentPrompt && state.currentPrompt.id === data.promptId) {
           const updatedPrompt = {
             ...state.currentPrompt,
-            versions: state.currentPrompt.versions.map(version =>
-              version.id === versionId
-                ? {
-                    ...version,
-                    label: updatedVersion.label,
-                    labelId: updatedVersion.labelId,
-                  }
-                : version
-            ),
+            versions: [newVersion, ...state.currentPrompt.versions],
           };
           return { currentPrompt: updatedPrompt };
         }
         return state;
       });
 
-      return true;
-    } catch {
-      return false;
+      return newVersion;
+    } catch (error) {
+      throw error; // Re-throw to allow component to handle specific errors
     }
   },
 }));

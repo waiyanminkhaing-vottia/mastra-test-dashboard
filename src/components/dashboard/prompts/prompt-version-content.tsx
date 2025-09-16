@@ -1,6 +1,7 @@
 'use client';
 
-import { Check, Copy, Info } from 'lucide-react';
+import { Check, Copy, Files, Info } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 
 import { PromptLabelSelect } from '@/components/dashboard/prompt-label-select';
@@ -58,38 +59,53 @@ export function PromptVersionContent({
   return (
     <div className="rounded-lg border bg-background text-card-foreground shadow-sm">
       <div className="p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="text-sm px-2 py-1">
-            #{selectedVersion.version}
-          </Badge>
-          <h2 className="text-lg font-semibold">{prompt.name}</h2>
-          {currentLabelName && (
-            <Badge
-              variant="outline"
-              className="text-sm px-2 py-1 border-primary text-primary"
-            >
-              {currentLabelName}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-sm px-2 py-1">
+              #{selectedVersion.version}
             </Badge>
-          )}
-          <PromptLabelSelect
-            selectedLabel={selectedVersion?.labelId || ''}
-            onLabelChange={(labelId, labelName = 'None') => {
-              const currentLabelId = selectedVersion?.labelId || '';
-              const newLabelId = labelId || '';
-
-              if (currentLabelId === newLabelId) return;
-
-              onLabelChange(labelId, labelName);
-            }}
-            trigger={
-              <Button
-                variant="ghost"
-                className="h-[28px] w-[28px] p-0 hover:text-primary"
+            <h2 className="text-lg font-semibold">{prompt.name}</h2>
+            {currentLabelName && (
+              <Badge
+                variant="outline"
+                className="text-sm px-2 py-1 border-primary text-primary"
               >
-                <Info className="size-4" />
-              </Button>
-            }
-          />
+                {currentLabelName}
+              </Badge>
+            )}
+            <PromptLabelSelect
+              selectedLabel={selectedVersion?.labelId || ''}
+              onLabelChange={(labelId, labelName = 'None') => {
+                const currentLabelId = selectedVersion?.labelId || '';
+                const newLabelId = labelId || '';
+
+                if (currentLabelId === newLabelId) return;
+
+                onLabelChange(labelId, labelName);
+              }}
+              trigger={
+                <Button
+                  variant="ghost"
+                  className="h-[28px] w-[28px] p-0 hover:text-primary"
+                >
+                  <Info className="size-4" />
+                </Button>
+              }
+            />
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="h-8 px-3 hover:text-primary"
+          >
+            <Link
+              href={`/prompts/${prompt.id}/versions/new?duplicate=${selectedVersion.id}`}
+            >
+              <Files className="size-4" />
+              {t('common.duplicate')}
+            </Link>
+          </Button>
         </div>
 
         <Separator />

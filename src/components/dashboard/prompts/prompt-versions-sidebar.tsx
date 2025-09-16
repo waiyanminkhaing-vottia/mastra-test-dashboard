@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowDown, ArrowUp, Filter, Plus, Search } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import { PromptVersionItem } from '@/components/dashboard/prompts/prompt-version-item';
@@ -26,6 +27,7 @@ import { usePromptLabelsStore } from '@/stores/prompt-labels-store';
 import type { PromptVersionWithLabel } from '@/types/prompt';
 
 interface PromptVersionsSidebarProps {
+  promptId: string;
   versions: PromptVersionWithLabel[];
   selectedVersionId?: string;
   onVersionSelect: (versionId: string) => void;
@@ -37,6 +39,7 @@ interface PromptVersionsSidebarProps {
  * Sidebar component displaying a list of prompt versions with search and filtering
  */
 export function PromptVersionsSidebar({
+  promptId,
   versions,
   selectedVersionId,
   onVersionSelect,
@@ -62,8 +65,22 @@ export function PromptVersionsSidebar({
   }, [labels, filterBy]);
 
   const availableLabels = useMemo(() => {
-    return labels.map(label => label.name);
-  }, [labels]);
+    const labelNames = new Set<string>();
+
+    versions.forEach(version => {
+      if (version.labelId) {
+        // Get current label name from labels store
+        const currentLabelName =
+          labels.find(label => label.id === version.labelId)?.name ||
+          version.label?.name;
+        if (currentLabelName) {
+          labelNames.add(currentLabelName);
+        }
+      }
+    });
+
+    return Array.from(labelNames).sort();
+  }, [versions, labels]);
   const filteredVersions = useMemo(() => {
     if (!versions) return [];
 
@@ -126,9 +143,16 @@ export function PromptVersionsSidebar({
               className="pl-10 h-8"
             />
           </div>
-          <Button variant="outline" size="sm" className="hover:text-primary">
-            <Plus className="size-4" />
-            {t('common.new')}
+          <Button
+            variant="outline"
+            size="sm"
+            className="hover:text-primary"
+            asChild
+          >
+            <Link href={`/prompts/${promptId}/versions/new`}>
+              <Plus className="size-4" />
+              {t('common.new')}
+            </Link>
           </Button>
         </div>
 

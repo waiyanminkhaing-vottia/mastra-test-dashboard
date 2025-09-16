@@ -11,6 +11,7 @@
     "back": "戻る",
     "copy": "コピー",
     "copied": "コピー済み",
+    "duplicate": "複製",
     "cancel": "キャンセル",
     "confirm": "確認",
     "error": "エラー",
@@ -102,6 +103,10 @@
       "labelUpdatedSuccess": "ラベルが正常に更新されました",
       "labelUpdateFailed": "ラベルの更新に失敗しました",
       "noMatchingVersions": "現在のフィルターに一致するバージョンがありません",
+      "changeNote": "変更メモ（オプション）",
+      "changeNotePlaceholder": "このバージョンで何が変更されたかを説明してください...",
+      "createVersion": "バージョンを作成",
+      "creatingVersion": "作成中...",
       "filter": {
         "label": "フィルター:",
         "all": "すべてのバージョン",
