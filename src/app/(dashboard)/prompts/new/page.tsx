@@ -6,14 +6,15 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
-import { PromptLabelSelect } from '@/components/dashboard/prompt-label-select';
+import { PromptLabelSelect } from '@/components/dashboard/prompts/prompt-label-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TextEditor } from '@/components/ui/text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/language-context';
-import { formatZodErrors, validateClientSide } from '@/lib/validation-utils';
+import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
+import { validateClientSide } from '@/lib/validation-utils';
 import { createPromptSchema } from '@/lib/validations/prompt';
 import { usePromptsStore } from '@/stores/prompts-store';
 
@@ -27,6 +28,7 @@ export default function NewPromptPage() {
   const { createPrompt, isCreating } = usePromptsStore();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const handleFormError = useFormErrorHandler(t, setErrors, setGeneralError);
   const [promptContent, setPromptContent] = useState('');
   const [selectedLabel, setSelectedLabel] = useState<string>('');
 
@@ -57,23 +59,9 @@ export default function NewPromptPage() {
       // If we reach here, the operation was successful
       router.push('/prompts');
     } catch (error: unknown) {
-      const apiError = error as {
-        status?: number;
-        data?: { details?: unknown };
-      };
-      if (apiError.status === 409) {
-        // Handle 409 Conflict - prompt already exists, show as name field error
-        setErrors({ name: t('prompts.errors.promptAlreadyExists') });
-      } else if (
-        apiError.data?.details &&
-        Array.isArray(apiError.data.details)
-      ) {
-        // Handle validation errors from server
-        setErrors(formatZodErrors({ issues: apiError.data.details }));
-      } else {
-        // Handle other API errors
-        setGeneralError('errors.somethingWentWrong');
-      }
+      handleFormError(error, {
+        conflictErrorKey: 'prompts.errors.promptAlreadyExists',
+      });
     }
   };
 

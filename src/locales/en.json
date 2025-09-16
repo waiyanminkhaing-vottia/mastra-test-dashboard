@@ -20,12 +20,14 @@
   "menu": {
     "management": "Management",
     "models": "Models",
-    "prompts": "Prompts"
+    "prompts": "Prompts",
+    "agents": "Agents"
   },
   "breadcrumbs": {
     "management": "Management",
     "models": "Models",
-    "prompts": "Prompts"
+    "prompts": "Prompts",
+    "agents": "Agents"
   },
   "models": {
     "title": "Models",
@@ -166,6 +168,65 @@
       "labelAlreadyExists": "A label with this name already exists",
       "failedToCreate": "Failed to create label",
       "invalidLabelReference": "Invalid reference in label data"
+    }
+  },
+  "agents": {
+    "title": "Agents",
+    "addAgent": "Add Agent",
+    "form": {
+      "title": "Add Agent",
+      "description": "Create a new agent with a model, prompt, and optional label.",
+      "editDescription": "Update the agent configuration.",
+      "nameField": "Name",
+      "namePlaceholder": "Agent name",
+      "providerField": "Provider",
+      "providerPlaceholder": "Select a provider",
+      "selectProviderFirst": "Select a provider first",
+      "selectPromptFirst": "Select a prompt first",
+      "useCustomConfig": "Use Custom LLM Configuration",
+      "llmConfigTitle": "LLM Configuration",
+      "resetToDefault": "Reset to Default",
+      "temperatureField": "Temperature",
+      "maxTokensField": "Max Tokens",
+      "topPField": "Top P",
+      "frequencyPenaltyField": "Frequency Penalty",
+      "presencePenaltyField": "Presence Penalty",
+      "modelField": "Model",
+      "modelPlaceholder": "Select a model",
+      "promptField": "Prompt",
+      "promptPlaceholder": "Select a prompt",
+      "labelField": "Label (Optional)",
+      "labelPlaceholder": "Select a label",
+      "noLabel": "No label",
+      "cancelButton": "Cancel",
+      "createButton": "Create Agent",
+      "creatingButton": "Creating...",
+      "updateButton": "Update Agent",
+      "updatingButton": "Updating..."
+    },
+    "table": {
+      "name": "Name",
+      "model": "Model",
+      "prompt": "Prompt",
+      "label": "Label",
+      "config": "LLM Config",
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions",
+      "noAgents": "No data available."
+    },
+    "validation": {
+      "nameRequired": "Name is required",
+      "nameMaxLength": "Name must be less than 100 characters",
+      "nameInvalidChars": "Name can only contain letters, numbers, hyphens, underscores, and dots",
+      "modelIdRequired": "Model is required",
+      "promptIdRequired": "Prompt is required"
+    },
+    "errors": {
+      "agentNotFound": "Agent not found",
+      "agentNotFoundDescription": "The agent you're looking for doesn't exist or has been removed.",
+      "agentAlreadyExists": "An agent with this name already exists",
+      "invalidAgentReference": "Invalid reference in agent data"
     }
   }
 }

@@ -11,7 +11,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useLanguage } from '@/contexts/language-context';
-import { formatZodErrors, validateClientSide } from '@/lib/validation-utils';
+import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
+import { validateClientSide } from '@/lib/validation-utils';
 import { promptLabelSchema } from '@/lib/validations/prompt-label';
 import { usePromptLabelsStore } from '@/stores/prompt-labels-store';
 
@@ -19,6 +20,8 @@ import { usePromptLabelsStore } from '@/stores/prompt-labels-store';
 const TRANSLATION_KEYS = {
   LABELS_NONE: 'labels.none',
   SELECT_LABEL: 'labels.selectLabel',
+  VALIDATION_ERROR: 'validation.error',
+  SOMETHING_WENT_WRONG: 'errors.somethingWentWrong',
 } as const;
 
 /** Props for the PromptLabelSelect component */
@@ -59,6 +62,19 @@ export function PromptLabelSelect({
   const [labelError, setLabelError] = useState<string>('');
   const clearLabelError = () => setLabelError('');
 
+  // Create a simplified error handler for single field errors
+  const setFieldError = (errors: Record<string, string>) => {
+    setLabelError(errors.name || '');
+  };
+  const setGeneralError = (error: string | null) => {
+    setLabelError(error || '');
+  };
+  const handleFormError = useFormErrorHandler(
+    t,
+    setFieldError,
+    setGeneralError
+  );
+
   const [showAddLabelInput, setShowAddLabelInput] = useState(false);
   const [newLabelName, setNewLabelName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,7 +94,9 @@ export function PromptLabelSelect({
     });
 
     if (!validation.success) {
-      setLabelError(validation.errors.name || t('validation.error'));
+      setLabelError(
+        validation.errors.name || t(TRANSLATION_KEYS.VALIDATION_ERROR)
+      );
       return;
     }
 
@@ -88,24 +106,9 @@ export function PromptLabelSelect({
       setShowAddLabelInput(false);
       clearLabelError();
     } catch (error: unknown) {
-      const apiError = error as {
-        status?: number;
-        data?: { details?: unknown };
-      };
-      if (apiError.status === 409) {
-        // Handle 409 Conflict - label already exists
-        setLabelError(t('labels.errors.labelAlreadyExists'));
-      } else if (
-        apiError.data?.details &&
-        Array.isArray(apiError.data.details)
-      ) {
-        // Handle validation errors from server
-        const errors = formatZodErrors({ issues: apiError.data.details });
-        setLabelError(errors.name || t('validation.error'));
-      } else {
-        // Handle other API errors
-        setLabelError(t('errors.somethingWentWrong'));
-      }
+      handleFormError(error, {
+        conflictErrorKey: 'labels.errors.labelAlreadyExists',
+      });
     }
   };
 
@@ -116,7 +119,9 @@ export function PromptLabelSelect({
     });
 
     if (!validation.success) {
-      setLabelError(validation.errors.name || t('validation.error'));
+      setLabelError(
+        validation.errors.name || t(TRANSLATION_KEYS.VALIDATION_ERROR)
+      );
       return;
     }
 
@@ -126,24 +131,9 @@ export function PromptLabelSelect({
       setEditLabelName('');
       clearLabelError();
     } catch (error: unknown) {
-      const apiError = error as {
-        status?: number;
-        data?: { details?: unknown };
-      };
-      if (apiError.status === 409) {
-        // Handle 409 Conflict - label already exists
-        setLabelError(t('labels.errors.labelAlreadyExists'));
-      } else if (
-        apiError.data?.details &&
-        Array.isArray(apiError.data.details)
-      ) {
-        // Handle validation errors from server
-        const errors = formatZodErrors({ issues: apiError.data.details });
-        setLabelError(errors.name || t('validation.error'));
-      } else {
-        // Handle other API errors
-        setLabelError(t('errors.somethingWentWrong'));
-      }
+      handleFormError(error, {
+        conflictErrorKey: 'labels.errors.labelAlreadyExists',
+      });
     }
   };
 
@@ -286,7 +276,7 @@ export function PromptLabelSelect({
           ))}
           {fetchError && (
             <div className="p-2 text-xs text-red-600">
-              {t('errors.somethingWentWrong')}
+              {t(TRANSLATION_KEYS.SOMETHING_WENT_WRONG)}
             </div>
           )}
           <div className="pt-2 border-t">

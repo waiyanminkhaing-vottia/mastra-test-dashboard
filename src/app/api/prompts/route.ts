@@ -16,7 +16,11 @@ import { createPromptSchema } from '@/lib/validations/prompt';
 export const GET = withErrorHandling(async () => {
   const prompts = await prisma.prompt.findMany({
     include: {
-      versions: true,
+      versions: {
+        include: {
+          label: true,
+        },
+      },
     },
     orderBy: {
       createdAt: 'desc',

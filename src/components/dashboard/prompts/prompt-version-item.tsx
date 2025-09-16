@@ -5,6 +5,7 @@ import React from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { getPromptLabelName } from '@/lib/prompt-label-utils';
 import { formatDate } from '@/lib/utils';
 import { usePromptLabelsStore } from '@/stores/prompt-labels-store';
 import type { PromptVersionWithLabel } from '@/types/prompt';
@@ -23,10 +24,7 @@ export const PromptVersionItem = React.memo<PromptVersionItemProps>(
     const { labels } = usePromptLabelsStore();
 
     // Get the current label name from the labels store to ensure it's up-to-date
-    const currentLabelName = version.labelId
-      ? labels.find(label => label.id === version.labelId)?.name ||
-        version.label?.name
-      : undefined;
+    const currentLabelName = getPromptLabelName(version, labels);
 
     const handleClick = React.useCallback(() => {
       onSelect(version.id);

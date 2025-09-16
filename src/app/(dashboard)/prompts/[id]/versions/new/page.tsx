@@ -6,14 +6,15 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
-import { PromptLabelSelect } from '@/components/dashboard/prompt-label-select';
+import { PromptLabelSelect } from '@/components/dashboard/prompts/prompt-label-select';
 import { PromptVersionsErrorState } from '@/components/dashboard/prompts/prompt-versions-error-state';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { TextEditor } from '@/components/ui/text-editor';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/language-context';
-import { formatZodErrors, validateClientSide } from '@/lib/validation-utils';
+import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
+import { validateClientSide } from '@/lib/validation-utils';
 import { createPromptVersionSchema } from '@/lib/validations/prompt-version';
 import { usePromptsStore } from '@/stores/prompts-store';
 
@@ -41,6 +42,7 @@ export default function NewVersionPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const handleFormError = useFormErrorHandler(t, setErrors, setGeneralError);
   const [promptContent, setPromptContent] = useState('');
   const [selectedLabel, setSelectedLabel] = useState<string>('');
 
@@ -105,17 +107,7 @@ export default function NewVersionPage() {
       // If we reach here, the operation was successful
       router.push(`/prompts/${promptId}/versions`);
     } catch (error: unknown) {
-      const apiError = error as {
-        status?: number;
-        data?: { details?: unknown };
-      };
-      if (apiError.data?.details && Array.isArray(apiError.data.details)) {
-        // Handle validation errors from server
-        setErrors(formatZodErrors({ issues: apiError.data.details }));
-      } else {
-        // Handle other API errors
-        setGeneralError('errors.somethingWentWrong');
-      }
+      handleFormError(error);
     }
   };
 
@@ -175,7 +167,7 @@ export default function NewVersionPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 pb-8">
             <div className="space-y-2">
               <Label htmlFor="content">{t('prompts.form.contentField')}</Label>
               <TextEditor

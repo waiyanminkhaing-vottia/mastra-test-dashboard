@@ -17,6 +17,9 @@ importers:
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-checkbox':
+        specifier: ^1.3.3
+        version: 1.3.3(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -49,7 +52,7 @@ importers:
         version: 0.543.0(react@19.1.0)
       mastra-test-common:
         specifier: git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git
-        version: git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#e37120b0f24985917780697c896f1f7e90741bb4(prisma@6.16.0(typescript@5.9.2))(typescript@5.9.2)
+        version: git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#fd9a644e3dc55c0bc11c463783a1fa995587ba85(prisma@6.16.0(typescript@5.9.2))(typescript@5.9.2)
       next:
         specifier: 15.5.2
         version: 15.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -513,6 +516,19 @@ packages:
 
   '@radix-ui/react-arrow@1.1.7':
     resolution: {integrity: sha512-F+M1tLhO+mlQaOWspE8Wstg+z6PwxwRd8oQ8IXceWz92kfAmalTRf0EjrouQeo7QssEPfCn05B4Ihs1K9WQ/7w==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
+  '@radix-ui/react-checkbox@1.3.3':
+    resolution: {integrity: sha512-wBbpv+NQftHDdG86Qc0pIyXk5IR3tM8Vd0nWLKDcX8nNn4nXFOFwsKuqw2okA/1D/mpaAkmuyndrPJTYDNZtFw==}
     peerDependencies:
       '@types/react': '*'
       '@types/react-dom': '*'
@@ -2101,8 +2117,8 @@ packages:
   magic-string@0.30.19:
     resolution: {integrity: sha512-2N21sPY9Ws53PZvsEpVtNuSW+ScYbQdp4b9qUaL+9QkHUrGFKo56Lg9Emg5s9V/qrtNBmiR01sYhUOwu3H+VOw==}
 
-  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#e37120b0f24985917780697c896f1f7e90741bb4:
-    resolution: {commit: e37120b0f24985917780697c896f1f7e90741bb4, repo: https://github.com/waiyanminkhaing-vottia/mastra-test-common.git, type: git}
+  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#fd9a644e3dc55c0bc11c463783a1fa995587ba85:
+    resolution: {commit: fd9a644e3dc55c0bc11c463783a1fa995587ba85, repo: https://github.com/waiyanminkhaing-vottia/mastra-test-common.git, type: git}
     version: 1.0.0
     engines: {node: '>=18', pnpm: '>=8'}
 
@@ -3159,6 +3175,22 @@ snapshots:
   '@radix-ui/react-arrow@1.1.7(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+    optionalDependencies:
+      '@types/react': 19.1.12
+      '@types/react-dom': 19.1.9(@types/react@19.1.12)
+
+  '@radix-ui/react-checkbox@1.3.3(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@radix-ui/primitive': 1.1.3
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.1.12)(react@19.1.0)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.1.12)(react@19.1.0)
+      '@radix-ui/react-presence': 1.1.5(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-use-controllable-state': 1.2.2(@types/react@19.1.12)(react@19.1.0)
+      '@radix-ui/react-use-previous': 1.1.1(@types/react@19.1.12)(react@19.1.0)
+      '@radix-ui/react-use-size': 1.1.1(@types/react@19.1.12)(react@19.1.0)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
     optionalDependencies:
@@ -4863,7 +4895,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#e37120b0f24985917780697c896f1f7e90741bb4(prisma@6.16.0(typescript@5.9.2))(typescript@5.9.2):
+  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#fd9a644e3dc55c0bc11c463783a1fa995587ba85(prisma@6.16.0(typescript@5.9.2))(typescript@5.9.2):
     dependencies:
       '@prisma/client': 6.16.0(prisma@6.16.0(typescript@5.9.2))(typescript@5.9.2)
     transitivePeerDependencies:

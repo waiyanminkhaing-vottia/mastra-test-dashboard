@@ -20,12 +20,14 @@
   "menu": {
     "management": "管理",
     "models": "モデル",
-    "prompts": "プロンプト"
+    "prompts": "プロンプト",
+    "agents": "エージェント"
   },
   "breadcrumbs": {
     "management": "管理",
     "models": "モデル",
-    "prompts": "プロンプト"
+    "prompts": "プロンプト",
+    "agents": "エージェント"
   },
   "models": {
     "title": "モデル",
@@ -165,6 +167,65 @@
       "labelAlreadyExists": "この名前のラベルは既に存在します",
       "failedToCreate": "ラベルの作成に失敗しました",
       "invalidLabelReference": "ラベルデータに無効な参照があります"
+    }
+  },
+  "agents": {
+    "title": "エージェント",
+    "addAgent": "エージェント追加",
+    "form": {
+      "title": "エージェント追加",
+      "description": "モデル、プロンプト、およびオプションのラベルを使用して新しいエージェントを作成します。",
+      "editDescription": "エージェント設定を更新します。",
+      "nameField": "名前",
+      "namePlaceholder": "エージェント名",
+      "providerField": "プロバイダー",
+      "providerPlaceholder": "プロバイダーを選択",
+      "selectProviderFirst": "まずプロバイダーを選択してください",
+      "selectPromptFirst": "まずプロンプトを選択してください",
+      "useCustomConfig": "カスタムLLM設定を使用",
+      "llmConfigTitle": "LLM設定",
+      "resetToDefault": "デフォルトにリセット",
+      "temperatureField": "温度",
+      "maxTokensField": "最大トークン数",
+      "topPField": "Top P",
+      "frequencyPenaltyField": "頻度ペナルティ",
+      "presencePenaltyField": "存在ペナルティ",
+      "modelField": "モデル",
+      "modelPlaceholder": "モデルを選択",
+      "promptField": "プロンプト",
+      "promptPlaceholder": "プロンプトを選択",
+      "labelField": "ラベル（オプション）",
+      "labelPlaceholder": "ラベルを選択",
+      "noLabel": "ラベルなし",
+      "cancelButton": "キャンセル",
+      "createButton": "エージェントを作成",
+      "creatingButton": "作成中...",
+      "updateButton": "エージェントを更新",
+      "updatingButton": "更新中..."
+    },
+    "table": {
+      "name": "名前",
+      "model": "モデル",
+      "prompt": "プロンプト",
+      "label": "ラベル",
+      "config": "LLM設定",
+      "created": "作成日",
+      "updated": "更新日",
+      "actions": "操作",
+      "noAgents": "データがありません。"
+    },
+    "validation": {
+      "nameRequired": "名前は必須です",
+      "nameMaxLength": "名前は100文字未満である必要があります",
+      "nameInvalidChars": "名前には文字、数字、ハイフン、アンダースコア、ドットのみ使用できます",
+      "modelIdRequired": "モデルは必須です",
+      "promptIdRequired": "プロンプトは必須です"
+    },
+    "errors": {
+      "agentNotFound": "エージェントが見つかりません",
+      "agentNotFoundDescription": "お探しのエージェントが存在しないか、削除されました。",
+      "agentAlreadyExists": "この名前のエージェントは既に存在します",
+      "invalidAgentReference": "エージェントデータに無効な参照があります"
     }
   }
 }

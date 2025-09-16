@@ -17,7 +17,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/language-context';
-import { formatZodErrors, validateClientSide } from '@/lib/validation-utils';
+import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
+import { validateClientSide } from '@/lib/validation-utils';
 import { updatePromptSchema } from '@/lib/validations/prompt';
 import { usePromptsStore } from '@/stores/prompts-store';
 
@@ -47,6 +48,7 @@ export function PromptDialog({
   const [description, setDescription] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const handleFormError = useFormErrorHandler(t, setErrors, setGeneralError);
 
   // Reset form when dialog opens
   useEffect(() => {
@@ -89,20 +91,9 @@ export function PromptDialog({
       setOpen(false);
       onSuccess?.(updatedPrompt);
     } catch (error: unknown) {
-      const apiError = error as {
-        status?: number;
-        data?: { details?: unknown };
-      };
-      if (apiError.status === 409) {
-        setErrors({ name: t('prompts.errors.promptAlreadyExists') });
-      } else if (
-        apiError.data?.details &&
-        Array.isArray(apiError.data.details)
-      ) {
-        setErrors(formatZodErrors({ issues: apiError.data.details }));
-      } else {
-        setGeneralError('errors.somethingWentWrong');
-      }
+      handleFormError(error, {
+        conflictErrorKey: 'prompts.errors.promptAlreadyExists',
+      });
     }
   };
 

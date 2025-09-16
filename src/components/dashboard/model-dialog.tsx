@@ -23,20 +23,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/language-context';
-import { formatZodErrors, validateClientSide } from '@/lib/validation-utils';
+import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
+import { PROVIDERS } from '@/lib/constants';
+import { validateClientSide } from '@/lib/validation-utils';
 import { modelSchema, type Provider } from '@/lib/validations/model';
 import { useModelsStore } from '@/stores/models-store';
-
-const PROVIDERS: { value: Provider; label: string }[] = [
-  { value: 'OPENAI', label: 'OpenAI' },
-  { value: 'ANTHROPIC', label: 'Anthropic' },
-  { value: 'GOOGLE', label: 'Google' },
-  { value: 'AZURE_OPENAI', label: 'Azure OpenAI' },
-  { value: 'COHERE', label: 'Cohere' },
-  { value: 'HUGGING_FACE', label: 'Hugging Face' },
-  { value: 'OLLAMA', label: 'Ollama' },
-  { value: 'MISTRAL', label: 'Mistral' },
-];
 
 interface ModelDialogProps {
   open: boolean;
@@ -66,6 +57,7 @@ export function ModelDialog({
   const [provider, setProvider] = useState<Provider | ''>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const handleFormError = useFormErrorHandler(t, setErrors, setGeneralError);
   const isEditing = !!model;
   const loading = isCreating || isUpdating;
 
@@ -117,20 +109,9 @@ export function ModelDialog({
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
-      const apiError = error as {
-        status?: number;
-        data?: { details?: unknown };
-      };
-      if (apiError.status === 409) {
-        setErrors({ name: t('models.errors.modelAlreadyExists') });
-      } else if (
-        apiError.data?.details &&
-        Array.isArray(apiError.data.details)
-      ) {
-        setErrors(formatZodErrors({ issues: apiError.data.details }));
-      } else {
-        setGeneralError('errors.somethingWentWrong');
-      }
+      handleFormError(error, {
+        conflictErrorKey: 'models.errors.modelAlreadyExists',
+      });
     }
   };
 

@@ -4,11 +4,12 @@ import { Check, Copy, Files, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { PromptLabelSelect } from '@/components/dashboard/prompt-label-select';
+import { PromptLabelSelect } from '@/components/dashboard/prompts/prompt-label-select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/contexts/language-context';
+import { getPromptLabelName } from '@/lib/prompt-label-utils';
 import { usePromptLabelsStore } from '@/stores/prompt-labels-store';
 import type {
   PromptVersionWithLabel,
@@ -39,10 +40,7 @@ export function PromptVersionContent({
   const [copied, setCopied] = useState(false);
 
   // Get the current label name from the labels store to ensure it's up-to-date
-  const currentLabelName = selectedVersion.labelId
-    ? labels.find(label => label.id === selectedVersion.labelId)?.name ||
-      selectedVersion.label?.name
-    : undefined;
+  const currentLabelName = getPromptLabelName(selectedVersion, labels);
 
   const handleCopyPrompt = async () => {
     if (!selectedVersion?.content) return;

@@ -23,6 +23,7 @@ import {
   SidebarMenu,
 } from '@/components/ui/sidebar';
 import { useLanguage } from '@/contexts/language-context';
+import { getPromptLabelName } from '@/lib/prompt-label-utils';
 import { usePromptLabelsStore } from '@/stores/prompt-labels-store';
 import type { PromptVersionWithLabel } from '@/types/prompt';
 
@@ -68,14 +69,9 @@ export function PromptVersionsSidebar({
     const labelNames = new Set<string>();
 
     versions.forEach(version => {
-      if (version.labelId) {
-        // Get current label name from labels store
-        const currentLabelName =
-          labels.find(label => label.id === version.labelId)?.name ||
-          version.label?.name;
-        if (currentLabelName) {
-          labelNames.add(currentLabelName);
-        }
+      const labelName = getPromptLabelName(version, labels);
+      if (labelName) {
+        labelNames.add(labelName);
       }
     });
 
@@ -89,15 +85,11 @@ export function PromptVersionsSidebar({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(version => {
-        // Get current label name from labels store
-        const currentLabelName = version.labelId
-          ? labels.find(label => label.id === version.labelId)?.name ||
-            version.label?.name
-          : undefined;
+        const labelName = getPromptLabelName(version, labels);
 
         return (
           version.version.toString().includes(query) ||
-          currentLabelName?.toLowerCase().includes(query) ||
+          labelName?.toLowerCase().includes(query) ||
           version.changeNote?.toLowerCase().includes(query)
         );
       });
@@ -108,12 +100,8 @@ export function PromptVersionsSidebar({
         filtered = filtered.filter(version => !version.labelId);
       } else {
         filtered = filtered.filter(version => {
-          // Get current label name from labels store for filtering
-          const currentLabelName = version.labelId
-            ? labels.find(label => label.id === version.labelId)?.name ||
-              version.label?.name
-            : undefined;
-          return currentLabelName === filterBy;
+          const labelName = getPromptLabelName(version, labels);
+          return labelName === filterBy;
         });
       }
     }

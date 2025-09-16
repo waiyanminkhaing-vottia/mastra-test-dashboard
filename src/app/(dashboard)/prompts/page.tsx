@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
-import { PromptDialog } from '@/components/dashboard/prompt-dialog';
+import { PromptDialog } from '@/components/dashboard/prompts/prompt-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
