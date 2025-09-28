@@ -99,13 +99,16 @@ jobs:
           sudo cp ".env.$ENV_FILE" "/opt/mastra-test-dashboard/.env.$ENV_FILE"
 
           # Build and push image
-          echo "$GITHUB_TOKEN" | sudo docker buildx build \
-            --secret id=github_token,src=- \
+          echo "Building Docker image..."
+          echo "$GITHUB_TOKEN" > /tmp/github_token
+          sudo docker buildx build \
+            --secret id=github_token,src=/tmp/github_token \
             --cache-from type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache \
             --cache-to type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache,mode=max \
             -t localhost:5000/mastra-test-dashboard:$ENV_FILE-latest \
             --push \
             .
+          rm -f /tmp/github_token
 
           # Security scan with Trivy
           echo "🔍 Running security scan..."
