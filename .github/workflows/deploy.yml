@@ -110,9 +110,25 @@ jobs:
           ENV_FILE="${{ github.event.inputs.environment }}"
           echo "Using environment: $ENV_FILE"
 
+          # Debug: Check if env file exists and print contents
+          echo "🔍 Checking environment file: .env.$ENV_FILE"
+          if [ -f ".env.$ENV_FILE" ]; then
+            echo "✅ Found .env.$ENV_FILE"
+            echo "📄 Contents of .env.$ENV_FILE:"
+            cat ".env.$ENV_FILE"
+          else
+            echo "❌ .env.$ENV_FILE not found!"
+            echo "📁 Available files:"
+            ls -la .env*
+          fi
+
           # Copy environment file to deployment location
           sudo mkdir -p /opt/mastra-test-dashboard
           sudo cp ".env.$ENV_FILE" "/opt/mastra-test-dashboard/.env.$ENV_FILE"
+
+          # Debug: Verify copied file
+          echo "🔍 Verifying copied file:"
+          sudo cat "/opt/mastra-test-dashboard/.env.$ENV_FILE"
 
           # Build and push image
           echo "Building Docker image..."
@@ -124,6 +140,10 @@ jobs:
 
           # Copy environment-specific file for build
           cp ".env.$ENV_FILE" .env
+
+          # Debug: Show what we're building with
+          echo "🔍 Build environment (.env):"
+          cat .env
 
           # Build image using regular docker build
           sudo docker build \
@@ -189,6 +209,10 @@ jobs:
             REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
             echo "Using registry at: $REGISTRY_IP:5000"
 
+            # Debug: Check environment file before deployment
+            echo "🔍 Environment file for container:"
+            sudo cat "/opt/mastra-test-dashboard/.env.$ENV_FILE"
+
             # Deploy new container with environment file
             sudo docker run -d \
               --name mastra-test-dashboard \
@@ -200,6 +224,10 @@ jobs:
               -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
               -e NEXT_TELEMETRY_DISABLED=1 \
               $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
+
+            # Debug: Check environment variables in running container
+            echo "🔍 Environment variables in container:"
+            sudo docker exec mastra-test-dashboard env | grep -E "(NEXT_PUBLIC_BASE_PATH|NODE_ENV)" || echo "No matching env vars found"
 
             # Clean up old images (keep running container image)
             sudo docker images "*mastra-test-dashboard*" --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +3 | awk '{print $1}' | xargs -r sudo docker rmi || true
@@ -220,8 +248,14 @@ jobs:
 
             echo "Waiting for application to be ready..."
             HEALTH_CHECK_PASSED=false
+
+            # Get basePath from environment file for health check
+            BASE_PATH=$(grep "NEXT_PUBLIC_BASE_PATH" "/opt/mastra-test-dashboard/.env.$ENV_FILE" | cut -d'=' -f2 || echo "")
+            HEALTH_URL="http://localhost:3000${BASE_PATH}/api/health"
+            echo "🔍 Using health check URL: $HEALTH_URL"
+
             for i in {1..30}; do
-              if curl -sf http://localhost:3000/api/health >/dev/null 2>&1; then
+              if curl -sf "$HEALTH_URL" >/dev/null 2>&1; then
                 echo "✅ Application health check passed"
                 HEALTH_CHECK_PASSED=true
                 break
