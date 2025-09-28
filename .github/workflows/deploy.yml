@@ -1,0 +1,202 @@
+name: Deploy Mastra Test Dashboard
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH for deployment
+        run: |
+          echo "Setting up SSH connection..."
+
+          # Hardcoded connection details
+          LIGHTSAIL_HOST="test.dev-maestra.vottia.me"
+          LIGHTSAIL_USER="ec2-user"
+
+          echo "Host: $LIGHTSAIL_HOST"
+          echo "User: $LIGHTSAIL_USER"
+
+          # Export for later steps
+          echo "LIGHTSAIL_HOST=$LIGHTSAIL_HOST" >> $GITHUB_ENV
+          echo "LIGHTSAIL_USER=$LIGHTSAIL_USER" >> $GITHUB_ENV
+
+          # Setup SSH key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.LIGHTSAIL_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          # Add host to known_hosts and test connection
+          ssh-keyscan -H $LIGHTSAIL_HOST >> ~/.ssh/known_hosts
+          ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no $LIGHTSAIL_USER@$LIGHTSAIL_HOST "echo 'SSH connection successful'"
+
+      - name: Build and push Docker image
+        run: |
+          # Create a temporary script for the remote build
+          cat << 'SCRIPT_EOF' > build_script.sh
+          #!/bin/bash
+          set -e
+
+          echo "🏗️ Building Docker image on Lightsail instance..."
+
+          # Clean up old mastra-test-dashboard images (keep latest 3)
+          sudo docker images localhost:5000/mastra-test-dashboard --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +4 | awk '{print $1}' | xargs -r sudo docker rmi || true
+
+          # Clone/update repository
+          BRANCH="${{ github.ref_name }}"
+          echo "Deploying from branch: $BRANCH"
+
+          if [ -d "/tmp/mastra-test-dashboard" ]; then
+            cd /tmp/mastra-test-dashboard
+            git fetch origin
+            git checkout $BRANCH
+            git pull origin $BRANCH
+          else
+            cd /tmp
+            git clone -b $BRANCH https://github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
+            cd mastra-test-dashboard
+          fi
+
+          # Set environment file based on input (default to development for push events)
+          ENV_FILE="${{ github.event.inputs.environment || 'development' }}"
+          echo "Using environment: $ENV_FILE"
+
+          # Copy environment file to deployment location
+          sudo mkdir -p /opt/mastra-test-dashboard
+          sudo cp ".env.$ENV_FILE" "/opt/mastra-test-dashboard/.env.$ENV_FILE"
+
+          # Build image with GitHub token and caching
+          echo "$GITHUB_TOKEN" | sudo docker buildx build \
+            --secret id=github_token,src=- \
+            --cache-from type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache \
+            --cache-to type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache,mode=max \
+            -t localhost:5000/mastra-test-dashboard:$ENV_FILE-latest \
+            -t localhost:5000/mastra-test-dashboard:$ENV_FILE-$(git rev-parse --short HEAD) \
+            .
+
+          # Push to local registry
+          sudo docker push localhost:5000/mastra-test-dashboard:$ENV_FILE-latest
+          sudo docker push localhost:5000/mastra-test-dashboard:$ENV_FILE-$(git rev-parse --short HEAD)
+
+          # Security scan with Trivy
+          echo "🔍 Running security scan..."
+          if command -v trivy >/dev/null 2>&1; then
+            trivy image --exit-code 0 --no-progress --format table localhost:5000/mastra-test-dashboard:$ENV_FILE-latest
+          else
+            echo "⚠️ Trivy not installed, skipping security scan"
+          fi
+
+          echo "✅ Image built and pushed successfully"
+          echo "📦 Image: localhost:5000/mastra-test-dashboard:$ENV_FILE-latest"
+          echo "🏷️  Tag: localhost:5000/mastra-test-dashboard:$ENV_FILE-$(git rev-parse --short HEAD)"
+          echo "🌿 Branch: $(git branch --show-current)"
+          echo "📅 Built: $(date)"
+          SCRIPT_EOF
+
+          # Copy script to remote and execute
+          scp build_script.sh ${{ env.LIGHTSAIL_USER }}@${{ env.LIGHTSAIL_HOST }}:/tmp/
+          ssh ${{ env.LIGHTSAIL_USER }}@${{ env.LIGHTSAIL_HOST }} \
+            "chmod +x /tmp/build_script.sh && GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' /tmp/build_script.sh"
+
+      - name: Deploy application container
+        run: |
+          ssh ${{ env.LIGHTSAIL_USER }}@${{ env.LIGHTSAIL_HOST }} << 'EOF'
+            echo "🚀 Deploying Mastra Test Dashboard..."
+
+            # Ensure Docker network exists
+            sudo docker network create mastra-test-network --driver bridge 2>/dev/null || true
+
+            # Store current image for rollback
+            CURRENT_IMAGE=$(sudo docker inspect mastra-test-dashboard --format='{{.Image}}' 2>/dev/null || echo "none")
+            echo "Current image: $CURRENT_IMAGE"
+
+            # Stop and remove existing container
+            sudo docker stop mastra-test-dashboard 2>/dev/null || true
+            sudo docker rm mastra-test-dashboard 2>/dev/null || true
+
+            # Set environment file based on input (default to development for push events)
+            ENV_FILE="${{ github.event.inputs.environment || 'development' }}"
+            echo "Deploying with environment: $ENV_FILE"
+
+            # Deploy new container with environment file
+            sudo docker run -d \
+              --name mastra-test-dashboard \
+              --network mastra-test-network \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
+              -e NODE_ENV=production \
+              -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
+              -e NEXT_TELEMETRY_DISABLED=1 \
+              localhost:5000/mastra-test-dashboard:$ENV_FILE-latest
+
+            # Clean up old images (keep running container image)
+            sudo docker images localhost:5000/mastra-test-dashboard --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +3 | awk '{print $1}' | xargs -r sudo docker rmi || true
+
+            echo "✅ Application deployed successfully"
+          EOF
+
+      - name: Verify deployment
+        run: |
+          ssh ${{ env.LIGHTSAIL_USER }}@${{ env.LIGHTSAIL_HOST }} << 'EOF'
+            echo "🔍 Verifying deployment..."
+
+            echo "Checking container status..."
+            sudo docker ps | grep mastra-test-dashboard
+
+            echo "Checking container logs..."
+            sudo docker logs mastra-test-dashboard --tail=20
+
+            echo "Waiting for application to be ready..."
+            HEALTH_CHECK_PASSED=false
+            for i in {1..30}; do
+              if curl -sf http://localhost:3000/api/health >/dev/null 2>&1; then
+                echo "✅ Application health check passed"
+                HEALTH_CHECK_PASSED=true
+                break
+              else
+                echo "⏳ Waiting for application... ($i/30)"
+                sleep 2
+              fi
+            done
+
+            # Rollback if health check failed
+            if [ "$HEALTH_CHECK_PASSED" = "false" ]; then
+              echo "❌ Health check failed. Rolling back..."
+              sudo docker stop mastra-test-dashboard 2>/dev/null || true
+              sudo docker rm mastra-test-dashboard 2>/dev/null || true
+
+              if [ "$CURRENT_IMAGE" != "none" ]; then
+                echo "🔄 Restoring previous container..."
+                sudo docker run -d \
+                  --name mastra-test-dashboard \
+                  --network mastra-test-network \
+                  --restart unless-stopped \
+                  -p 3000:3000 \
+                  --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
+                  -e NODE_ENV=production \
+                  -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
+                  -e NEXT_TELEMETRY_DISABLED=1 \
+                  $CURRENT_IMAGE
+                echo "🔄 Rollback completed"
+              fi
+              exit 1
+            fi
+
+            echo "✅ Deployment verification completed successfully"
+          EOF
