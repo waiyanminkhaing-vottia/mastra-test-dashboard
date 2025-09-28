@@ -74,8 +74,14 @@ jobs:
           # Configure git with token authentication
           echo "Configuring git authentication..."
           echo "Token length: ${#GITHUB_TOKEN}"
+
+          # Configure git to use the token directly for GitHub
           $GIT_CMD config --global credential.helper store
+          $GIT_CMD config --global credential.https://github.com.username oauth2
           echo "https://oauth2:$GITHUB_TOKEN@github.com" > ~/.git-credentials
+
+          # Alternative: Set git config for URL rewriting
+          $GIT_CMD config --global url."https://oauth2:$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
 
           if [ -d "/tmp/mastra-test-dashboard" ]; then
             cd /tmp/mastra-test-dashboard
