@@ -113,7 +113,7 @@ jobs:
           # Copy script to remote and execute
           scp build_script.sh ${{ env.LIGHTSAIL_USER }}@${{ env.LIGHTSAIL_HOST }}:/tmp/
           ssh ${{ env.LIGHTSAIL_USER }}@${{ env.LIGHTSAIL_HOST }} \
-            "chmod +x /tmp/build_script.sh && GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' /tmp/build_script.sh"
+            "chmod +x /tmp/build_script.sh && export GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' && /tmp/build_script.sh"
 
       - name: Deploy application container
         run: |
