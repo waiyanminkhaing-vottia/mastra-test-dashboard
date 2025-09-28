@@ -52,67 +52,33 @@ jobs:
 
           echo "🏗️ Building Docker image on Lightsail instance..."
 
-          # Debug PATH and find git
-          echo "🔍 Current PATH: $PATH"
-          echo "🔍 Checking for git..."
-
-          # First try to find git with which/whereis
-          echo "🔍 Searching for git with multiple methods:"
-          echo "  - which git: $(which git 2>/dev/null || echo 'not found')"
-          echo "  - whereis git: $(whereis git 2>/dev/null || echo 'not found')"
-          echo "  - type git: $(type git 2>/dev/null || echo 'not found')"
-
-          # Search in all PATH directories
-          echo "🔍 Searching in PATH directories:"
-          for dir in $(echo "$PATH" | tr ':' ' '); do
-            if [ -x "$dir/git" ]; then
-              echo "  ✅ Found git at: $dir/git"
-            fi
-          done
-
-          # Try to find git in common locations
-          GIT_CMD=""
+          # Ensure git is available
           if command -v git >/dev/null 2>&1; then
             GIT_CMD="git"
-            echo "✅ Using git via command: $(command -v git)"
           elif [ -x /usr/bin/git ]; then
             GIT_CMD="/usr/bin/git"
-            echo "✅ Using git at: /usr/bin/git"
-          elif [ -x /bin/git ]; then
-            GIT_CMD="/bin/git"
-            echo "✅ Using git at: /bin/git"
-          elif [ -x /usr/local/bin/git ]; then
-            GIT_CMD="/usr/local/bin/git"
-            echo "✅ Using git at: /usr/local/bin/git"
           else
-            echo "❌ Attempting to install git..."
-            sudo dnf install -y git || sudo yum install -y git || echo "Failed to install git"
-
-            # Try again after installation
-            if command -v git >/dev/null 2>&1; then
-              GIT_CMD="git"
-              echo "✅ Git installed and available: $(command -v git)"
-            else
-              echo "❌ Git installation failed or not in PATH"
-              exit 1
-            fi
+            echo "Installing git..."
+            sudo dnf install -y git
+            GIT_CMD="git"
           fi
+          echo "✅ Using git: $GIT_CMD"
 
           # Clean up old mastra-test-dashboard images (keep latest 3)
           sudo docker images localhost:5000/mastra-test-dashboard --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +4 | awk '{print $1}' | xargs -r sudo docker rmi || true
 
-          # Clone/update repository
+          # Clone/update repository with authentication
           BRANCH="${{ github.ref_name }}"
           echo "Deploying from branch: $BRANCH"
 
           if [ -d "/tmp/mastra-test-dashboard" ]; then
             cd /tmp/mastra-test-dashboard
-            $GIT_CMD fetch origin
+            $GIT_CMD fetch https://$GITHUB_TOKEN@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
             $GIT_CMD checkout $BRANCH
-            $GIT_CMD pull origin $BRANCH
+            $GIT_CMD pull https://$GITHUB_TOKEN@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git $BRANCH
           else
             cd /tmp
-            $GIT_CMD clone -b $BRANCH https://github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
+            $GIT_CMD clone -b $BRANCH https://$GITHUB_TOKEN@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
             cd mastra-test-dashboard
           fi
 
@@ -124,18 +90,14 @@ jobs:
           sudo mkdir -p /opt/mastra-test-dashboard
           sudo cp ".env.$ENV_FILE" "/opt/mastra-test-dashboard/.env.$ENV_FILE"
 
-          # Build image with GitHub token and caching
+          # Build and push image
           echo "$GITHUB_TOKEN" | sudo docker buildx build \
             --secret id=github_token,src=- \
             --cache-from type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache \
             --cache-to type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache,mode=max \
             -t localhost:5000/mastra-test-dashboard:$ENV_FILE-latest \
-            -t localhost:5000/mastra-test-dashboard:$ENV_FILE-$($GIT_CMD rev-parse --short HEAD) \
+            --push \
             .
-
-          # Push to local registry
-          sudo docker push localhost:5000/mastra-test-dashboard:$ENV_FILE-latest
-          sudo docker push localhost:5000/mastra-test-dashboard:$ENV_FILE-$($GIT_CMD rev-parse --short HEAD)
 
           # Security scan with Trivy
           echo "🔍 Running security scan..."
@@ -145,11 +107,7 @@ jobs:
             echo "⚠️ Trivy not installed, skipping security scan"
           fi
 
-          echo "✅ Image built and pushed successfully"
-          echo "📦 Image: localhost:5000/mastra-test-dashboard:$ENV_FILE-latest"
-          echo "🏷️  Tag: localhost:5000/mastra-test-dashboard:$ENV_FILE-$($GIT_CMD rev-parse --short HEAD)"
-          echo "🌿 Branch: $($GIT_CMD branch --show-current)"
-          echo "📅 Built: $(date)"
+          echo "✅ Image built and pushed: localhost:5000/mastra-test-dashboard:$ENV_FILE-latest"
           SCRIPT_EOF
 
           # Copy script to remote and execute
