@@ -52,6 +52,20 @@ jobs:
 
           echo "🏗️ Building Docker image on Lightsail instance..."
 
+          # Ensure git is available (check common paths)
+          GIT_CMD=""
+          if command -v git >/dev/null 2>&1; then
+            GIT_CMD="git"
+          elif [ -f /usr/bin/git ]; then
+            GIT_CMD="/usr/bin/git"
+          elif [ -f /bin/git ]; then
+            GIT_CMD="/bin/git"
+          else
+            echo "❌ Git not found. Please install git on the server."
+            exit 1
+          fi
+          echo "✅ Using git at: $GIT_CMD"
+
           # Clean up old mastra-test-dashboard images (keep latest 3)
           sudo docker images localhost:5000/mastra-test-dashboard --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +4 | awk '{print $1}' | xargs -r sudo docker rmi || true
 
@@ -61,12 +75,12 @@ jobs:
 
           if [ -d "/tmp/mastra-test-dashboard" ]; then
             cd /tmp/mastra-test-dashboard
-            git fetch origin
-            git checkout $BRANCH
-            git pull origin $BRANCH
+            $GIT_CMD fetch origin
+            $GIT_CMD checkout $BRANCH
+            $GIT_CMD pull origin $BRANCH
           else
             cd /tmp
-            git clone -b $BRANCH https://github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
+            $GIT_CMD clone -b $BRANCH https://github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
             cd mastra-test-dashboard
           fi
 
@@ -84,12 +98,12 @@ jobs:
             --cache-from type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache \
             --cache-to type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache,mode=max \
             -t localhost:5000/mastra-test-dashboard:$ENV_FILE-latest \
-            -t localhost:5000/mastra-test-dashboard:$ENV_FILE-$(git rev-parse --short HEAD) \
+            -t localhost:5000/mastra-test-dashboard:$ENV_FILE-$($GIT_CMD rev-parse --short HEAD) \
             .
 
           # Push to local registry
           sudo docker push localhost:5000/mastra-test-dashboard:$ENV_FILE-latest
-          sudo docker push localhost:5000/mastra-test-dashboard:$ENV_FILE-$(git rev-parse --short HEAD)
+          sudo docker push localhost:5000/mastra-test-dashboard:$ENV_FILE-$($GIT_CMD rev-parse --short HEAD)
 
           # Security scan with Trivy
           echo "🔍 Running security scan..."
@@ -101,8 +115,8 @@ jobs:
 
           echo "✅ Image built and pushed successfully"
           echo "📦 Image: localhost:5000/mastra-test-dashboard:$ENV_FILE-latest"
-          echo "🏷️  Tag: localhost:5000/mastra-test-dashboard:$ENV_FILE-$(git rev-parse --short HEAD)"
-          echo "🌿 Branch: $(git branch --show-current)"
+          echo "🏷️  Tag: localhost:5000/mastra-test-dashboard:$ENV_FILE-$($GIT_CMD rev-parse --short HEAD)"
+          echo "🌿 Branch: $($GIT_CMD branch --show-current)"
           echo "📅 Built: $(date)"
           SCRIPT_EOF
 
