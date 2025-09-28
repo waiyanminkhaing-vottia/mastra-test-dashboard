@@ -74,16 +74,16 @@ jobs:
           # Configure git with token authentication
           echo "Configuring git authentication..."
           $GIT_CMD config --global credential.helper store
-          echo "https://$GITHUB_TOKEN@github.com" > ~/.git-credentials
+          echo "https://oauth2:$GITHUB_TOKEN@github.com" > ~/.git-credentials
 
           if [ -d "/tmp/mastra-test-dashboard" ]; then
             cd /tmp/mastra-test-dashboard
-            $GIT_CMD fetch https://github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
+            $GIT_CMD fetch https://oauth2:$GITHUB_TOKEN@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
             $GIT_CMD checkout $BRANCH
-            $GIT_CMD pull https://github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git $BRANCH
+            $GIT_CMD pull https://oauth2:$GITHUB_TOKEN@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git $BRANCH
           else
             cd /tmp
-            $GIT_CMD clone -b $BRANCH https://github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
+            $GIT_CMD clone -b $BRANCH https://oauth2:$GITHUB_TOKEN@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
             cd mastra-test-dashboard
           fi
 
