@@ -56,27 +56,46 @@ jobs:
           echo "🔍 Current PATH: $PATH"
           echo "🔍 Checking for git..."
 
+          # First try to find git with which/whereis
+          echo "🔍 Searching for git with multiple methods:"
+          echo "  - which git: $(which git 2>/dev/null || echo 'not found')"
+          echo "  - whereis git: $(whereis git 2>/dev/null || echo 'not found')"
+          echo "  - type git: $(type git 2>/dev/null || echo 'not found')"
+
+          # Search in all PATH directories
+          echo "🔍 Searching in PATH directories:"
+          for dir in $(echo "$PATH" | tr ':' ' '); do
+            if [ -x "$dir/git" ]; then
+              echo "  ✅ Found git at: $dir/git"
+            fi
+          done
+
           # Try to find git in common locations
           GIT_CMD=""
           if command -v git >/dev/null 2>&1; then
             GIT_CMD="git"
-            echo "✅ Found git via command: $(command -v git)"
+            echo "✅ Using git via command: $(command -v git)"
           elif [ -x /usr/bin/git ]; then
             GIT_CMD="/usr/bin/git"
-            echo "✅ Found git at: /usr/bin/git"
+            echo "✅ Using git at: /usr/bin/git"
           elif [ -x /bin/git ]; then
             GIT_CMD="/bin/git"
-            echo "✅ Found git at: /bin/git"
+            echo "✅ Using git at: /bin/git"
           elif [ -x /usr/local/bin/git ]; then
             GIT_CMD="/usr/local/bin/git"
-            echo "✅ Found git at: /usr/local/bin/git"
+            echo "✅ Using git at: /usr/local/bin/git"
           else
-            echo "❌ Git not found in common locations:"
-            echo "  - /usr/bin/git: $(ls -la /usr/bin/git 2>/dev/null || echo 'not found')"
-            echo "  - /bin/git: $(ls -la /bin/git 2>/dev/null || echo 'not found')"
-            echo "  - /usr/local/bin/git: $(ls -la /usr/local/bin/git 2>/dev/null || echo 'not found')"
-            echo "  - command -v git: $(command -v git 2>/dev/null || echo 'not found')"
-            exit 1
+            echo "❌ Attempting to install git..."
+            sudo dnf install -y git || sudo yum install -y git || echo "Failed to install git"
+
+            # Try again after installation
+            if command -v git >/dev/null 2>&1; then
+              GIT_CMD="git"
+              echo "✅ Git installed and available: $(command -v git)"
+            else
+              echo "❌ Git installation failed or not in PATH"
+              exit 1
+            fi
           fi
 
           # Clean up old mastra-test-dashboard images (keep latest 3)
