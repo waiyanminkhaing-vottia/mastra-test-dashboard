@@ -122,6 +122,9 @@ jobs:
           REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
           echo "Registry IP: $REGISTRY_IP"
 
+          # Copy environment-specific file for build
+          cp ".env.$ENV_FILE" .env
+
           # Build image using regular docker build
           sudo docker build \
             --secret id=github_token,src=/tmp/github_token \
