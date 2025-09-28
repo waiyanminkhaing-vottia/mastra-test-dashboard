@@ -10,8 +10,6 @@ on:
         type: choice
         options:
           - development
-  push:
-    branches: [main]
 
 jobs:
   deploy:
@@ -72,8 +70,8 @@ jobs:
             cd mastra-test-dashboard
           fi
 
-          # Set environment file based on input (default to development for push events)
-          ENV_FILE="${{ github.event.inputs.environment || 'development' }}"
+          # Set environment file based on manual input
+          ENV_FILE="${{ github.event.inputs.environment }}"
           echo "Using environment: $ENV_FILE"
 
           # Copy environment file to deployment location
@@ -129,8 +127,8 @@ jobs:
             sudo docker stop mastra-test-dashboard 2>/dev/null || true
             sudo docker rm mastra-test-dashboard 2>/dev/null || true
 
-            # Set environment file based on input (default to development for push events)
-            ENV_FILE="${{ github.event.inputs.environment || 'development' }}"
+            # Set environment file based on manual input
+            ENV_FILE="${{ github.event.inputs.environment }}"
             echo "Deploying with environment: $ENV_FILE"
 
             # Deploy new container with environment file

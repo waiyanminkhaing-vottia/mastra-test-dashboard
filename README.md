@@ -98,19 +98,15 @@ docker-compose up -d
 
 ## 🚢 Deployment
 
-### Automated Deployment (Recommended)
+### Manual Deployment
 
-The project includes a sophisticated GitHub Actions workflow for automated deployment:
+The project includes a sophisticated GitHub Actions workflow for manual deployment:
 
-1. **Manual Deployment**
+1. **Deploy via GitHub Actions**
    - Go to GitHub Actions → "Deploy Mastra Test Dashboard"
    - Click "Run workflow"
    - Select "development" environment
    - Click "Run workflow"
-
-2. **Automatic Deployment**
-   - Push to `main` branch triggers automatic deployment
-   - Uses development environment by default
 
 ### Deployment Features
 
