@@ -264,12 +264,38 @@ jobs:
             HEALTH_URL="http://localhost:3000${BASE_PATH}/api/health"
             echo "🔍 Using health check URL: $HEALTH_URL"
 
+            # First, let's check if the container is actually running and healthy
+            echo "🔍 Container status:"
+            sudo docker ps | grep mastra-test-dashboard || echo "Container not found"
+
+            # Check if port 3000 is responding at all
+            echo "🔍 Testing basic connectivity to port 3000:"
+            if curl -sf http://localhost:3000 >/dev/null 2>&1; then
+              echo "✅ Port 3000 is responding"
+            else
+              echo "❌ Port 3000 is not responding"
+            fi
+
+            # Test both URLs to see which one works
+            echo "🔍 Testing health endpoints:"
+            echo "Testing http://localhost:3000/api/health:"
+            curl -sf http://localhost:3000/api/health && echo "✅ Base health endpoint works" || echo "❌ Base health endpoint failed"
+
+            echo "Testing $HEALTH_URL:"
+            curl -sf "$HEALTH_URL" && echo "✅ BasePath health endpoint works" || echo "❌ BasePath health endpoint failed"
+
             for i in {1..30}; do
+              # Try the health check with more verbose output on failures
               if curl -sf "$HEALTH_URL" >/dev/null 2>&1; then
                 echo "✅ Application health check passed"
                 HEALTH_CHECK_PASSED=true
                 break
               else
+                if [ $i -eq 1 ] || [ $((i % 5)) -eq 0 ]; then
+                  # Show detailed error every 5 attempts
+                  echo "🔍 Detailed curl output for attempt $i:"
+                  curl -v "$HEALTH_URL" 2>&1 | head -10
+                fi
                 echo "⏳ Waiting for application... ($i/30)"
                 sleep 2
               fi
@@ -281,8 +307,8 @@ jobs:
               sudo docker stop mastra-test-dashboard 2>/dev/null || true
               sudo docker rm mastra-test-dashboard 2>/dev/null || true
 
-              if [ "$CURRENT_IMAGE" != "none" ]; then
-                echo "🔄 Restoring previous container..."
+              if [ "$CURRENT_IMAGE" != "none" ] && [ -n "$CURRENT_IMAGE" ]; then
+                echo "🔄 Restoring previous container with image: $CURRENT_IMAGE"
                 sudo docker run -d \
                   --name mastra-test-dashboard \
                   --network mastra-test-network \
@@ -294,6 +320,8 @@ jobs:
                   -e NEXT_TELEMETRY_DISABLED=1 \
                   $CURRENT_IMAGE
                 echo "🔄 Rollback completed"
+              else
+                echo "❌ No previous image available for rollback (CURRENT_IMAGE: '$CURRENT_IMAGE')"
               fi
               exit 1
             fi
