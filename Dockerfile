@@ -19,7 +19,7 @@ COPY package.json pnpm-lock.yaml* ./
 # For private git repos, you may need to build with --build-arg or secrets
 RUN --mount=type=secret,id=github_token \
     if [ -f /run/secrets/github_token ]; then \
-        git config --global url."https://$(cat /run/secrets/github_token):x-oauth-basic@github.com/".insteadOf "https://github.com/"; \
+        git config --global url."https://oauth2:$(cat /run/secrets/github_token)@github.com/".insteadOf "https://github.com/"; \
     fi && \
     pnpm config set auto-install-peers false && \
     pnpm install --frozen-lockfile
