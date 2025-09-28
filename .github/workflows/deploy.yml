@@ -94,12 +94,12 @@ jobs:
 
           if [ -d "/tmp/mastra-test-dashboard" ]; then
             cd /tmp/mastra-test-dashboard
-            $GIT_CMD fetch origin
+            $GIT_CMD fetch "https://$GITHUB_TOKEN:x-oauth-basic@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git"
             $GIT_CMD checkout $BRANCH
-            $GIT_CMD pull origin $BRANCH
+            $GIT_CMD pull "https://$GITHUB_TOKEN:x-oauth-basic@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git" $BRANCH
           else
             cd /tmp
-            $GIT_CMD clone -b $BRANCH https://github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git
+            $GIT_CMD clone -b $BRANCH "https://$GITHUB_TOKEN:x-oauth-basic@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git"
             cd mastra-test-dashboard
           fi
 
