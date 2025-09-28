@@ -11,12 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/language-context';
 import { PROVIDERS } from '@/lib/constants';
 
 interface AgentBasicInfoProps {
   name: string;
   onNameChange: (name: string) => void;
+  description: string;
+  onDescriptionChange: (description: string) => void;
   provider: Provider | '';
   onProviderChange: (provider: Provider) => void;
   modelId: string;
@@ -28,21 +31,25 @@ interface AgentBasicInfoProps {
 const ERROR_BORDER_CLASS = 'border-red-500';
 
 /**
- * Component for managing basic agent information (name, provider, model)
+ * Component for managing basic agent information (name, description, provider, model)
  * @param props Component properties for basic agent information form fields
  * @param props.name Current agent name value
  * @param props.onNameChange Callback when name changes
+ * @param props.description Current agent description value
+ * @param props.onDescriptionChange Callback when description changes
  * @param props.provider Current selected provider
  * @param props.onProviderChange Callback when provider changes
  * @param props.modelId Current selected model ID
  * @param props.onModelChange Callback when model changes
  * @param props.filteredModels Available models filtered by provider
  * @param props.errors Form validation errors
- * @returns JSX element containing name, provider, and model selection fields
+ * @returns JSX element containing name, description, provider, and model selection fields
  */
 export function AgentBasicInfo({
   name,
   onNameChange,
+  description,
+  onDescriptionChange,
   provider,
   onProviderChange,
   modelId,
@@ -69,6 +76,26 @@ export function AgentBasicInfo({
             required
           />
           {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
+        </div>
+      </div>
+
+      {/* Agent Description Field */}
+      <div className="flex items-start gap-7">
+        <Label htmlFor="description" className="min-w-36 mt-2">
+          {t('agents.form.descriptionField')}
+        </Label>
+        <div className="flex-1 space-y-2">
+          <Textarea
+            id="description"
+            value={description}
+            onChange={e => onDescriptionChange(e.target.value)}
+            placeholder={t('agents.form.descriptionPlaceholder')}
+            className={errors.description ? ERROR_BORDER_CLASS : ''}
+            rows={3}
+          />
+          {errors.description && (
+            <p className="text-sm text-red-600">{errors.description}</p>
+          )}
         </div>
       </div>
 

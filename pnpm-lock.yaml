@@ -1,7 +1,7 @@
 lockfileVersion: '9.0'
 
 settings:
-  autoInstallPeers: true
+  autoInstallPeers: false
   excludeLinksFromLockfile: false
 
 importers:
@@ -52,7 +52,10 @@ importers:
         version: 0.543.0(react@19.1.0)
       mastra-test-common:
         specifier: git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git
-        version: git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#fd9a644e3dc55c0bc11c463783a1fa995587ba85(prisma@6.16.0(typescript@5.9.2))(typescript@5.9.2)
+        version: git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#084b239300a725a1b6eefc0410a7232a3022c8e1(prisma@6.16.0(typescript@5.9.2))(typescript@5.9.2)
+      monaco-editor:
+        specifier: ^0.53.0
+        version: 0.53.0
       next:
         specifier: 15.5.2
         version: 15.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -2117,8 +2120,8 @@ packages:
   magic-string@0.30.19:
     resolution: {integrity: sha512-2N21sPY9Ws53PZvsEpVtNuSW+ScYbQdp4b9qUaL+9QkHUrGFKo56Lg9Emg5s9V/qrtNBmiR01sYhUOwu3H+VOw==}
 
-  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#fd9a644e3dc55c0bc11c463783a1fa995587ba85:
-    resolution: {commit: fd9a644e3dc55c0bc11c463783a1fa995587ba85, repo: https://github.com/waiyanminkhaing-vottia/mastra-test-common.git, type: git}
+  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#084b239300a725a1b6eefc0410a7232a3022c8e1:
+    resolution: {commit: 084b239300a725a1b6eefc0410a7232a3022c8e1, repo: https://github.com/waiyanminkhaing-vottia/mastra-test-common.git, type: git}
     version: 1.0.0
     engines: {node: '>=18', pnpm: '>=8'}
 
@@ -4895,7 +4898,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#fd9a644e3dc55c0bc11c463783a1fa995587ba85(prisma@6.16.0(typescript@5.9.2))(typescript@5.9.2):
+  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#084b239300a725a1b6eefc0410a7232a3022c8e1(prisma@6.16.0(typescript@5.9.2))(typescript@5.9.2):
     dependencies:
       '@prisma/client': 6.16.0(prisma@6.16.0(typescript@5.9.2))(typescript@5.9.2)
     transitivePeerDependencies:

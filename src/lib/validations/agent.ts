@@ -11,6 +11,7 @@ const defaultMessages = {
     VALIDATION_LIMITS.AGENT_NAME_MAX_LENGTH
   ),
   nameInvalidChars: COMMON_VALIDATION_MESSAGES.NAME_INVALID_CHARS,
+  descriptionMaxLength: `Description must be no more than ${VALIDATION_LIMITS.AGENT_DESCRIPTION_MAX_LENGTH} characters`,
   modelIdRequired: 'Model is required',
   promptIdRequired: 'Prompt is required',
 };
@@ -36,6 +37,13 @@ export const agentSchema = (t?: (key: string) => string) => {
       .regex(REGEX_PATTERNS.ALPHANUMERIC_WITH_SPECIAL, {
         message: getMessage('nameInvalidChars'),
       }),
+    description: z
+      .string()
+      .max(
+        VALIDATION_LIMITS.AGENT_DESCRIPTION_MAX_LENGTH,
+        getMessage('descriptionMaxLength')
+      )
+      .optional(),
     modelId: z.string().min(1, getMessage('modelIdRequired')),
     promptId: z.string().min(1, getMessage('promptIdRequired')),
     labelId: z.string().optional(),

@@ -45,6 +45,7 @@ export default function NewVersionPage() {
   const handleFormError = useFormErrorHandler(t, setErrors, setGeneralError);
   const [promptContent, setPromptContent] = useState('');
   const [selectedLabel, setSelectedLabel] = useState<string>('');
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Fetch the prompt on mount
   useEffect(() => {
@@ -53,9 +54,9 @@ export default function NewVersionPage() {
     }
   }, [promptId, fetchPromptById]);
 
-  // Pre-populate with version content when prompt is loaded
+  // Pre-populate with version content when prompt is loaded (only once)
   useEffect(() => {
-    if (prompt?.versions && prompt.versions.length > 0 && !promptContent) {
+    if (prompt?.versions && prompt.versions.length > 0 && !hasInitialized) {
       let versionToUse;
 
       if (duplicateVersionId) {
@@ -77,8 +78,9 @@ export default function NewVersionPage() {
           setSelectedLabel(versionToUse.labelId);
         }
       }
+      setHasInitialized(true);
     }
-  }, [prompt, promptContent, duplicateVersionId]);
+  }, [prompt, hasInitialized, duplicateVersionId]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

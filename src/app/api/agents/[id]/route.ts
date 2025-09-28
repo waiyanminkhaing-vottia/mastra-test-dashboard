@@ -54,13 +54,14 @@ export const PUT = withErrorHandling(
     const { data, error } = await validateRequestBody(request, agentSchema());
     if (error) return error;
 
-    const { name, modelId, promptId, labelId, config } = data;
+    const { name, description, modelId, promptId, labelId, config } = data;
 
     // Update the agent
     const updatedAgent = await prisma.agent.update({
       where: { id },
       data: {
         name,
+        description,
         modelId,
         promptId,
         labelId,

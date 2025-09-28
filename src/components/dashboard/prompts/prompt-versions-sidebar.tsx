@@ -118,7 +118,7 @@ export function PromptVersionsSidebar({
   return (
     <Sidebar
       collapsible="none"
-      className="relative border rounded-lg shadow-sm w-full bg-background"
+      className="relative border rounded-lg shadow-sm w-full bg-background max-h-[90vh]"
     >
       <SidebarHeader className="border-b p-3 pb-2 space-y-3">
         <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ export function PromptVersionsSidebar({
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="pt-2">
+      <SidebarContent className="pt-2 overflow-y-auto">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>

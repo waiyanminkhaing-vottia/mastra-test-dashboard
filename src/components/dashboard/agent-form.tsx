@@ -48,6 +48,7 @@ export function AgentForm({
   const { fetchLabels: fetchPromptLabels } = usePromptLabelsStore();
 
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [provider, setProvider] = useState<Provider | ''>('');
   const [modelId, setModelId] = useState('');
   const [promptId, setPromptId] = useState('');
@@ -100,6 +101,7 @@ export function AgentForm({
     if (agent && models && prompts) {
       // Edit mode: populate with existing data
       setName(agent.name);
+      setDescription(agent.description || '');
       setProvider(agent.model.provider);
       setModelId(agent.modelId);
       setPromptId(agent.promptId);
@@ -118,6 +120,7 @@ export function AgentForm({
     } else if (!agent) {
       // Add mode: clear form
       setName('');
+      setDescription('');
       setProvider('');
       setModelId('');
       setPromptId('');
@@ -165,6 +168,7 @@ export function AgentForm({
     // Client-side validation with common utility
     const validation = validateClientSide(agentSchema(t), {
       name: name.trim(),
+      description: description.trim(),
       modelId,
       promptId,
       labelId: labelId && labelId !== 'none' ? labelId : undefined,
@@ -203,6 +207,8 @@ export function AgentForm({
         <AgentBasicInfo
           name={name}
           onNameChange={setName}
+          description={description}
+          onDescriptionChange={setDescription}
           provider={provider}
           onProviderChange={setProvider}
           modelId={modelId}

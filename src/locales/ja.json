@@ -178,6 +178,8 @@
       "editDescription": "エージェント設定を更新します。",
       "nameField": "名前",
       "namePlaceholder": "エージェント名",
+      "descriptionField": "説明",
+      "descriptionPlaceholder": "このエージェントの用途についての説明（任意）",
       "providerField": "プロバイダー",
       "providerPlaceholder": "プロバイダーを選択",
       "selectProviderFirst": "まずプロバイダーを選択してください",
@@ -218,6 +220,7 @@
       "nameRequired": "名前は必須です",
       "nameMaxLength": "名前は100文字未満である必要があります",
       "nameInvalidChars": "名前には文字、数字、ハイフン、アンダースコア、ドットのみ使用できます",
+      "descriptionMaxLength": "説明は500文字以下である必要があります",
       "modelIdRequired": "モデルは必須です",
       "promptIdRequired": "プロンプトは必須です"
     },

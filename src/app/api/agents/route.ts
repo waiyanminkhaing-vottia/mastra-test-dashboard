@@ -39,11 +39,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const { data, error } = await validateRequestBody(request, agentSchema());
   if (error) return error;
 
-  const { name, modelId, promptId, labelId, config } = data;
+  const { name, description, modelId, promptId, labelId, config } = data;
 
   const agent = await prisma.agent.create({
     data: {
       name,
+      description,
       modelId,
       promptId,
       labelId,

@@ -134,7 +134,11 @@ export function TextEditor({
           height={editorHeight}
           language={language}
           value={value}
-          onChange={value => onChange(value || '')}
+          onChange={value => {
+            // Ensure we always pass a string to the parent onChange
+            const newValue = value ?? '';
+            onChange(newValue);
+          }}
           theme={theme === 'dark' ? 'vs-dark' : 'vs'}
           onMount={handleEditorDidMount}
           options={{
@@ -151,6 +155,9 @@ export function TextEditor({
             scrollbar: { vertical: 'auto', horizontal: 'auto' },
             padding: { top: 12, bottom: 12 },
             renderLineHighlight: 'none',
+            // Allow completely clearing the editor
+            acceptSuggestionOnCommitCharacter: false,
+            acceptSuggestionOnEnter: 'off',
           }}
         />
       </div>

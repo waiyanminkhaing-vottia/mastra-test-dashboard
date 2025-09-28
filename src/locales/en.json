@@ -179,6 +179,8 @@
       "editDescription": "Update the agent configuration.",
       "nameField": "Name",
       "namePlaceholder": "Agent name",
+      "descriptionField": "Description",
+      "descriptionPlaceholder": "Optional description of what this agent does",
       "providerField": "Provider",
       "providerPlaceholder": "Select a provider",
       "selectProviderFirst": "Select a provider first",
@@ -219,6 +221,7 @@
       "nameRequired": "Name is required",
       "nameMaxLength": "Name must be less than 100 characters",
       "nameInvalidChars": "Name can only contain letters, numbers, hyphens, underscores, and dots",
+      "descriptionMaxLength": "Description must be no more than 500 characters",
       "modelIdRequired": "Model is required",
       "promptIdRequired": "Prompt is required"
     },
