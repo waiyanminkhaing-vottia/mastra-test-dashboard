@@ -118,28 +118,21 @@ jobs:
           echo "Building Docker image..."
           echo "$GITHUB_TOKEN" > /tmp/github_token
 
-          # Setup buildx builder with docker-container driver connected to mastra-test-network
-          # Configure insecure registry access
+          # Get registry IP for tagging
           REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
           echo "Registry IP: $REGISTRY_IP"
 
-          # Create buildx builder with insecure registry configuration
-          sudo docker buildx create --name multiarch \
-            --driver docker-container \
-            --driver-opt network=mastra-test-network \
-            --driver-opt "image=moby/buildkit:latest" \
-            --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
-            --use 2>/dev/null || \
-          sudo docker buildx use multiarch 2>/dev/null || true
-
-          # Build and push to insecure registry
-          sudo docker buildx build \
+          # Build image using regular docker build
+          sudo docker build \
             --secret id=github_token,src=/tmp/github_token \
-            --cache-from type=registry,ref=$REGISTRY_IP:5000/mastra-test-dashboard:buildcache,registry.insecure=true \
-            --cache-to type=registry,ref=$REGISTRY_IP:5000/mastra-test-dashboard:buildcache,mode=max,registry.insecure=true \
-            -t $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest \
-            --push \
+            -t mastra-test-dashboard:$ENV_FILE-latest \
             .
+
+          # Tag image for registry
+          sudo docker tag mastra-test-dashboard:$ENV_FILE-latest $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
+
+          # Push to local registry
+          sudo docker push $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
           rm -f /tmp/github_token
 
           # Security scan with Trivy
