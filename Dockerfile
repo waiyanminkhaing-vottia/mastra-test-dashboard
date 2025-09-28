@@ -33,6 +33,10 @@ COPY . .
 # Install pnpm in builder stage
 RUN corepack enable pnpm
 
+# Accept build arguments for Next.js environment variables
+ARG NEXT_PUBLIC_BASE_PATH
+ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
+
 # Generate Prisma client
 RUN pnpm prisma:generate
 
