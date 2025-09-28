@@ -52,19 +52,32 @@ jobs:
 
           echo "🏗️ Building Docker image on Lightsail instance..."
 
-          # Ensure git is available (check common paths)
+          # Debug PATH and find git
+          echo "🔍 Current PATH: $PATH"
+          echo "🔍 Checking for git..."
+
+          # Try to find git in common locations
           GIT_CMD=""
           if command -v git >/dev/null 2>&1; then
             GIT_CMD="git"
-          elif [ -f /usr/bin/git ]; then
+            echo "✅ Found git via command: $(command -v git)"
+          elif [ -x /usr/bin/git ]; then
             GIT_CMD="/usr/bin/git"
-          elif [ -f /bin/git ]; then
+            echo "✅ Found git at: /usr/bin/git"
+          elif [ -x /bin/git ]; then
             GIT_CMD="/bin/git"
+            echo "✅ Found git at: /bin/git"
+          elif [ -x /usr/local/bin/git ]; then
+            GIT_CMD="/usr/local/bin/git"
+            echo "✅ Found git at: /usr/local/bin/git"
           else
-            echo "❌ Git not found. Please install git on the server."
+            echo "❌ Git not found in common locations:"
+            echo "  - /usr/bin/git: $(ls -la /usr/bin/git 2>/dev/null || echo 'not found')"
+            echo "  - /bin/git: $(ls -la /bin/git 2>/dev/null || echo 'not found')"
+            echo "  - /usr/local/bin/git: $(ls -la /usr/local/bin/git 2>/dev/null || echo 'not found')"
+            echo "  - command -v git: $(command -v git 2>/dev/null || echo 'not found')"
             exit 1
           fi
-          echo "✅ Using git at: $GIT_CMD"
 
           # Clean up old mastra-test-dashboard images (keep latest 3)
           sudo docker images localhost:5000/mastra-test-dashboard --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +4 | awk '{print $1}' | xargs -r sudo docker rmi || true
