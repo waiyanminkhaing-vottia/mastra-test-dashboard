@@ -118,15 +118,19 @@ jobs:
           echo "Building Docker image..."
           echo "$GITHUB_TOKEN" > /tmp/github_token
 
-          # Setup buildx builder with docker-container driver for advanced caching
-          sudo docker buildx create --name multiarch --driver docker-container --use 2>/dev/null || \
+          # Setup buildx builder with docker-container driver connected to mastra-test-network
+          sudo docker buildx create --name multiarch --driver docker-container --driver-opt network=mastra-test-network --use 2>/dev/null || \
           sudo docker buildx use multiarch 2>/dev/null || true
+
+          # Get registry container IP from network
+          REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+          echo "Registry IP: $REGISTRY_IP"
 
           sudo docker buildx build \
             --secret id=github_token,src=/tmp/github_token \
-            --cache-from type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache \
-            --cache-to type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache,mode=max \
-            -t localhost:5000/mastra-test-dashboard:$ENV_FILE-latest \
+            --cache-from type=registry,ref=$REGISTRY_IP:5000/mastra-test-dashboard:buildcache \
+            --cache-to type=registry,ref=$REGISTRY_IP:5000/mastra-test-dashboard:buildcache,mode=max \
+            -t $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest \
             --push \
             .
           rm -f /tmp/github_token
@@ -167,6 +171,10 @@ jobs:
             ENV_FILE="${{ github.event.inputs.environment }}"
             echo "Deploying with environment: $ENV_FILE"
 
+            # Get registry container IP from network
+            REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+            echo "Using registry at: $REGISTRY_IP:5000"
+
             # Deploy new container with environment file
             sudo docker run -d \
               --name mastra-test-dashboard \
@@ -177,10 +185,10 @@ jobs:
               -e NODE_ENV=production \
               -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
               -e NEXT_TELEMETRY_DISABLED=1 \
-              localhost:5000/mastra-test-dashboard:$ENV_FILE-latest
+              $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
 
             # Clean up old images (keep running container image)
-            sudo docker images localhost:5000/mastra-test-dashboard --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +3 | awk '{print $1}' | xargs -r sudo docker rmi || true
+            sudo docker images "*mastra-test-dashboard*" --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +3 | awk '{print $1}' | xargs -r sudo docker rmi || true
 
             echo "✅ Application deployed successfully"
           EOF
