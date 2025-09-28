@@ -250,7 +250,17 @@ jobs:
             HEALTH_CHECK_PASSED=false
 
             # Get basePath from environment file for health check
-            BASE_PATH=$(grep "NEXT_PUBLIC_BASE_PATH" "/opt/mastra-test-dashboard/.env.$ENV_FILE" | cut -d'=' -f2 || echo "")
+            ENV_FILE="${{ github.event.inputs.environment }}"
+            echo "🔍 Looking for basePath in: /opt/mastra-test-dashboard/.env.$ENV_FILE"
+
+            if [ -f "/opt/mastra-test-dashboard/.env.$ENV_FILE" ]; then
+              BASE_PATH=$(grep "NEXT_PUBLIC_BASE_PATH" "/opt/mastra-test-dashboard/.env.$ENV_FILE" | cut -d'=' -f2 || echo "")
+              echo "🔍 Found BASE_PATH: '$BASE_PATH'"
+            else
+              echo "❌ Environment file not found, using empty basePath"
+              BASE_PATH=""
+            fi
+
             HEALTH_URL="http://localhost:3000${BASE_PATH}/api/health"
             echo "🔍 Using health check URL: $HEALTH_URL"
 
