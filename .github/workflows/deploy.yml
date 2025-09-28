@@ -119,19 +119,27 @@ jobs:
           echo "$GITHUB_TOKEN" > /tmp/github_token
 
           # Setup buildx builder with docker-container driver connected to mastra-test-network
-          sudo docker buildx create --name multiarch --driver docker-container --driver-opt network=mastra-test-network --use 2>/dev/null || \
-          sudo docker buildx use multiarch 2>/dev/null || true
-
-          # Get registry container IP from network
+          # Configure insecure registry access
           REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
           echo "Registry IP: $REGISTRY_IP"
 
+          # Create buildx builder with insecure registry configuration
+          sudo docker buildx create --name multiarch \
+            --driver docker-container \
+            --driver-opt network=mastra-test-network \
+            --driver-opt "image=moby/buildkit:latest" \
+            --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" \
+            --use 2>/dev/null || \
+          sudo docker buildx use multiarch 2>/dev/null || true
+
+          # Build and push to insecure registry
           sudo docker buildx build \
             --secret id=github_token,src=/tmp/github_token \
-            --cache-from type=registry,ref=$REGISTRY_IP:5000/mastra-test-dashboard:buildcache \
-            --cache-to type=registry,ref=$REGISTRY_IP:5000/mastra-test-dashboard:buildcache,mode=max \
+            --cache-from type=registry,ref=$REGISTRY_IP:5000/mastra-test-dashboard:buildcache,registry.insecure=true \
+            --cache-to type=registry,ref=$REGISTRY_IP:5000/mastra-test-dashboard:buildcache,mode=max,registry.insecure=true \
             -t $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest \
             --push \
+            --registry-config /dev/null \
             .
           rm -f /tmp/github_token
 
