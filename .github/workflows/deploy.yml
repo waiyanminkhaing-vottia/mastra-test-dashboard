@@ -139,7 +139,6 @@ jobs:
             --cache-to type=registry,ref=$REGISTRY_IP:5000/mastra-test-dashboard:buildcache,mode=max,registry.insecure=true \
             -t $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest \
             --push \
-            --registry-config /dev/null \
             .
           rm -f /tmp/github_token
 
