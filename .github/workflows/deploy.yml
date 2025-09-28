@@ -101,6 +101,11 @@ jobs:
           # Build and push image
           echo "Building Docker image..."
           echo "$GITHUB_TOKEN" > /tmp/github_token
+
+          # Setup buildx builder with docker-container driver for advanced caching
+          sudo docker buildx create --name multiarch --driver docker-container --use 2>/dev/null || \
+          sudo docker buildx use multiarch 2>/dev/null || true
+
           sudo docker buildx build \
             --secret id=github_token,src=/tmp/github_token \
             --cache-from type=registry,ref=localhost:5000/mastra-test-dashboard:buildcache \
