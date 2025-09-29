@@ -8,6 +8,7 @@ import { HtmlLangWrapper } from '@/components/html-lang-wrapper';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ToasterProvider } from '@/components/toaster-provider';
 import { LanguageProvider } from '@/contexts/language-context';
+import { getAssetPath } from '@/lib/utils';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
   title: 'vottia',
   description: 'Maintenance Screen',
   icons: {
-    icon: '/favicon.svg',
+    icon: getAssetPath('/favicon.svg'),
   },
 };
 

@@ -36,3 +36,13 @@ export function formatDate(
     ...options,
   });
 }
+
+/**
+ * Prefixes static asset paths with basePath for correct routing
+ * @param path Static asset path (should start with /)
+ * @returns Path prefixed with basePath if configured
+ */
+export function getAssetPath(path: string): string {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+  return `${basePath}${path}`;
+}

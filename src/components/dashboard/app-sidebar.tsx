@@ -19,6 +19,7 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { useLanguage } from '@/contexts/language-context';
+import { getAssetPath } from '@/lib/utils';
 
 /**
  * Main application sidebar component
@@ -44,7 +45,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <div className="p-2">
           <Link href="/">
             <Image
-              src="/brand.png"
+              src={getAssetPath('/brand.png')}
               alt="Vottia Brand"
               width="150"
               height="30"

@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   ...(process.env.NEXT_PUBLIC_BASE_PATH &&
     process.env.NEXT_PUBLIC_BASE_PATH.trim() !== '' && {
       basePath: process.env.NEXT_PUBLIC_BASE_PATH,
+      assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH,
     }),
 
   // Optimize for production

@@ -45,39 +45,6 @@ export const GET = withApiProtection(rateLimiters.readonly, async () => {
 });
 
 /**
- * Check database connectivity
- * @returns Health check result for database
- */
-async function checkDatabaseConnection(): Promise<{
-  status: 'healthy' | 'unhealthy';
-  message: string;
-  responseTime?: number;
-}> {
-  try {
-    const startTime = Date.now();
-
-    // Try to import prisma dynamically to avoid issues if not available
-    const { prisma } = await import('@/lib/prisma');
-
-    // Simple query to test database connectivity
-    await prisma.$queryRaw`SELECT 1`;
-
-    const responseTime = Date.now() - startTime;
-
-    return {
-      status: 'healthy',
-      message: 'Database connection successful',
-      responseTime,
-    };
-  } catch {
-    return {
-      status: 'unhealthy',
-      message: 'Database connection failed',
-    };
-  }
-}
-
-/**
  * Check basic system health metrics
  * @returns Health check result for system
  */
