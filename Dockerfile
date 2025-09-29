@@ -47,8 +47,13 @@ RUN pnpm build
 FROM base AS runner
 WORKDIR /app
 
-# Add development tools for debugging
-RUN apk add --no-cache curl wget
+# Add only essential tools for health checks (conditional)
+ARG INCLUDE_DEBUG_TOOLS=false
+RUN if [ "$INCLUDE_DEBUG_TOOLS" = "true" ]; then \
+      apk add --no-cache curl wget; \
+    else \
+      apk add --no-cache curl; \
+    fi
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

@@ -10,8 +10,8 @@ function getBaseUrl(): string {
     // Client-side: use current origin
     return window.location.origin;
   }
-  // Server-side fallback
-  return process.env.NEXT_PUBLIC_BASE_URL || '';
+  // Server-side fallback - provide sensible default
+  return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 }
 
 /**
@@ -20,7 +20,19 @@ function getBaseUrl(): string {
 function buildUrl(path: string): string {
   const baseUrl = getBaseUrl();
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-  return `${baseUrl}${basePath}${path}`;
+
+  // Ensure path starts with /
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  // Combine baseUrl, basePath, and path with proper slash handling
+  if (basePath) {
+    const normalizedBasePath = basePath.endsWith('/')
+      ? basePath.slice(0, -1)
+      : basePath;
+    return `${baseUrl}${normalizedBasePath}${normalizedPath}`;
+  }
+
+  return `${baseUrl}${normalizedPath}`;
 }
 
 /**
