@@ -1,7 +1,10 @@
 {
   "errors": {
     "somethingWentWrong": "Something went wrong",
-    "invalidIDFormat": "Invalid ID format"
+    "invalidIDFormat": "Invalid ID format",
+    "unexpectedError": "An unexpected error occurred. Please try again or contact support if the problem persists.",
+    "tryAgain": "Try Again",
+    "errorDetails": "Error Details (Development)"
   },
   "validation": {
     "error": "Validation error"

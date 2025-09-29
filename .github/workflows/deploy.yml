@@ -74,8 +74,7 @@ jobs:
 
           # Configure git with token authentication
           echo "Configuring git authentication..."
-          echo "Token length: ${#GITHUB_TOKEN}"
-          echo "Token starts with: ${GITHUB_TOKEN:0:4}..."
+          # Remove token logging for security
 
           # Test token with GitHub API first
           echo "Testing token with GitHub API..."
@@ -111,12 +110,11 @@ jobs:
           ENV_FILE="${{ github.event.inputs.environment }}"
           echo "Using environment: $ENV_FILE"
 
-          # Debug: Check if env file exists and print contents
+          # Check if env file exists (without exposing contents)
           echo "🔍 Checking environment file: .env.$ENV_FILE"
           if [ -f ".env.$ENV_FILE" ]; then
             echo "✅ Found .env.$ENV_FILE"
-            echo "📄 Contents of .env.$ENV_FILE:"
-            cat ".env.$ENV_FILE"
+            echo "📄 File size: $(wc -l < ".env.$ENV_FILE") lines"
           else
             echo "❌ .env.$ENV_FILE not found!"
             echo "📁 Available files:"
@@ -127,9 +125,15 @@ jobs:
           sudo mkdir -p /opt/mastra-test-dashboard
           sudo cp ".env.$ENV_FILE" "/opt/mastra-test-dashboard/.env.$ENV_FILE"
 
-          # Debug: Verify copied file
+          # Verify copied file (without exposing contents)
           echo "🔍 Verifying copied file:"
-          sudo cat "/opt/mastra-test-dashboard/.env.$ENV_FILE"
+          if [ -f "/opt/mastra-test-dashboard/.env.$ENV_FILE" ]; then
+            echo "✅ Environment file copied successfully"
+            echo "📄 File size: $(sudo wc -l < "/opt/mastra-test-dashboard/.env.$ENV_FILE") lines"
+          else
+            echo "❌ Failed to copy environment file"
+            exit 1
+          fi
 
           # Build and push image
           echo "Building Docker image..."
@@ -142,9 +146,15 @@ jobs:
           # Copy environment-specific file for build
           cp ".env.$ENV_FILE" .env
 
-          # Debug: Show what we're building with
-          echo "🔍 Build environment (.env):"
-          cat .env
+          # Verify build environment file
+          echo "🔍 Build environment file verified:"
+          if [ -f ".env" ]; then
+            echo "✅ .env file ready for build"
+            echo "📄 File size: $(wc -l < ".env") lines"
+          else
+            echo "❌ .env file missing for build"
+            exit 1
+          fi
 
           # Extract NEXT_PUBLIC_BASE_PATH for build time
           NEXT_PUBLIC_BASE_PATH=$(grep "NEXT_PUBLIC_BASE_PATH" ".env.$ENV_FILE" | cut -d'=' -f2 || echo "")

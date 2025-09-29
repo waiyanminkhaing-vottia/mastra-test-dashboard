@@ -5,8 +5,6 @@ import { twMerge } from 'tailwind-merge';
  * Combines class names with clsx and merges conflicting Tailwind classes with twMerge
  * @param inputs - Class values to combine (strings, objects, arrays, etc.)
  * @returns Merged and deduplicated class string
- * @example
- * cn('px-2 py-1', 'px-4', { 'text-red-500': true }) // Returns: 'py-1 px-4 text-red-500'
  */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

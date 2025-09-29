@@ -4,8 +4,6 @@ import type { ZodError } from 'zod';
  * Converts Zod validation errors to a flat object with field names as keys
  * @param error - ZodError object or API response with issues array
  * @returns Object mapping field names to their first error message
- * @example
- * formatZodErrors(zodError) // { "email": "Invalid email", "name": "Required" }
  */
 export function formatZodErrors(
   error:
@@ -25,8 +23,6 @@ export function formatZodErrors(
  * Creates a standardized validation error response for API routes
  * @param error - ZodError from validation failure
  * @returns Object with error message and detailed issues for API response
- * @example
- * return NextResponse.json(createValidationErrorResponse(zodError), { status: 400 });
  */
 export function createValidationErrorResponse(error: ZodError) {
   return {
@@ -41,13 +37,6 @@ export function createValidationErrorResponse(error: ZodError) {
  * @param schema.safeParse - Function to validate data
  * @param data - Data to validate
  * @returns Object with either validated data or formatted errors
- * @example
- * const result = validateClientSide(schema, formData);
- * if (result.success) {
- *   // use result.data
- * } else {
- *   setErrors(result.errors);
- * }
  */
 export function validateClientSide<T>(
   schema: {

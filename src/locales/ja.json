@@ -1,7 +1,10 @@
 {
   "errors": {
     "somethingWentWrong": "エラーが発生しました",
-    "invalidIDFormat": "不正なID形式です"
+    "invalidIDFormat": "不正なID形式です",
+    "unexpectedError": "予期しないエラーが発生しました。もう一度お試しいただくか、問題が解決しない場合はサポートにお問い合わせください。",
+    "tryAgain": "再試行",
+    "errorDetails": "エラー詳細（開発用）"
   },
   "validation": {
     "error": "検証エラー"

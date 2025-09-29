@@ -98,9 +98,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
  * Hook to access language context and translation functionality
  * @returns LanguageContextType object with language, setLanguage, t, and isLoading
  * @throws Error if used outside of LanguageProvider
- * @example
- * const { t, language, setLanguage } = useLanguage();
- * const translatedText = t('common.save');
  */
 export function useLanguage() {
   const context = React.useContext(LanguageContext);
