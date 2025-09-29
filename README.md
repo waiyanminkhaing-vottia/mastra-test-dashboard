@@ -4,12 +4,14 @@ A modern, secure, and production-ready Next.js dashboard application built with 
 
 ## 🌟 Features
 
-- **🔐 Security-First Design**: OWASP security headers, request validation, input sanitization
+- **🔐 Security-First Design**: OWASP security headers, rate limiting, Trivy vulnerability scanning
 - **🚀 Modern Stack**: Next.js 15, React 19, TypeScript with ES2020, Turbopack
 - **🐳 Container-Native**: Multi-stage Docker builds, health checks, automatic rollback
-- **📊 Quality-Assured**: Comprehensive ESLint rules, SonarJS complexity analysis, automated testing
+- **📊 Quality-Assured**: Comprehensive ESLint rules, SonarJS complexity analysis, error boundaries
 - **🛠️ Developer-Optimized**: Hot reloading, debugging tools, detailed error reporting
 - **⚡ Performance-Focused**: Registry caching, standalone builds, optimized assets
+- **🌐 Multi-language Support**: Internationalization with English and Japanese
+- **🛡️ Production-Ready**: Rate limiting, comprehensive monitoring, structured logging
 
 ## 🏗️ Architecture
 
@@ -25,10 +27,13 @@ A modern, secure, and production-ready Next.js dashboard application built with 
 ### Security Features
 
 - OWASP-compliant security headers
+- Rate limiting with nginx proxy support (100-300 req/15min)
 - Request size validation (50KB limit)
 - Input sanitization with Zod schemas
 - Non-root container execution
-- Vulnerability scanning with Trivy
+- Automated vulnerability scanning with Trivy
+- Error boundaries with internationalization
+- Comprehensive API protection middleware
 
 ## 🚀 Quick Start
 
@@ -114,8 +119,10 @@ The project includes a sophisticated GitHub Actions workflow for manual deployme
 - ✅ **Environment-specific builds**: Development-optimized containers
 - ✅ **Automatic rollback**: Health check validation with recovery
 - ✅ **Build caching**: Registry-based caching for faster builds
-- ✅ **Security scanning**: Trivy vulnerability assessment
-- ✅ **Health validation**: 30-attempt health check with detailed logging
+- ✅ **Security scanning**: Automated Trivy vulnerability assessment
+- ✅ **Health validation**: Streamlined health check with basePath support
+- ✅ **Asset optimization**: basePath support for CDN/proxy routing
+- ✅ **Rate limiting**: Production-ready API protection
 
 ### Infrastructure Requirements
 
@@ -151,16 +158,20 @@ docker run -p 3000:3000 mastra-test-dashboard
 ├── .github/workflows/     # GitHub Actions CI/CD
 ├── src/
 │   ├── app/              # Next.js App Router
-│   │   ├── api/          # API routes
-│   │   │   └── health/   # Health check endpoint
+│   │   ├── api/          # API routes with rate limiting
+│   │   │   └── health/   # Enhanced health check endpoint
 │   │   └── (dashboard)/  # Dashboard pages
 │   ├── components/       # React components
+│   │   ├── error-boundary.tsx # Error boundaries with i18n
 │   │   └── ui/          # Reusable UI components
+│   ├── contexts/        # React contexts (language)
+│   ├── locales/         # i18n translations (en, ja)
 │   └── lib/             # Utility libraries
-│       ├── api-utils.ts  # API helpers
+│       ├── api-utils.ts  # API helpers with protection
+│       ├── rate-limit.ts # Rate limiting middleware
 │       ├── logger.ts     # Structured logging
 │       └── security-utils.ts # Security utilities
-├── public/              # Static assets
+├── public/              # Static assets (with basePath support)
 ├── Dockerfile           # Multi-stage container build
 ├── docker-compose.yml   # Development orchestration
 └── .env.development     # Development environment
@@ -190,18 +201,64 @@ DATABASE_URL="postgresql://username:password@localhost:5432/database_name"
 
 The application includes comprehensive health monitoring:
 
-- **Health Endpoint**: `GET /api/health`
+- **Enhanced Health Endpoint**: `GET /api/health`
 
   ```json
   {
     "status": "healthy",
     "timestamp": "2025-01-09T10:30:00.000Z",
-    "service": "mastra-test-dashboard"
+    "service": "mastra-test-dashboard",
+    "version": "1.0.0",
+    "environment": "production",
+    "uptime": 3600.123,
+    "memory": {
+      "used": 45.67,
+      "total": 64.0,
+      "external": 8.12
+    },
+    "checks": {
+      "system": {
+        "status": "healthy",
+        "message": "System metrics within normal range",
+        "metrics": {
+          "memoryUsagePercent": 71,
+          "uptimeHours": 1.0
+        }
+      }
+    },
+    "responseTime": 12
   }
   ```
 
 - **Container Health**: Built-in Docker health checks
 - **Deployment Validation**: Automatic health verification with rollback
+- **System Metrics**: Memory usage, uptime monitoring
+- **Rate Limiting**: Built-in protection with nginx proxy support
+
+## 🌐 Internationalization
+
+The application supports multiple languages with React Context-based i18n:
+
+- **Languages**: English (en), Japanese (ja)
+- **Features**: Dynamic language switching, persistent preferences
+- **Error Messages**: Localized error boundaries and validation messages
+- **Context-based**: Server-side safe hydration with cookie persistence
+
+```typescript
+// Usage in components
+const { t, language, setLanguage } = useLanguage();
+const message = t('errors.somethingWentWrong');
+```
+
+## 🚨 Error Handling
+
+Comprehensive error management with React Error Boundaries:
+
+- **Internationalized Error Messages**: Localized error displays
+- **Graceful Degradation**: Fallback UI for component crashes
+- **Structured Logging**: Detailed error context and stack traces
+- **User-Friendly Recovery**: Reset functionality for error states
+- **Development Support**: Detailed error information in development mode
 
 ## 🛡️ Security
 
@@ -213,19 +270,22 @@ The application includes comprehensive health monitoring:
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Content-Security-Policy: default-src 'self'`
 
-### Request Validation
+### API Protection
 
+- Rate limiting (100-300 requests per 15 minutes)
 - Request size limits (50KB)
 - Zod schema validation
 - Input sanitization
-- Error handling
+- Comprehensive error handling
+- nginx proxy header support (X-Real-IP, X-Forwarded-For)
 
 ### Container Security
 
 - Non-root user execution
 - Minimal Alpine Linux base
-- Security vulnerability scanning
+- Automated Trivy vulnerability scanning
 - Secrets management
+- Multi-stage builds for minimal attack surface
 
 ## 📊 Code Quality
 
@@ -298,4 +358,4 @@ For issues and questions:
 
 **Built with ❤️ for modern development workflows**
 
-Last Updated: January 2025 | Version: 0.1.0
+Last Updated: September 2025 | Version: 0.1.0
