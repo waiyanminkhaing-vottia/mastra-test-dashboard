@@ -300,45 +300,22 @@ jobs:
             HEALTH_URL="http://localhost:3000${BASE_PATH}/api/health"
             echo "🔍 Using health check URL: $HEALTH_URL"
 
-            # First, let's check if the container is actually running and healthy
+            # Check container status
             echo "🔍 Container status:"
             sudo docker ps | grep mastra-test-dashboard || echo "Container not found"
 
-            # Check if port 3000 is responding at all
-            echo "🔍 Testing basic connectivity to port 3000:"
-            if curl -sf http://localhost:3000 >/dev/null 2>&1; then
-              echo "✅ Port 3000 is responding"
-            else
-              echo "❌ Port 3000 is not responding"
-            fi
-
-            # Test both URLs to see which one works
-            echo "🔍 Testing health endpoints:"
-            echo "Testing http://localhost:3000/api/health:"
-            curl -sf http://localhost:3000/api/health && echo "✅ Base health endpoint works" || echo "❌ Base health endpoint failed"
-
-            echo "Testing $HEALTH_URL:"
-            curl -sf "$HEALTH_URL" && echo "✅ BasePath health endpoint works" || echo "❌ BasePath health endpoint failed"
-
+            # Wait for application to be ready with the correct health endpoint
             for i in {1..30}; do
-              # Try the basePath health check first
               if curl -sf "$HEALTH_URL" >/dev/null 2>&1; then
-                echo "✅ Application health check passed (with basePath)"
-                HEALTH_CHECK_PASSED=true
-                break
-              # Fallback to base health check if basePath fails
-              elif curl -sf "http://localhost:3000/api/health" >/dev/null 2>&1; then
-                echo "⚠️ Application health check passed (fallback to base path)"
-                echo "Note: BasePath routing may not be working correctly"
+                echo "✅ Application health check passed"
                 HEALTH_CHECK_PASSED=true
                 break
               else
-                if [ $i -eq 1 ] || [ $((i % 5)) -eq 0 ]; then
-                  # Show detailed error every 5 attempts
-                  echo "🔍 Detailed curl output for attempt $i:"
-                  curl -v "$HEALTH_URL" 2>&1 | head -10
+                if [ $i -eq 1 ]; then
+                  echo "⏳ Waiting for application to start..."
+                elif [ $((i % 10)) -eq 0 ]; then
+                  echo "⏳ Still waiting for application... ($i/30)"
                 fi
-                echo "⏳ Waiting for application... ($i/30)"
                 sleep 2
               fi
             done

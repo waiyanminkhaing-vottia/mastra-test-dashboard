@@ -27,7 +27,6 @@ export const GET = withApiProtection(rateLimiters.readonly, async () => {
         Math.round((process.memoryUsage().external / 1024 / 1024) * 100) / 100,
     },
     checks: {
-      database: await checkDatabaseConnection(),
       system: checkSystemHealth(),
     },
     responseTime: Date.now() - startTime,
