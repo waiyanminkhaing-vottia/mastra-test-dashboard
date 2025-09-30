@@ -145,23 +145,24 @@ jobs:
           REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
           echo "Registry IP: $REGISTRY_IP"
 
-          # Copy environment-specific file for build
-          cp ".env.$ENV_FILE" .env
+          # Extract NEXT_PUBLIC_BASE_PATH before renaming
+          NEXT_PUBLIC_BASE_PATH=$(grep "NEXT_PUBLIC_BASE_PATH" ".env.$ENV_FILE" | cut -d'=' -f2 || echo "")
+          echo "🔍 Building with NEXT_PUBLIC_BASE_PATH: '$NEXT_PUBLIC_BASE_PATH'"
+          echo "🔍 Building with BUILD_ENV: '$ENV_FILE'"
+
+          # Rename environment-specific file to .env for build
+          # This ensures Next.js only uses the correct environment file
+          mv ".env.$ENV_FILE" .env
 
           # Verify build environment file
           echo "🔍 Build environment file verified:"
           if [ -f ".env" ]; then
-            echo "✅ .env file ready for build"
+            echo "✅ .env file ready for build (from $ENV_FILE)"
             echo "📄 File size: $(wc -l < ".env") lines"
           else
             echo "❌ .env file missing for build"
             exit 1
           fi
-
-          # Extract NEXT_PUBLIC_BASE_PATH for build time
-          NEXT_PUBLIC_BASE_PATH=$(grep "NEXT_PUBLIC_BASE_PATH" ".env.$ENV_FILE" | cut -d'=' -f2 || echo "")
-          echo "🔍 Building with NEXT_PUBLIC_BASE_PATH: '$NEXT_PUBLIC_BASE_PATH'"
-          echo "🔍 Building with BUILD_ENV: '$ENV_FILE'"
 
           # Build image using regular docker build with build args
           sudo docker build \
