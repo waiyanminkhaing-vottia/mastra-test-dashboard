@@ -35,7 +35,6 @@ RUN corepack enable pnpm
 
 # Accept build arguments for Next.js environment variables
 ARG NEXT_PUBLIC_BASE_PATH
-ARG BUILD_ENV=production
 ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
 # NODE_ENV should always be production for optimized builds
 ENV NODE_ENV=production

@@ -148,7 +148,7 @@ jobs:
           # Extract NEXT_PUBLIC_BASE_PATH before modifying files
           NEXT_PUBLIC_BASE_PATH=$(grep "NEXT_PUBLIC_BASE_PATH" ".env.$ENV_FILE" | cut -d'=' -f2 || echo "")
           echo "🔍 Building with NEXT_PUBLIC_BASE_PATH: '$NEXT_PUBLIC_BASE_PATH'"
-          echo "🔍 Building with BUILD_ENV: '$ENV_FILE'"
+          echo "🔍 Building for environment: '$ENV_FILE'"
 
           # Remove all .env files except the one we need
           # This prevents Next.js from detecting and using the wrong environment
@@ -180,7 +180,6 @@ jobs:
           sudo docker build \
             --secret id=github_token,src=/tmp/github_token \
             --build-arg NEXT_PUBLIC_BASE_PATH="$NEXT_PUBLIC_BASE_PATH" \
-            --build-arg BUILD_ENV="$ENV_FILE" \
             -t mastra-test-dashboard:$ENV_FILE-latest \
             .
 
