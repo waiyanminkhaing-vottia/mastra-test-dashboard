@@ -21,6 +21,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/language-context';
+import { buildUrl } from '@/lib/api-client';
 import logger from '@/lib/logger';
 import { useMcpsStore } from '@/stores/mcps-store';
 
@@ -220,10 +221,9 @@ function AgentMcpToolsSectionComponent({
       try {
         logger.debug({ msg: 'Fetching MCP tools from API', mcpName: mcp.name });
 
-        const response = await fetch(
-          `/api/mcps/tools?id=${encodeURIComponent(mcp.id)}`,
-          { signal: controller.signal }
-        );
+        const response = await fetch(buildUrl(`/api/mcps/${mcp.id}/tools`), {
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error(`Failed to fetch tools: ${response.statusText}`);

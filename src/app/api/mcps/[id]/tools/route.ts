@@ -1,5 +1,3 @@
-import { NextRequest } from 'next/server';
-
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -73,65 +71,64 @@ function handleMcpError(error: unknown, responseTime: number, mcpId: string) {
 }
 
 /**
- * GET /api/mcps/tools?id=<mcp-id>
+ * GET /api/mcps/[id]/tools
  * Fetches tools from an MCP server using @mastra/mcp
- * @param request - NextRequest containing MCP ID as query parameter
+ * @param request - NextRequest (unused but required by Next.js)
+ * @param params - Route parameters containing MCP ID
  * @returns JSON response with tools array or error message
  */
-export const GET = withErrorHandling(async (request: NextRequest) => {
-  const mcpService = McpService.getInstance();
-  const startTime = Date.now();
-  const { searchParams } = new URL(request.url);
-  const mcpId = searchParams.get('id');
-  const clientIp =
-    request.headers.get('x-forwarded-for') ||
-    request.headers.get('x-real-ip') ||
-    'unknown';
+export const GET = withErrorHandling(
+  async (
+    _request: Request,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const mcpService = McpService.getInstance();
+    const startTime = Date.now();
+    const { id: mcpId } = await params;
 
-  try {
-    // Input validation
-    if (!mcpId || typeof mcpId !== 'string') {
-      logger.warn({
-        msg: 'MCP Tools API request missing MCP ID parameter',
-        clientIp,
+    try {
+      // Input validation
+      if (!mcpId || typeof mcpId !== 'string') {
+        logger.warn({
+          msg: 'MCP Tools API request missing MCP ID parameter',
+        });
+        return createErrorResponse('MCP ID is required', 400);
+      }
+
+      logger.debug({ msg: 'Fetching MCP tools', mcpId });
+
+      // Fetch MCP from database
+      const mcp = await prisma.mcp.findUniqueOrThrow({
+        where: { id: mcpId },
+        select: { id: true, name: true, url: true },
       });
-      return createErrorResponse('MCP ID is required', 400);
+
+      logger.debug({ msg: 'Found MCP in database', mcpName: mcp.name });
+
+      // Use MCP service to get tools with comprehensive error handling and connection pooling
+      const tools = await mcpService.getTools({
+        id: mcp.id,
+        name: mcp.name,
+        url: mcp.url,
+      });
+
+      const responseTime = Date.now() - startTime;
+      logger.info({
+        msg: 'Successfully fetched MCP tools via service',
+        mcpName: mcp.name,
+        toolCount: tools.length,
+        responseTime,
+      });
+
+      const response = createSuccessResponse({ tools });
+
+      // Add service headers
+      response.headers.set('X-MCP-Service-Status', 'healthy');
+
+      return response;
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      return handleMcpError(error, responseTime, mcpId || 'unknown');
     }
-
-    logger.debug({ msg: 'Fetching MCP tools', mcpId });
-
-    // Fetch MCP from database
-    const mcp = await prisma.mcp.findUniqueOrThrow({
-      where: { id: mcpId },
-      select: { id: true, name: true, url: true },
-    });
-
-    logger.debug({ msg: 'Found MCP in database', mcpName: mcp.name });
-
-    // Use MCP service to get tools with comprehensive error handling and connection pooling
-    const tools = await mcpService.getTools({
-      id: mcp.id,
-      name: mcp.name,
-      url: mcp.url,
-    });
-
-    const responseTime = Date.now() - startTime;
-    logger.info({
-      msg: 'Successfully fetched MCP tools via service',
-      mcpName: mcp.name,
-      toolCount: tools.length,
-      responseTime,
-      clientIp,
-    });
-
-    const response = createSuccessResponse({ tools });
-
-    // Add service headers
-    response.headers.set('X-MCP-Service-Status', 'healthy');
-
-    return response;
-  } catch (error) {
-    const responseTime = Date.now() - startTime;
-    return handleMcpError(error, responseTime, mcpId || 'unknown');
   }
-});
+);

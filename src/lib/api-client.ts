@@ -17,7 +17,7 @@ function getBaseUrl(): string {
 /**
  * Build full URL with basePath support
  */
-function buildUrl(path: string): string {
+export function buildUrl(path: string): string {
   const baseUrl = getBaseUrl();
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
