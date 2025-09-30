@@ -41,7 +41,12 @@ RUN pnpm prisma:generate
 
 # Build the application with env vars from .env file
 # Load .env and export variables before building
-RUN set -a && [ -f .env ] && . ./.env && set +a && pnpm build
+RUN set -a; \
+    if [ -f .env ]; then \
+      . ./.env; \
+    fi; \
+    set +a; \
+    pnpm build
 
 # Production image, copy all the files and run next
 FROM base AS runner
