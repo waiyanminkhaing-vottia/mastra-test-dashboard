@@ -4,7 +4,7 @@ A modern, secure, and production-ready Next.js dashboard application built with 
 
 ## 🌟 Features
 
-- **🔐 Security-First Design**: OWASP security headers, rate limiting, Trivy vulnerability scanning
+- **🔐 Security-First Design**: OWASP security headers, rate limiting
 - **🚀 Modern Stack**: Next.js 15, React 19, TypeScript with ES2020, Turbopack
 - **🐳 Container-Native**: Multi-stage Docker builds, health checks, automatic rollback
 - **📊 Quality-Assured**: Comprehensive ESLint rules, SonarJS complexity analysis, error boundaries
@@ -31,7 +31,6 @@ A modern, secure, and production-ready Next.js dashboard application built with 
 - Request size validation (50KB limit)
 - Input sanitization with Zod schemas
 - Non-root container execution
-- Automated vulnerability scanning with Trivy
 - Error boundaries with internationalization
 - Comprehensive API protection middleware
 
@@ -119,7 +118,6 @@ The project includes a sophisticated GitHub Actions workflow for manual deployme
 - ✅ **Environment-specific builds**: Development-optimized containers
 - ✅ **Automatic rollback**: Health check validation with recovery
 - ✅ **Build caching**: Registry-based caching for faster builds
-- ✅ **Security scanning**: Automated Trivy vulnerability assessment
 - ✅ **Health validation**: Streamlined health check with basePath support
 - ✅ **Asset optimization**: basePath support for CDN/proxy routing
 - ✅ **Rate limiting**: Production-ready API protection
@@ -283,7 +281,6 @@ Comprehensive error management with React Error Boundaries:
 
 - Non-root user execution
 - Minimal Alpine Linux base
-- Automated Trivy vulnerability scanning
 - Secrets management
 - Multi-stage builds for minimal attack surface
 
