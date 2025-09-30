@@ -34,14 +34,14 @@ COPY . .
 RUN corepack enable pnpm
 
 # NODE_ENV should always be production for optimized builds
-# Note: NEXT_PUBLIC_* variables are read from .env file during build
 ENV NODE_ENV=production
 
 # Generate Prisma client
 RUN pnpm prisma:generate
 
-# Build the application
-RUN pnpm build
+# Build the application with env vars from .env file
+# Load .env and export variables before building
+RUN set -a && [ -f .env ] && . ./.env && set +a && pnpm build
 
 # Production image, copy all the files and run next
 FROM base AS runner
