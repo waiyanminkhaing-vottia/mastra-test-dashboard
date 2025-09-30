@@ -94,6 +94,8 @@ jobs:
 
           if [ -d "/tmp/mastra-test-dashboard" ]; then
             cd /tmp/mastra-test-dashboard
+            # Stash any local changes to prevent merge conflicts
+            $GIT_CMD stash push -m "Auto-stash before deployment $(date +%Y%m%d_%H%M%S)" || true
             $GIT_CMD fetch "https://$GITHUB_TOKEN:x-oauth-basic@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git"
             $GIT_CMD checkout $BRANCH
             $GIT_CMD pull "https://$GITHUB_TOKEN:x-oauth-basic@github.com/waiyanminkhaing-vottia/mastra-test-dashboard.git" $BRANCH
