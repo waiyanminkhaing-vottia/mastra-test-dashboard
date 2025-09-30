@@ -21,6 +21,7 @@ import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { TableSortButton } from '@/components/ui/table-sort-button';
 import { useLanguage } from '@/contexts/language-context';
 import { useTableSort } from '@/hooks/use-table-sort';
+import { buildUrl } from '@/lib/api-client';
 import logger from '@/lib/logger';
 import { formatDate } from '@/lib/utils';
 import { useMcpDialog } from '@/stores/dialog-store';
@@ -71,9 +72,7 @@ export default function McpsPage() {
       logger.debug({ msg: 'Fetching MCP tools for modal', mcpName: mcp.name });
 
       // Fetch tools from the MCP server using GET with MCP ID
-      const response = await fetch(
-        `/api/mcps/tools?id=${encodeURIComponent(mcp.id)}`
-      );
+      const response = await fetch(buildUrl(`/api/mcps/${mcp.id}/tools`));
 
       if (!response.ok) {
         throw new Error(`Failed to fetch tools: ${response.statusText}`);
