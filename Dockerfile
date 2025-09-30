@@ -37,7 +37,8 @@ RUN corepack enable pnpm
 ARG NEXT_PUBLIC_BASE_PATH
 ARG BUILD_ENV=production
 ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
-ENV NODE_ENV=${BUILD_ENV}
+# NODE_ENV should always be production for optimized builds
+ENV NODE_ENV=production
 
 # Generate Prisma client
 RUN pnpm prisma:generate
