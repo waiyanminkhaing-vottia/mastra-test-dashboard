@@ -145,9 +145,7 @@ jobs:
           REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
           echo "Registry IP: $REGISTRY_IP"
 
-          # Extract NEXT_PUBLIC_BASE_PATH before modifying files
-          NEXT_PUBLIC_BASE_PATH=$(grep "NEXT_PUBLIC_BASE_PATH" ".env.$ENV_FILE" | cut -d'=' -f2 || echo "")
-          echo "🔍 Building with NEXT_PUBLIC_BASE_PATH: '$NEXT_PUBLIC_BASE_PATH'"
+          # Log environment being built
           echo "🔍 Building for environment: '$ENV_FILE'"
 
           # Remove all .env files except the one we need
@@ -176,10 +174,10 @@ jobs:
             exit 1
           fi
 
-          # Build image using regular docker build with build args
+          # Build image using docker build
+          # Next.js will read NEXT_PUBLIC_* variables from .env file
           sudo docker build \
             --secret id=github_token,src=/tmp/github_token \
-            --build-arg NEXT_PUBLIC_BASE_PATH="$NEXT_PUBLIC_BASE_PATH" \
             -t mastra-test-dashboard:$ENV_FILE-latest \
             .
 
@@ -240,34 +238,16 @@ jobs:
             # Deploy container with environment-specific configuration
             echo "🚀 Deploying with environment: $ENV_FILE"
 
-            if [ "$ENV_FILE" = "production" ]; then
-              echo "🔒 Using production deployment (environment variables only)"
-              # Production: Use environment variables directly (no env files)
-              sudo docker run -d \
-                --name mastra-test-dashboard \
-                --network mastra-test-network \
-                --restart unless-stopped \
-                -p 3000:3000 \
-                -e NODE_ENV=production \
-                -e LOG_LEVEL=info \
-                -e NEXT_PUBLIC_BASE_PATH=/dashboard \
-                -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
-                -e NEXT_TELEMETRY_DISABLED=1 \
-                $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
-            else
-              echo "🧪 Using development deployment (env file + overrides)"
-              # Development: Use env file with production overrides
-              sudo docker run -d \
-                --name mastra-test-dashboard \
-                --network mastra-test-network \
-                --restart unless-stopped \
-                -p 3000:3000 \
-                --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
-                -e NODE_ENV=production \
-                -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
-                -e NEXT_TELEMETRY_DISABLED=1 \
-                $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
-            fi
+            # Deploy container with env file and DATABASE_URL override
+            # DATABASE_URL contains secrets and must be injected at runtime
+            sudo docker run -d \
+              --name mastra-test-dashboard \
+              --network mastra-test-network \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
+              -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
+              $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
 
             # Debug: Check safe environment variables in running container
             echo "🔍 Safe environment variables in container:"
@@ -342,9 +322,7 @@ jobs:
                   --restart unless-stopped \
                   -p 3000:3000 \
                   --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
-                  -e NODE_ENV=production \
                   -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
-                  -e NEXT_TELEMETRY_DISABLED=1 \
                   $CURRENT_IMAGE
                 echo "🔄 Rollback completed"
               else

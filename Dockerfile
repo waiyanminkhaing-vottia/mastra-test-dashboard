@@ -33,10 +33,8 @@ COPY . .
 # Install pnpm in builder stage
 RUN corepack enable pnpm
 
-# Accept build arguments for Next.js environment variables
-ARG NEXT_PUBLIC_BASE_PATH
-ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
 # NODE_ENV should always be production for optimized builds
+# Note: NEXT_PUBLIC_* variables are read from .env file during build
 ENV NODE_ENV=production
 
 # Generate Prisma client
