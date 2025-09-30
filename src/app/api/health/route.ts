@@ -1,77 +1,19 @@
-import { createSuccessResponse, withErrorHandling } from '@/lib/api-utils';
+import { NextResponse } from 'next/server';
 
 /**
  * GET /api/health
- * Health check endpoint with system metrics and status information
- * Includes database connectivity, memory usage, and service status
- * @returns JSON response with detailed health information
+ * Simple health check endpoint
+ * Returns 200 OK if the service is running
+ * @returns JSON response with basic health information
  */
-export const GET = withErrorHandling(async () => {
-  const startTime = Date.now();
-
-  // Basic system information
-  const healthData = {
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    service: 'mastra-test-dashboard',
-    version: process.env.npm_package_version || '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    uptime: process.uptime(),
-    memory: {
-      used:
-        Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100,
-      total:
-        Math.round((process.memoryUsage().heapTotal / 1024 / 1024) * 100) / 100,
-      external:
-        Math.round((process.memoryUsage().external / 1024 / 1024) * 100) / 100,
+export async function GET() {
+  return NextResponse.json(
+    {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      service: 'mastra-test-dashboard',
+      version: '1.0.0',
     },
-    checks: {
-      system: checkSystemHealth(),
-    },
-    responseTime: Date.now() - startTime,
-  };
-
-  // Determine overall status based on checks
-  const allChecksHealthy = Object.values(healthData.checks).every(
-    check => check.status === 'healthy'
+    { status: 200 }
   );
-
-  if (!allChecksHealthy) {
-    healthData.status = 'degraded';
-  }
-
-  return createSuccessResponse(healthData);
-});
-
-/**
- * Check basic system health metrics
- * @returns Health check result for system
- */
-function checkSystemHealth(): {
-  status: 'healthy' | 'unhealthy';
-  message: string;
-  metrics: {
-    memoryUsagePercent: number;
-    uptimeHours: number;
-  };
-} {
-  const memoryUsage = process.memoryUsage();
-  const memoryUsagePercent = Math.round(
-    (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100
-  );
-  const uptimeHours = Math.round((process.uptime() / 3600) * 100) / 100;
-
-  // Consider system unhealthy if memory usage is very high
-  const isHealthy = memoryUsagePercent < 90;
-
-  return {
-    status: isHealthy ? 'healthy' : 'unhealthy',
-    message: isHealthy
-      ? 'System metrics within normal range'
-      : 'High memory usage detected',
-    metrics: {
-      memoryUsagePercent,
-      uptimeHours,
-    },
-  };
 }
