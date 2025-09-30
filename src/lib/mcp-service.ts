@@ -133,11 +133,14 @@ export class McpService {
         throw new Error('Invalid configuration values after validation');
       }
 
+      // Use MCP name as server identifier for better traceability
+      const serverName = name || id;
+
       const client = new MCPClient({
         id: clientId,
         timeout: timeout,
         servers: {
-          targetServer: {
+          [serverName]: {
             url: sanitizedUrl,
           },
         },
