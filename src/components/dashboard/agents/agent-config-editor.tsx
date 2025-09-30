@@ -71,7 +71,7 @@ export function AgentConfigEditor({
       {useCustomConfig && (
         <div className="space-y-6 border rounded-lg p-4">
           <div className="flex justify-between items-center mb-12">
-            <h4 className="text-sm font-medium text-gray-700">
+            <h4 className="text-sm font-medium text-gray">
               {t('agents.form.llmConfigTitle')}
             </h4>
             <Button

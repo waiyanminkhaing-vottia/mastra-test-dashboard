@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown, Globe } from 'lucide-react';
-import * as React from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +18,7 @@ const languages = [
  */
 export function LanguageSwitcher() {
   const { language, setLanguage, isLoading } = useLanguage();
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const currentLang = languages.find(lang => lang.code === language);
 

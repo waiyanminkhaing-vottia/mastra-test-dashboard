@@ -100,6 +100,9 @@ export default function AgentsPage() {
                   <TableHead>{t('agents.table.prompt')}</TableHead>
                   <TableHead>{t('agents.table.label')}</TableHead>
                   <TableHead className="text-center">
+                    {t('agents.table.mcpTools')}
+                  </TableHead>
+                  <TableHead className="text-center">
                     {t('agents.table.config')}
                   </TableHead>
                   <TableHead>
@@ -126,11 +129,11 @@ export default function AgentsPage() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableSkeleton rows={3} columns={7} />
+                  <TableSkeleton rows={3} columns={8} />
                 ) : error ? (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className="h-24 text-center text-red-600"
                     >
                       {t('errors.somethingWentWrong')}
@@ -138,7 +141,7 @@ export default function AgentsPage() {
                   </TableRow>
                 ) : !agents || agents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={8} className="h-24 text-center">
                       {t('agents.table.noAgents')}
                     </TableCell>
                   </TableRow>
@@ -164,6 +167,79 @@ export default function AgentsPage() {
                       <TableCell>
                         {agent.label ? (
                           <Badge variant="outline">{agent.label.name}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {agent.mcpTools && agent.mcpTools.length > 0 ? (
+                          <TooltipPrimitive.Root>
+                            <TooltipPrimitive.Trigger
+                              onMouseEnter={e => e.stopPropagation()}
+                              className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground hover:text-foreground cursor-pointer"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </TooltipPrimitive.Trigger>
+                            <TooltipPrimitive.Portal>
+                              <TooltipPrimitive.Content
+                                align="center"
+                                avoidCollisions
+                                className="text-sm min-w-60 max-w-lg p-4 bg-popover text-popover-foreground border z-50 rounded-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
+                              >
+                                <div className="space-y-2">
+                                  <h4 className="font-medium mb-6">
+                                    {t('agents.table.mcpTools')}
+                                  </h4>
+                                  <div className="space-y-3">
+                                    {(() => {
+                                      // Group tools by MCP server
+                                      const groupedTools =
+                                        agent.mcpTools.reduce(
+                                          (acc, agentMcpTool) => {
+                                            const mcpName =
+                                              agentMcpTool.mcp?.name ||
+                                              'Unknown MCP';
+                                            if (!acc[mcpName]) {
+                                              acc[mcpName] = [];
+                                            }
+                                            acc[mcpName].push(
+                                              agentMcpTool.toolName
+                                            );
+                                            return acc;
+                                          },
+                                          {} as Record<string, string[]>
+                                        );
+
+                                      return Object.entries(groupedTools).map(
+                                        ([mcpName, tools]) => (
+                                          <div
+                                            key={mcpName}
+                                            className="space-y-1"
+                                          >
+                                            <div className="font-medium text-xs text-muted-foreground break-words">
+                                              {mcpName}:
+                                            </div>
+                                            <div className="flex flex-wrap gap-1">
+                                              {tools.map(toolName => (
+                                                <Badge
+                                                  key={toolName}
+                                                  variant="outline"
+                                                  className="text-xs break-all max-w-full"
+                                                >
+                                                  {toolName}
+                                                </Badge>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )
+                                      );
+                                    })()}
+                                  </div>
+                                </div>
+                                <TooltipPrimitive.Arrow className="fill-popover" />
+                              </TooltipPrimitive.Content>
+                            </TooltipPrimitive.Portal>
+                          </TooltipPrimitive.Root>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}

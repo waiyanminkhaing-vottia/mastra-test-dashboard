@@ -1,23 +1,16 @@
 'use client';
 
-import type { Provider } from '@prisma/client';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
 
 import { AgentBasicInfo } from '@/components/dashboard/agents/agent-basic-info';
 import { AgentConfigEditor } from '@/components/dashboard/agents/agent-config-editor';
+import { AgentMcpToolsSection } from '@/components/dashboard/agents/agent-mcp-tools-section';
 import { AgentPromptSection } from '@/components/dashboard/agents/agent-prompt-section';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
-import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
-import { validateClientSide } from '@/lib/validation-utils';
-import { agentSchema } from '@/lib/validations/agent';
-import { useAgentsStore } from '@/stores/agents-store';
-import { useModelsStore } from '@/stores/models-store';
-import { usePromptLabelsStore } from '@/stores/prompt-labels-store';
-import { usePromptsStore } from '@/stores/prompts-store';
+import { useAgentForm } from '@/hooks/use-agent-form';
+import { useAgentFormSubmission } from '@/hooks/use-agent-form-submission';
 import type { AgentWithRelations } from '@/types/agent';
-import type { LLMConfig } from '@/types/config';
 
 interface AgentFormProps {
   agent?: AgentWithRelations | null;
@@ -42,158 +35,56 @@ export function AgentForm({
   isEditing = false,
 }: AgentFormProps) {
   const { t } = useLanguage();
-  const { createAgent, updateAgent, isCreating, isUpdating } = useAgentsStore();
-  const { models, fetchModels } = useModelsStore();
-  const { prompts, fetchPrompts } = usePromptsStore();
-  const { fetchLabels: fetchPromptLabels } = usePromptLabelsStore();
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [provider, setProvider] = useState<Provider | ''>('');
-  const [modelId, setModelId] = useState('');
-  const [promptId, setPromptId] = useState('');
-  const [labelId, setLabelId] = useState('');
-  const [config, setConfig] = useState<LLMConfig>({
-    temperature: 0.7,
-    maxTokens: 1000,
-    topP: 1.0,
-    frequencyPenalty: 0.0,
-    presencePenalty: 0.0,
+  // Use custom hooks for form state and logic
+  const {
+    name,
+    setName,
+    description,
+    setDescription,
+    provider,
+    setProvider,
+    modelId,
+    setModelId,
+    promptId,
+    setPromptId,
+    labelId,
+    setLabelId,
+    config,
+    setConfig,
+    useCustomConfig,
+    setUseCustomConfig,
+    selectedMcpTools,
+    setSelectedMcpTools,
+    errors,
+    setErrors,
+    generalError,
+    loading,
+    filteredModels,
+    filteredLabels,
+    prompts,
+    createAgent,
+    updateAgent,
+    handleFormError,
+  } = useAgentForm(agent);
+
+  const { handleSubmit } = useAgentFormSubmission({
+    agent,
+    isEditing,
+    name,
+    description,
+    modelId,
+    promptId,
+    labelId,
+    config,
+    useCustomConfig,
+    selectedMcpTools,
+    createAgent,
+    updateAgent,
+    handleFormError,
+    setErrors,
+    onSuccess,
   });
-  const [useCustomConfig, setUseCustomConfig] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [generalError, setGeneralError] = useState<string | null>(null);
-  const handleFormError = useFormErrorHandler(t, setErrors, setGeneralError);
-  const loading = isCreating || isUpdating;
-
-  // Filter models based on selected provider
-  const filteredModels = provider
-    ? models?.filter(model => model.provider === provider)
-    : [];
-
-  // Filter labels based on selected prompt
-  const filteredLabels = useMemo(() => {
-    if (!promptId) return [];
-
-    const selectedPrompt = prompts?.find(prompt => prompt.id === promptId);
-    if (!selectedPrompt?.versions) return [];
-
-    // Get unique labels from all versions of the selected prompt
-    const uniqueLabels = new Map();
-    selectedPrompt.versions.forEach(version => {
-      if (version.label) {
-        uniqueLabels.set(version.label.id, version.label);
-      }
-    });
-
-    return Array.from(uniqueLabels.values());
-  }, [promptId, prompts]);
-
-  // Fetch required data when component mounts
-  useEffect(() => {
-    fetchModels();
-    fetchPrompts();
-    fetchPromptLabels();
-  }, [fetchModels, fetchPrompts, fetchPromptLabels]);
-
-  // Reset form when agent changes
-  useEffect(() => {
-    if (agent && models && prompts) {
-      // Edit mode: populate with existing data
-      setName(agent.name);
-      setDescription(agent.description || '');
-      setProvider(agent.model.provider);
-      setModelId(agent.modelId);
-      setPromptId(agent.promptId);
-      setLabelId(agent.labelId || 'none');
-      const hasConfig = agent.config && Object.keys(agent.config).length > 0;
-      setUseCustomConfig(Boolean(hasConfig));
-      setConfig(
-        (agent.config as LLMConfig) || {
-          temperature: 0.7,
-          maxTokens: 1000,
-          topP: 1.0,
-          frequencyPenalty: 0.0,
-          presencePenalty: 0.0,
-        }
-      );
-    } else if (!agent) {
-      // Add mode: clear form
-      setName('');
-      setDescription('');
-      setProvider('');
-      setModelId('');
-      setPromptId('');
-      setLabelId('none');
-      setUseCustomConfig(false);
-      setConfig({
-        temperature: 0.7,
-        maxTokens: 1000,
-        topP: 1.0,
-        frequencyPenalty: 0.0,
-        presencePenalty: 0.0,
-      });
-    }
-    setErrors({});
-    setGeneralError(null);
-  }, [agent, models, prompts]);
-
-  // Reset model selection when provider changes
-  useEffect(() => {
-    if (modelId && provider) {
-      const selectedModel = models?.find(model => model.id === modelId);
-      if (selectedModel && selectedModel.provider !== provider) {
-        setModelId('');
-      }
-    }
-  }, [provider, models, modelId]);
-
-  // Reset label selection when prompt changes
-  useEffect(() => {
-    if (labelId && labelId !== 'none' && promptId) {
-      const isLabelAvailable = filteredLabels.some(
-        label => label.id === labelId
-      );
-      if (!isLabelAvailable) {
-        setLabelId('none');
-      }
-    }
-  }, [promptId, labelId, filteredLabels]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({});
-    setGeneralError(null);
-
-    // Client-side validation with common utility
-    const validation = validateClientSide(agentSchema(t), {
-      name: name.trim(),
-      description: description.trim(),
-      modelId,
-      promptId,
-      labelId: labelId && labelId !== 'none' ? labelId : undefined,
-      config: useCustomConfig ? config : isEditing ? null : undefined,
-    });
-
-    if (!validation.success) {
-      setErrors(validation.errors);
-      return;
-    }
-
-    try {
-      if (isEditing && agent) {
-        await updateAgent(agent.id, validation.data);
-      } else {
-        await createAgent(validation.data);
-      }
-
-      onSuccess();
-    } catch (error: unknown) {
-      handleFormError(error, {
-        conflictErrorKey: 'agents.errors.agentAlreadyExists',
-      });
-    }
-  };
 
   return (
     <>
@@ -225,6 +116,11 @@ export function AgentForm({
           prompts={prompts}
           filteredLabels={filteredLabels}
           errors={errors}
+        />
+
+        <AgentMcpToolsSection
+          selectedTools={selectedMcpTools}
+          onSelectedToolsChange={setSelectedMcpTools}
         />
 
         <AgentConfigEditor

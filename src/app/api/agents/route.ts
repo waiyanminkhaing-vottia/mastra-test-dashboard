@@ -20,13 +20,47 @@ export const GET = withErrorHandling(async () => {
       model: true,
       prompt: true,
       label: true,
+      mcpTools: true,
     },
     orderBy: {
       createdAt: 'desc',
     },
   });
 
-  return createSuccessResponse(agents);
+  // Collect all unique MCP IDs to avoid N+1 query
+  const allMcpIds = new Set<string>();
+  agents.forEach(agent => {
+    agent.mcpTools?.forEach(mcpTool => {
+      allMcpIds.add(mcpTool.mcpId);
+    });
+  });
+
+  // Fetch all MCPs in a single query
+  const mcps = await prisma.mcp.findMany({
+    where: {
+      id: { in: Array.from(allMcpIds) },
+    },
+  });
+
+  // Create lookup map for O(1) access
+  const mcpLookup = new Map(mcps.map(mcp => [mcp.id, mcp]));
+
+  // Map agents with MCP details using the lookup
+  const agentsWithMcpDetails = agents.map(agent => {
+    if (!agent.mcpTools?.length) return agent;
+
+    const mcpToolsWithDetails = agent.mcpTools.map(mcpTool => ({
+      ...mcpTool,
+      mcp: mcpLookup.get(mcpTool.mcpId) || null,
+    }));
+
+    return {
+      ...agent,
+      mcpTools: mcpToolsWithDetails,
+    };
+  });
+
+  return createSuccessResponse(agentsWithMcpDetails);
 });
 
 /**
@@ -39,21 +73,46 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const { data, error } = await validateRequestBody(request, agentSchema());
   if (error) return error;
 
-  const { name, description, modelId, promptId, labelId, config } = data;
+  const { name, description, modelId, promptId, labelId, config, mcpTools } =
+    data as {
+      name: string;
+      description?: string;
+      modelId: string;
+      promptId: string;
+      labelId?: string;
+      config?: Record<string, unknown> | null;
+      mcpTools?: string[];
+    };
+
+  // Parse MCP tool IDs if provided
+  const mcpToolConnections =
+    mcpTools?.map((toolId: string) => {
+      const [mcpId, toolName] = toolId.split(':');
+      return { mcpId, toolName };
+    }) || [];
 
   const agent = await prisma.agent.create({
     data: {
       name,
-      description,
+      description: description || null,
       modelId,
       promptId,
       labelId,
       config: config as Prisma.InputJsonValue,
+      mcpTools: {
+        create: mcpToolConnections.map(
+          ({ mcpId, toolName }: { mcpId: string; toolName: string }) => ({
+            mcpId,
+            toolName,
+          })
+        ),
+      },
     },
     include: {
       model: true,
       prompt: true,
       label: true,
+      mcpTools: true,
     },
   });
 

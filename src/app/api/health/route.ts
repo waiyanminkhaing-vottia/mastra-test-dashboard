@@ -1,5 +1,4 @@
-import { createSuccessResponse, withApiProtection } from '@/lib/api-utils';
-import { rateLimiters } from '@/lib/rate-limit';
+import { createSuccessResponse, withErrorHandling } from '@/lib/api-utils';
 
 /**
  * GET /api/health
@@ -7,7 +6,7 @@ import { rateLimiters } from '@/lib/rate-limit';
  * Includes database connectivity, memory usage, and service status
  * @returns JSON response with detailed health information
  */
-export const GET = withApiProtection(rateLimiters.readonly, async () => {
+export const GET = withErrorHandling(async () => {
   const startTime = Date.now();
 
   // Basic system information

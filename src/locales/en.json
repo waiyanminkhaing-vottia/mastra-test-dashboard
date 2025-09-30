@@ -14,22 +14,32 @@
     "back": "Back",
     "copy": "Copy",
     "copied": "Copied",
+    "copyUrl": "Copy URL",
     "duplicate": "Duplicate",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "error": "Error",
-    "notFound": "Not Found"
+    "notFound": "Not Found",
+    "creating": "Creating...",
+    "updating": "Updating...",
+    "loading": "Loading",
+    "refresh": "Refresh",
+    "yes": "Yes",
+    "no": "No"
   },
   "menu": {
     "management": "Management",
     "models": "Models",
     "prompts": "Prompts",
+    "mcps": "MCPs",
     "agents": "Agents"
   },
   "breadcrumbs": {
     "management": "Management",
     "models": "Models",
     "prompts": "Prompts",
+    "mcps": "MCPs",
+    "newMcp": "New MCP",
     "agents": "Agents"
   },
   "models": {
@@ -209,12 +219,21 @@
       "updateButton": "Update Agent",
       "updatingButton": "Updating..."
     },
+    "mcpTools": {
+      "title": "MCP Tools",
+      "description": "Select tools from MCP servers to add to this agent",
+      "noMcps": "No MCP servers configured",
+      "error": "Error",
+      "noToolsAvailable": "No tools available",
+      "selected": "selected"
+    },
     "table": {
       "name": "Name",
       "model": "Model",
       "prompt": "Prompt",
       "label": "Label",
       "config": "LLM Config",
+      "mcpTools": "MCP Tools",
       "created": "Created",
       "updated": "Updated",
       "actions": "Actions",
@@ -233,6 +252,65 @@
       "agentNotFoundDescription": "The agent you're looking for doesn't exist or has been removed.",
       "agentAlreadyExists": "An agent with this name already exists",
       "invalidAgentReference": "Invalid reference in agent data"
+    }
+  },
+  "mcps": {
+    "title": "MCPs",
+    "addMcp": "Add MCP",
+    "form": {
+      "title": "Add MCP",
+      "description": "Create a new Model Control Protocol connection.",
+      "editTitle": "Edit MCP",
+      "editDescription": "Update the MCP configuration.",
+      "nameField": "Name",
+      "namePlaceholder": "e.g., File System, Database, Web Search",
+      "urlField": "URL",
+      "urlPlaceholder": "e.g., https://example.com/mcp-server",
+      "nameRequired": "Name is required",
+      "urlRequired": "URL is required",
+      "invalidUrl": "Please enter a valid URL",
+      "createMcp": "Create MCP",
+      "updateMcp": "Update MCP",
+      "createSuccess": "MCP created successfully",
+      "createError": "Failed to create MCP",
+      "updateSuccess": "MCP updated successfully",
+      "updateError": "Failed to update MCP",
+      "loadError": "Failed to load MCP",
+      "notFound": "MCP not found"
+    },
+    "table": {
+      "name": "Name",
+      "url": "URL",
+      "tools": "Tools",
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions",
+      "noMcps": "No data available."
+    },
+    "validation": {
+      "nameRequired": "Name is required",
+      "nameMaxLength": "Name must be less than 100 characters",
+      "nameInvalidChars": "Name can only contain letters, numbers, hyphens, underscores, and dots",
+      "urlRequired": "URL is required",
+      "urlInvalid": "Please enter a valid URL"
+    },
+    "errors": {
+      "mcpNotFound": "MCP not found",
+      "mcpNotFoundDescription": "The MCP you're looking for doesn't exist or has been removed.",
+      "mcpAlreadyExists": "An MCP with this name already exists",
+      "invalidMcpReference": "Invalid reference in MCP data"
+    },
+    "tools": {
+      "title": "MCP Tools",
+      "description": "Available tools for",
+      "viewTools": "View Tools",
+      "table": {
+        "name": "Tool Name",
+        "description": "Description",
+        "noTools": "No tools available for this MCP",
+        "noDescription": "No description provided"
+      },
+      "totalCount": "Total tools"
     }
   }
 }

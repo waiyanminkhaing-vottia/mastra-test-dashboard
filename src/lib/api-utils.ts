@@ -97,30 +97,6 @@ export function withErrorHandling<T extends unknown[]>(
 }
 
 /**
- * Higher-order function that combines rate limiting and error handling for API routes
- * @param rateLimiter - Rate limiting function (use rateLimiters.api, rateLimiters.readonly, etc.)
- * @param handler - API route handler function
- * @returns Wrapped handler with rate limiting and error catching
- */
-export function withApiProtection<T extends unknown[]>(
-  rateLimiter: (request: NextRequest) => Promise<NextResponse | null>,
-  handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
-) {
-  return withErrorHandling(
-    async (request: NextRequest, ...args: T): Promise<NextResponse> => {
-      // Apply rate limiting first
-      const rateLimitResult = await rateLimiter(request);
-      if (rateLimitResult) {
-        return rateLimitResult;
-      }
-
-      // Then execute the handler
-      return handler(request, ...args);
-    }
-  );
-}
-
-/**
  * Handles Prisma errors and converts them to appropriate HTTP responses
  * @param error - The error object from Prisma or other sources
  * @returns NextResponse with appropriate error message and status

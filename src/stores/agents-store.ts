@@ -16,19 +16,23 @@ interface AgentsActions {
   fetchAgent: (id: string) => Promise<AgentWithRelations>;
   createAgent: (data: {
     name: string;
+    description?: string;
     modelId: string;
     promptId: string;
     labelId?: string;
     config?: Record<string, unknown> | null;
+    mcpTools?: string[];
   }) => Promise<AgentWithRelations>;
   updateAgent: (
     id: string,
     data: {
       name: string;
+      description?: string;
       modelId: string;
       promptId: string;
       labelId?: string;
       config?: Record<string, unknown> | null;
+      mcpTools?: string[];
     }
   ) => Promise<AgentWithRelations>;
   setLoading: (loading: boolean) => void;

@@ -6,7 +6,7 @@ import {
   withErrorHandling,
 } from '@/lib/api-utils';
 import { prisma } from '@/lib/prisma';
-import { modelSchema } from '@/lib/validations/model';
+import { modelSchema, Provider } from '@/lib/validations/model';
 
 /**
  * GET /api/models
@@ -33,12 +33,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const { data, error } = await validateRequestBody(request, modelSchema());
   if (error) return error;
 
-  const { name, provider } = data;
+  const { name, provider } = data as { name: string; provider: string };
 
   const model = await prisma.model.create({
     data: {
       name,
-      provider,
+      provider: provider as Provider,
     },
   });
 

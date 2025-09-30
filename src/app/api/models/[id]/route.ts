@@ -6,7 +6,7 @@ import {
   withErrorHandling,
 } from '@/lib/api-utils';
 import { prisma } from '@/lib/prisma';
-import { modelSchema } from '@/lib/validations/model';
+import { modelSchema, Provider } from '@/lib/validations/model';
 
 /**
  * PUT /api/models/[id]
@@ -25,14 +25,14 @@ export const PUT = withErrorHandling(
     const { data, error } = await validateRequestBody(request, modelSchema());
     if (error) return error;
 
-    const { name, provider } = data;
+    const { name, provider } = data as { name: string; provider: string };
 
     // Update the model
     const updatedModel = await prisma.model.update({
       where: { id },
       data: {
         name,
-        provider,
+        provider: provider as Provider,
       },
     });
 

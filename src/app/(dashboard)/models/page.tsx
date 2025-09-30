@@ -46,7 +46,7 @@ export default function ModelsPage() {
     sortField,
     sortDirection,
     handleSort,
-  } = useTableSort(models, {
+  } = useTableSort<Model>(models, {
     defaultSortField: 'createdAt',
     defaultSortDirection: 'asc',
   });
@@ -93,7 +93,7 @@ export default function ModelsPage() {
               <TableRow>
                 <TableHead>
                   <TableSortButton
-                    field="name"
+                    field={'name' as keyof Model}
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
@@ -104,7 +104,7 @@ export default function ModelsPage() {
                 <TableHead>{t('models.table.provider')}</TableHead>
                 <TableHead>
                   <TableSortButton
-                    field="createdAt"
+                    field={'createdAt' as keyof Model}
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
@@ -114,7 +114,7 @@ export default function ModelsPage() {
                 </TableHead>
                 <TableHead>
                   <TableSortButton
-                    field="updatedAt"
+                    field={'updatedAt' as keyof Model}
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}

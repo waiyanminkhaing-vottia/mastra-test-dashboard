@@ -1,6 +1,14 @@
 'use client';
 
-import * as React from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import enTranslations from '@/locales/en.json';
 import jaTranslations from '@/locales/ja.json';
@@ -21,7 +29,7 @@ interface LanguageContextType {
 }
 
 /** React context for language and translation functionality */
-const LanguageContext = React.createContext<LanguageContextType | null>(null);
+const LanguageContext = createContext<LanguageContextType | null>(null);
 
 /** Translation data mapping for each supported language */
 const translations = {
@@ -35,12 +43,12 @@ const translations = {
  * @param props Component properties
  * @param props.children Child components to render within the provider
  */
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = React.useState<Language>('en');
-  const [mounted, setMounted] = React.useState(false);
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguage] = useState<Language>('en');
+  const [mounted, setMounted] = useState(false);
 
   // Handle hydration
-  React.useEffect(() => {
+  useEffect(() => {
     setMounted(true);
     // Read from cookie after mount to avoid hydration mismatch
     const savedLanguage = document.cookie
@@ -53,7 +61,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const handleSetLanguage = React.useCallback((newLanguage: Language) => {
+  const handleSetLanguage = useCallback((newLanguage: Language) => {
     setLanguage(newLanguage);
     // Save to cookie
     document.cookie = `language=${newLanguage}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Strict${
@@ -63,7 +71,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }`;
   }, []);
 
-  const t = React.useCallback(
+  const t = useCallback(
     (key: string) => {
       const keys = key.split('.');
       let value: unknown = translations[language];
@@ -77,7 +85,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     [language]
   );
 
-  const value = React.useMemo(
+  const value = useMemo(
     () => ({
       language,
       setLanguage: handleSetLanguage,
@@ -100,7 +108,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
  * @throws Error if used outside of LanguageProvider
  */
 export function useLanguage() {
-  const context = React.useContext(LanguageContext);
+  const context = useContext(LanguageContext);
   if (!context) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }

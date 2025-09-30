@@ -1,6 +1,6 @@
 'use client';
 
-import type { Model } from '@prisma/client';
+import type { Mcp } from '@prisma/client';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -15,68 +15,60 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useLanguage } from '@/contexts/language-context';
 import { useFormErrorHandler } from '@/hooks/use-form-error-handler';
-import { PROVIDERS } from '@/lib/constants';
 import { validateClientSide } from '@/lib/validation-utils';
-import { modelSchema, type Provider } from '@/lib/validations/model';
-import { useModelsStore } from '@/stores/models-store';
+import { mcpSchema } from '@/lib/validations/mcp';
+import { useMcpsStore } from '@/stores/mcps-store';
 
-interface ModelDialogProps {
+interface McpDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  model?: Model | null; // For edit mode
+  mcp?: Mcp | null; // For edit mode
 }
 
 /**
- * Dialog component for creating and editing AI model configurations
+ * Dialog component for creating and editing MCP configurations
  * @param props Component properties
  * @param props.open Whether the dialog is currently open
  * @param props.onOpenChange Callback function called when dialog open state changes
- * @param props.onSuccess Callback function called when model is successfully created or updated
- * @param props.model Optional model object for editing existing models
- * @returns JSX element containing the model creation/editing dialog
+ * @param props.onSuccess Callback function called when MCP is successfully created or updated
+ * @param props.mcp Optional MCP object for editing existing MCPs
+ * @returns JSX element containing the MCP creation/editing dialog
  */
-export function ModelDialog({
+export function McpDialog({
   open,
   onOpenChange,
   onSuccess,
-  model,
-}: ModelDialogProps) {
+  mcp,
+}: McpDialogProps) {
   const { t } = useLanguage();
-  const { createModel, updateModel, isCreating, isUpdating } = useModelsStore();
+  const { createMcp, updateMcp, isCreating, isUpdating } = useMcpsStore();
   const [name, setName] = useState('');
-  const [provider, setProvider] = useState<Provider | ''>('');
+  const [url, setUrl] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const handleFormError = useFormErrorHandler(t, setErrors, setGeneralError);
-  const isEditing = !!model;
+  const isEditing = !!mcp;
   const loading = isCreating || isUpdating;
 
-  // Reset form when model changes or dialog opens/closes
+  // Reset form when mcp changes or dialog opens/closes
   useEffect(() => {
     if (open) {
-      if (model) {
+      if (mcp) {
         // Edit mode: populate with existing data
-        setName(model.name);
-        setProvider(model.provider);
+        setName(mcp.name);
+        setUrl(mcp.url);
       } else {
         // Add mode: clear form
         setName('');
-        setProvider('');
+        setUrl('');
       }
       setErrors({});
       setGeneralError(null);
     }
-  }, [model, open]);
+  }, [mcp, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,9 +76,9 @@ export function ModelDialog({
     setGeneralError(null);
 
     // Client-side validation with common utility
-    const validation = validateClientSide(modelSchema(t), {
+    const validation = validateClientSide(mcpSchema(t), {
       name: name.trim(),
-      provider,
+      url: url.trim(),
     });
 
     if (!validation.success) {
@@ -95,27 +87,25 @@ export function ModelDialog({
     }
 
     try {
-      if (isEditing && model) {
-        await updateModel(
-          model.id,
-          validation.data as { name: string; provider: string }
+      if (isEditing && mcp) {
+        await updateMcp(
+          mcp.id,
+          validation.data as { name: string; url: string }
         );
       } else {
-        await createModel(
-          validation.data as { name: string; provider: string }
-        );
+        await createMcp(validation.data as { name: string; url: string });
       }
 
       // If we reach here, the operation was successful
       setName('');
-      setProvider('');
+      setUrl('');
       setErrors({});
       setGeneralError(null);
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
       handleFormError(error, {
-        conflictErrorKey: 'models.errors.modelAlreadyExists',
+        conflictErrorKey: 'mcps.errors.mcpAlreadyExists',
       });
     }
   };
@@ -126,12 +116,12 @@ export function ModelDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
-              {isEditing ? t('models.form.editTitle') : t('models.form.title')}
+              {isEditing ? t('mcps.form.editTitle') : t('mcps.form.title')}
             </DialogTitle>
             <DialogDescription>
               {isEditing
-                ? t('models.form.editDescription')
-                : t('models.form.description')}
+                ? t('mcps.form.editDescription')
+                : t('mcps.form.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -143,44 +133,31 @@ export function ModelDialog({
 
           <div className="grid gap-6 py-6">
             <div className="grid gap-3">
-              <Label htmlFor="provider">{t('models.form.providerField')}</Label>
-              <Select
-                value={provider}
-                onValueChange={value => setProvider(value as Provider)}
-                required
-              >
-                <SelectTrigger
-                  className={errors.provider ? 'border-red-500' : ''}
-                >
-                  <SelectValue
-                    placeholder={t('models.form.providerPlaceholder')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROVIDERS.map(p => (
-                    <SelectItem key={p.value} value={p.value}>
-                      {p.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.provider && (
-                <p className="text-sm text-red-500">{errors.provider}</p>
-              )}
-            </div>
-
-            <div className="grid gap-3">
-              <Label htmlFor="name">{t('models.form.nameField')}</Label>
+              <Label htmlFor="name">{t('mcps.form.nameField')} *</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder={t('models.form.namePlaceholder')}
+                placeholder={t('mcps.form.namePlaceholder')}
                 className={errors.name ? 'border-red-500' : ''}
                 required
               />
               {errors.name && (
                 <p className="text-sm text-red-500">{errors.name}</p>
+              )}
+            </div>
+
+            <div className="grid gap-3">
+              <Label htmlFor="url">{t('mcps.form.urlField')} *</Label>
+              <Input
+                id="url"
+                value={url}
+                onChange={e => setUrl(e.target.value)}
+                placeholder={t('mcps.form.urlPlaceholder')}
+                className={errors.url ? 'border-red-500' : ''}
+              />
+              {errors.url && (
+                <p className="text-sm text-red-500">{errors.url}</p>
               )}
             </div>
           </div>
@@ -192,20 +169,20 @@ export function ModelDialog({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              {t('models.form.cancelButton')}
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
-              disabled={loading || !name.trim() || !provider}
+              disabled={loading || !name.trim() || !url.trim()}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {loading
                 ? isEditing
-                  ? t('models.form.updatingButton')
-                  : t('models.form.creatingButton')
+                  ? t('common.updating')
+                  : t('common.creating')
                 : isEditing
-                  ? t('models.form.updateButton')
-                  : t('models.form.createButton')}
+                  ? t('mcps.form.updateMcp')
+                  : t('mcps.form.createMcp')}
             </Button>
           </DialogFooter>
         </form>

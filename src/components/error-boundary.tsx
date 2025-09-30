@@ -30,7 +30,7 @@ function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
   const { t } = useLanguage();
 
   return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50 p-8 text-center">
+    <div className="flex min-h-[400px] flex-col items-center justify-center p-8 text-center">
       <div className="mb-4 text-red-600">
         <svg
           className="mx-auto h-12 w-12"

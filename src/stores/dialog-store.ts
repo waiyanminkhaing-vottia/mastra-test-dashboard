@@ -1,4 +1,4 @@
-import type { Model, Prompt } from '@prisma/client';
+import type { Mcp, Model, Prompt } from '@prisma/client';
 import { create } from 'zustand';
 
 /**
@@ -11,6 +11,8 @@ export const DIALOG_TYPES = {
   PROMPT_CREATE: 'prompt-create',
   PROMPT_EDIT: 'prompt-edit',
   PROMPT_LABEL_CHANGE: 'prompt-label-change',
+  MCP_CREATE: 'mcp-create',
+  MCP_EDIT: 'mcp-edit',
 } as const;
 
 type DialogType =
@@ -19,6 +21,8 @@ type DialogType =
   | typeof DIALOG_TYPES.PROMPT_CREATE
   | typeof DIALOG_TYPES.PROMPT_EDIT
   | typeof DIALOG_TYPES.PROMPT_LABEL_CHANGE
+  | typeof DIALOG_TYPES.MCP_CREATE
+  | typeof DIALOG_TYPES.MCP_EDIT
   | null;
 
 interface DialogData {
@@ -31,6 +35,8 @@ interface DialogData {
     currentLabelId?: string;
     currentLabelName?: string;
   };
+  [DIALOG_TYPES.MCP_CREATE]: undefined;
+  [DIALOG_TYPES.MCP_EDIT]: Mcp;
   null: undefined;
 }
 
@@ -148,6 +154,24 @@ export const usePromptLabelChangeDialog = () => {
         : null,
     open: (data: DialogData[typeof DIALOG_TYPES.PROMPT_LABEL_CHANGE]) =>
       openDialog(DIALOG_TYPES.PROMPT_LABEL_CHANGE, data),
+    close: closeDialog,
+  };
+};
+
+/**
+ * Hook for managing MCP-specific dialogs
+ */
+export const useMcpDialog = () => {
+  const { activeDialog, dialogData, openDialog, closeDialog } =
+    useDialogStore();
+
+  return {
+    isCreateOpen: activeDialog === DIALOG_TYPES.MCP_CREATE,
+    isEditOpen: activeDialog === DIALOG_TYPES.MCP_EDIT,
+    editingMcp:
+      activeDialog === DIALOG_TYPES.MCP_EDIT ? (dialogData as Mcp) : null,
+    openCreate: () => openDialog(DIALOG_TYPES.MCP_CREATE),
+    openEdit: (mcp: Mcp) => openDialog(DIALOG_TYPES.MCP_EDIT, mcp),
     close: closeDialog,
   };
 };

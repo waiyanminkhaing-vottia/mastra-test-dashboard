@@ -1,10 +1,10 @@
 'use client';
 
-import { Bot, Cpu, FileText } from 'lucide-react';
+import { Bot, Cpu, FileText, Plug } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import * as React from 'react';
+import type { ComponentProps } from 'react';
 
 import {
   Sidebar,
@@ -27,7 +27,7 @@ import { getAssetPath } from '@/lib/utils';
  * @param props - Sidebar component props
  * @returns Sidebar component with navigation menu
  */
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const { t, isLoading: languageLoading } = useLanguage();
   const pathname = usePathname();
 
@@ -79,6 +79,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Link href="/prompts">
                     <FileText className="size-4" />
                     <span>{t('menu.prompts')}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith('/mcps')}
+                >
+                  <Link href="/mcps">
+                    <Plug className="size-4" />
+                    <span>{t('menu.mcps')}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
