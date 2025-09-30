@@ -145,13 +145,23 @@ jobs:
           REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
           echo "Registry IP: $REGISTRY_IP"
 
-          # Extract NEXT_PUBLIC_BASE_PATH before renaming
+          # Extract NEXT_PUBLIC_BASE_PATH before modifying files
           NEXT_PUBLIC_BASE_PATH=$(grep "NEXT_PUBLIC_BASE_PATH" ".env.$ENV_FILE" | cut -d'=' -f2 || echo "")
           echo "🔍 Building with NEXT_PUBLIC_BASE_PATH: '$NEXT_PUBLIC_BASE_PATH'"
           echo "🔍 Building with BUILD_ENV: '$ENV_FILE'"
 
+          # Remove all .env files except the one we need
+          # This prevents Next.js from detecting and using the wrong environment
+          echo "🔍 Removing other env files to prevent conflicts..."
+          rm -f .env.local .env.example
+          if [ "$ENV_FILE" != "development" ]; then
+            rm -f .env.development
+          fi
+          if [ "$ENV_FILE" != "production" ]; then
+            rm -f .env.production
+          fi
+
           # Rename environment-specific file to .env for build
-          # This ensures Next.js only uses the correct environment file
           mv ".env.$ENV_FILE" .env
 
           # Verify build environment file
@@ -159,6 +169,8 @@ jobs:
           if [ -f ".env" ]; then
             echo "✅ .env file ready for build (from $ENV_FILE)"
             echo "📄 File size: $(wc -l < ".env") lines"
+            echo "📁 Remaining env files:"
+            ls -la .env* 2>/dev/null || echo "Only .env exists"
           else
             echo "❌ .env file missing for build"
             exit 1
