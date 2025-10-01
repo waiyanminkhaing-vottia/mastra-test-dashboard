@@ -20,13 +20,24 @@ const DEFAULT_CONFIG: LLMConfig = {
 
 /**
  * Custom hook for managing agent form state and logic
+ * Uses selective Zustand subscriptions to prevent unnecessary re-renders
  */
 export function useAgentForm(agent?: AgentWithRelations | null) {
   const { t } = useLanguage();
-  const { createAgent, updateAgent, isCreating, isUpdating } = useAgentsStore();
-  const { models, fetchModels } = useModelsStore();
-  const { prompts, fetchPrompts } = usePromptsStore();
-  const { fetchLabels: fetchPromptLabels } = usePromptLabelsStore();
+
+  // Selective store subscriptions to avoid unnecessary re-renders
+  const createAgent = useAgentsStore(state => state.createAgent);
+  const updateAgent = useAgentsStore(state => state.updateAgent);
+  const isCreating = useAgentsStore(state => state.isCreating);
+  const isUpdating = useAgentsStore(state => state.isUpdating);
+
+  const models = useModelsStore(state => state.models);
+  const fetchModels = useModelsStore(state => state.fetchModels);
+
+  const prompts = usePromptsStore(state => state.prompts);
+  const fetchPrompts = usePromptsStore(state => state.fetchPrompts);
+
+  const fetchPromptLabels = usePromptLabelsStore(state => state.fetchLabels);
 
   // Form state
   const [name, setName] = useState('');
@@ -71,12 +82,14 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
     return Array.from(uniqueLabels.values());
   }, [promptId, prompts]);
 
-  // Data fetching
+  // Fetch initial data on mount
   useEffect(() => {
     fetchModels();
     fetchPrompts();
     fetchPromptLabels();
-  }, [fetchModels, fetchPrompts, fetchPromptLabels]);
+    // Zustand functions are stable, don't need to be in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Form initialization
   useEffect(() => {

@@ -230,9 +230,7 @@
     "subAgents": {
       "title": "Sub-Agents",
       "description": "Select agents to add as sub-agents for this agent",
-      "noAgents": "No agents available to add as sub-agents",
-      "selectAll": "All Agents",
-      "selected": "selected"
+      "noAgents": "No agents available to add as sub-agents"
     },
     "table": {
       "name": "Name",
@@ -241,6 +239,7 @@
       "label": "Label",
       "config": "LLM Config",
       "mcpTools": "MCP Tools",
+      "subAgents": "Sub-Agents",
       "created": "Created",
       "updated": "Updated",
       "actions": "Actions",

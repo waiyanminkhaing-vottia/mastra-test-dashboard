@@ -102,14 +102,19 @@ interface AgentMcpToolsSectionProps {
 
 /**
  * Component for selecting MCP tools in agent forms
- * Optimized with React.memo and comprehensive caching
+ * Optimized with React.memo, selective Zustand subscriptions, and comprehensive caching
  */
 function AgentMcpToolsSectionComponent({
   selectedTools,
   onSelectedToolsChange,
 }: AgentMcpToolsSectionProps) {
   const { t } = useLanguage();
-  const { mcps, loading, fetchMcps } = useMcpsStore();
+
+  // Selective store subscriptions to avoid unnecessary re-renders
+  const mcps = useMcpsStore(state => state.mcps);
+  const loading = useMcpsStore(state => state.loading);
+  const fetchMcps = useMcpsStore(state => state.fetchMcps);
+
   const [mcpsWithTools, setMcpsWithTools] = useState<McpWithTools[]>([]);
   const resourcesRef = useRef<ResourceManager>({
     controllers: new Map(),
@@ -118,12 +123,14 @@ function AgentMcpToolsSectionComponent({
   });
   const lruCacheRef = useRef<LRUCache<string, McpTool[]>>(new LRUCache(50));
 
-  // Cache TTL in milliseconds (5 minutes)
-  const CACHE_TTL = 5 * 60 * 1000;
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+  // Fetch MCPs on mount
   useEffect(() => {
     fetchMcps();
-  }, [fetchMcps]);
+    // Zustand functions are stable, don't need to be in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Centralized cleanup effect with error handling
   useEffect(() => {

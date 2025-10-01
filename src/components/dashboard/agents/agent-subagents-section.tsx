@@ -1,14 +1,8 @@
 'use client';
 
-import { ChevronDown } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,6 +18,7 @@ interface AgentSubAgentsSectionProps {
 /**
  * Component for selecting sub-agents in agent forms
  * Allows agents to have other agents as sub-agents
+ * Uses selective Zustand subscriptions to prevent unnecessary re-renders
  */
 function AgentSubAgentsSectionComponent({
   selectedSubAgents,
@@ -31,23 +26,29 @@ function AgentSubAgentsSectionComponent({
   currentAgentId,
 }: AgentSubAgentsSectionProps) {
   const { t } = useLanguage();
-  const { agents, loading, fetchAgents } = useAgentsStore();
 
+  // Selective store subscriptions to avoid unnecessary re-renders
+  const agents = useAgentsStore(state => state.agents);
+  const loading = useAgentsStore(state => state.loading);
+  const fetchAgents = useAgentsStore(state => state.fetchAgents);
+
+  // Fetch agents on mount
   useEffect(() => {
     fetchAgents();
-  }, [fetchAgents]);
+    // Zustand functions are stable, don't need to be in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Filter out the current agent to prevent self-reference and circular dependencies
+  // Filter out the current agent to prevent self-reference
+  // Note: We don't filter out existing sub-agents because users need to see them to uncheck them
   const availableAgents = useMemo(() => {
     if (!agents) return [];
+
     return agents.filter(agent => {
-      // Exclude current agent
-      if (currentAgentId && agent.id === currentAgentId) return false;
-      // Exclude agents that already have this agent as parent (prevent circular)
-      // TypeScript may not have picked up the regenerated Prisma types yet
-      const parentId = (agent as unknown as { parentId?: string | null })
-        .parentId;
-      if (currentAgentId && parentId === currentAgentId) return false;
+      // Exclude current agent (can't add itself as sub-agent)
+      if (currentAgentId && agent.id === currentAgentId) {
+        return false;
+      }
       return true;
     });
   }, [agents, currentAgentId]);
@@ -64,23 +65,6 @@ function AgentSubAgentsSectionComponent({
     },
     [selectedSubAgents, onSelectedSubAgentsChange]
   );
-
-  const handleSelectAll = useCallback(
-    (selectAll: boolean) => {
-      if (selectAll) {
-        const allIds = availableAgents.map(agent => agent.id);
-        onSelectedSubAgentsChange(allIds);
-      } else {
-        onSelectedSubAgentsChange([]);
-      }
-    },
-    [availableAgents, onSelectedSubAgentsChange]
-  );
-
-  const allSelected =
-    availableAgents.length > 0 &&
-    selectedSubAgents.length === availableAgents.length;
-  const someSelected = selectedSubAgents.length > 0 && !allSelected;
 
   if (loading) {
     return (
@@ -135,86 +119,46 @@ function AgentSubAgentsSectionComponent({
             {t('agents.subAgents.noAgents')}
           </p>
         ) : (
-          <Collapsible className="w-full">
-            <div className="flex items-center gap-3 py-2 border-b">
-              <Checkbox
-                checked={allSelected || someSelected}
-                onCheckedChange={checked => handleSelectAll(checked === true)}
-                aria-label={
-                  allSelected ? 'Deselect all agents' : 'Select all agents'
-                }
-                id="sub-agents-select-all"
-              />
-              <CollapsibleTrigger className="group flex items-center justify-between w-full">
-                <Label
-                  htmlFor="sub-agents-select-all"
-                  className="font-medium cursor-pointer"
-                >
-                  {t('agents.subAgents.selectAll')}
-                </Label>
-                <div className="flex items-center gap-2">
-                  {selectedSubAgents.length > 0 && (
-                    <span className="text-xs border px-2 py-1 rounded-full bg-transparent">
-                      {selectedSubAgents.length}{' '}
-                      {t('agents.subAgents.selected')}
-                    </span>
-                  )}
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                </div>
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent>
-              <div
-                className="space-y-3 mt-4"
-                role="group"
-                aria-labelledby="sub-agents-section-title"
-                aria-describedby="sub-agents-section-description"
-              >
-                {availableAgents.map(agent => {
-                  const isSelected = selectedSubAgents.includes(agent.id);
+          <div
+            className="space-y-2 w-full"
+            role="group"
+            aria-labelledby="sub-agents-section-title"
+            aria-describedby="sub-agents-section-description"
+          >
+            {availableAgents.map(agent => {
+              const isSelected = selectedSubAgents.includes(agent.id);
 
-                  return (
-                    <div key={agent.id} className="flex items-start gap-3 py-2">
-                      <Checkbox
-                        id={`subagent-${agent.id}`}
-                        checked={isSelected}
-                        onCheckedChange={checked =>
-                          handleSubAgentSelection(agent.id, checked === true)
-                        }
-                        className="mt-1"
-                        aria-describedby={
-                          agent.description
-                            ? `agent-description-${agent.id}`
-                            : undefined
-                        }
-                        aria-label={
-                          agent.description
-                            ? undefined
-                            : `Select ${agent.name} as sub-agent`
-                        }
-                      />
-                      <div className="flex-1 min-w-0">
+              return (
+                <div key={agent.id} className="w-full border-b last:border-b-0">
+                  <div className="flex items-center gap-3 py-4 w-full">
+                    <Checkbox
+                      id={`subagent-${agent.id}`}
+                      checked={isSelected}
+                      onCheckedChange={checked =>
+                        handleSubAgentSelection(agent.id, checked === true)
+                      }
+                      aria-label={`Select ${agent.name} as sub-agent`}
+                    />
+                    <div className="flex items-center justify-between w-full">
+                      <div className="text-left">
                         <Label
                           htmlFor={`subagent-${agent.id}`}
-                          className="text-sm font-medium cursor-pointer"
+                          className="font-medium cursor-pointer"
                         >
                           {agent.name}
                         </Label>
                         {agent.description && (
-                          <div
-                            id={`agent-description-${agent.id}`}
-                            className="text-xs text-muted-foreground mt-1 break-words"
-                          >
+                          <div className="text-xs text-muted-foreground">
                             {agent.description}
                           </div>
                         )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

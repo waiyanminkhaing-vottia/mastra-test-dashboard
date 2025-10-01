@@ -229,9 +229,7 @@
     "subAgents": {
       "title": "サブエージェント",
       "description": "このエージェントのサブエージェントとして追加するエージェントを選択してください",
-      "noAgents": "サブエージェントとして追加できるエージェントがありません",
-      "selectAll": "すべてのエージェント",
-      "selected": "選択済み"
+      "noAgents": "サブエージェントとして追加できるエージェントがありません"
     },
     "table": {
       "name": "名前",
@@ -240,6 +238,7 @@
       "label": "ラベル",
       "config": "LLM設定",
       "mcpTools": "MCPツール",
+      "subAgents": "サブエージェント",
       "created": "作成日",
       "updated": "更新日",
       "actions": "操作",
