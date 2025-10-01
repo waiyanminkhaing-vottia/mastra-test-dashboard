@@ -24,7 +24,7 @@ import { useTableSort } from '@/hooks/use-table-sort';
 import { getProviderLabel } from '@/lib/constants';
 import { formatDate } from '@/lib/utils';
 import { useAgentsStore } from '@/stores/agents-store';
-import type { AgentWithRelations } from '@/types/agent';
+import type { AgentMcpToolWithMcp, AgentWithRelations } from '@/types/agent';
 import type { LLMConfig } from '@/types/config';
 
 /**
@@ -195,7 +195,10 @@ export default function AgentsPage() {
                                       // Group tools by MCP server
                                       const groupedTools =
                                         agent.mcpTools.reduce(
-                                          (acc, agentMcpTool) => {
+                                          (
+                                            acc: Record<string, string[]>,
+                                            agentMcpTool: AgentMcpToolWithMcp
+                                          ) => {
                                             const mcpName =
                                               agentMcpTool.mcp?.name ||
                                               'Unknown MCP';
@@ -220,7 +223,7 @@ export default function AgentsPage() {
                                               {mcpName}:
                                             </div>
                                             <div className="flex flex-wrap gap-1">
-                                              {tools.map(toolName => (
+                                              {tools.map((toolName: string) => (
                                                 <Badge
                                                   key={toolName}
                                                   variant="outline"

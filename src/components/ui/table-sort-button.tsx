@@ -2,12 +2,14 @@ import { ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
+type StringKeyOf<T> = Extract<keyof T, string>;
+
 interface TableSortButtonProps<T> {
-  field: keyof T;
+  field: StringKeyOf<T>;
   children: React.ReactNode;
-  sortField: keyof T | null;
+  sortField: StringKeyOf<T> | null;
   sortDirection: 'asc' | 'desc';
-  onSort: (field: keyof T) => void;
+  onSort: (field: StringKeyOf<T>) => void;
 }
 
 export function TableSortButton<T>({

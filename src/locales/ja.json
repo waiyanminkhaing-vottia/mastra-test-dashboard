@@ -226,6 +226,13 @@
       "noToolsAvailable": "利用可能なツールがありません",
       "selected": "選択済み"
     },
+    "subAgents": {
+      "title": "サブエージェント",
+      "description": "このエージェントのサブエージェントとして追加するエージェントを選択してください",
+      "noAgents": "サブエージェントとして追加できるエージェントがありません",
+      "selectAll": "すべてのエージェント",
+      "selected": "選択済み"
+    },
     "table": {
       "name": "名前",
       "model": "モデル",

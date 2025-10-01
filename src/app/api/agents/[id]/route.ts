@@ -31,6 +31,8 @@ export const GET = withErrorHandling(
         prompt: true,
         label: true,
         mcpTools: true,
+        subAgents: true,
+        parent: true,
       },
     });
 
@@ -78,16 +80,25 @@ export const PUT = withErrorHandling(
     const { data, error } = await validateRequestBody(request, agentSchema());
     if (error) return error;
 
-    const { name, description, modelId, promptId, labelId, config, mcpTools } =
-      data as {
-        name: string;
-        description?: string;
-        modelId: string;
-        promptId: string;
-        labelId?: string;
-        config?: Record<string, unknown> | null;
-        mcpTools?: string[];
-      };
+    const {
+      name,
+      description,
+      modelId,
+      promptId,
+      labelId,
+      config,
+      mcpTools,
+      subAgents,
+    } = data as {
+      name: string;
+      description?: string;
+      modelId: string;
+      promptId: string;
+      labelId?: string;
+      config?: Record<string, unknown> | null;
+      mcpTools?: string[];
+      subAgents?: string[];
+    };
 
     // Parse MCP tool IDs if provided
     const mcpToolConnections =
@@ -96,31 +107,40 @@ export const PUT = withErrorHandling(
         return { mcpId, toolName };
       }) || [];
 
+    const updateData = {
+      name,
+      description: description || null,
+      modelId,
+      promptId,
+      labelId,
+      config: config as Prisma.InputJsonValue,
+      mcpTools: {
+        deleteMany: {}, // Remove all existing MCP tool associations
+        create: mcpToolConnections.map(
+          ({ mcpId, toolName }: { mcpId: string; toolName: string }) => ({
+            mcpId,
+            toolName,
+          })
+        ),
+      },
+      subAgents: subAgents
+        ? {
+            set: subAgents.map(agentId => ({ id: agentId })),
+          }
+        : { set: [] },
+    };
+
     // Update the agent
     const updatedAgent = await prisma.agent.update({
       where: { id },
-      data: {
-        name,
-        description: description || null,
-        modelId,
-        promptId,
-        labelId,
-        config: config as Prisma.InputJsonValue,
-        mcpTools: {
-          deleteMany: {}, // Remove all existing MCP tool associations
-          create: mcpToolConnections.map(
-            ({ mcpId, toolName }: { mcpId: string; toolName: string }) => ({
-              mcpId,
-              toolName,
-            })
-          ),
-        },
-      },
+      data: updateData,
       include: {
         model: true,
         prompt: true,
         label: true,
         mcpTools: true,
+        subAgents: true,
+        parent: true,
       },
     });
 

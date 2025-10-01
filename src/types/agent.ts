@@ -25,4 +25,6 @@ export type AgentWithRelations = Agent & {
   prompt: Prompt;
   label?: PromptLabel | null;
   mcpTools?: AgentMcpToolWithMcp[];
+  subAgents?: Agent[];
+  parent?: Agent | null;
 };

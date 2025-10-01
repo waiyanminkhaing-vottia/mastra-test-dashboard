@@ -61,7 +61,9 @@ export default function NewVersionPage() {
 
       if (duplicateVersionId) {
         // If duplicating a specific version, find that version
-        versionToUse = prompt.versions.find(v => v.id === duplicateVersionId);
+        versionToUse = prompt.versions.find(
+          (v: { id: string }) => v.id === duplicateVersionId
+        );
       }
 
       if (!versionToUse) {
@@ -124,7 +126,9 @@ export default function NewVersionPage() {
   // Calculate next version number
   const nextVersionNumber =
     prompt?.versions && prompt.versions.length > 0
-      ? Math.max(...prompt.versions.map(v => v.version)) + 1
+      ? Math.max(
+          ...prompt.versions.map((v: { version: number }) => v.version)
+        ) + 1
       : 1;
 
   return (

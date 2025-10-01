@@ -38,6 +38,7 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
   const [config, setConfig] = useState<LLMConfig>(DEFAULT_CONFIG);
   const [useCustomConfig, setUseCustomConfig] = useState(false);
   const [selectedMcpTools, setSelectedMcpTools] = useState<string[]>([]);
+  const [selectedSubAgents, setSelectedSubAgents] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
 
@@ -97,6 +98,10 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
           agentMcpTool => `${agentMcpTool.mcpId}:${agentMcpTool.toolName}`
         ) || [];
       setSelectedMcpTools(mcpToolIds);
+
+      // Parse and set selected sub-agents from agent data
+      const subAgentIds = agent.subAgents?.map(subAgent => subAgent.id) || [];
+      setSelectedSubAgents(subAgentIds);
     } else if (!agent) {
       // Add mode: clear form
       setName('');
@@ -107,6 +112,7 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
       setLabelId('none');
       setUseCustomConfig(false);
       setSelectedMcpTools([]);
+      setSelectedSubAgents([]);
       setConfig(DEFAULT_CONFIG);
     }
     setErrors({});
@@ -146,6 +152,7 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
     setLabelId('none');
     setUseCustomConfig(false);
     setSelectedMcpTools([]);
+    setSelectedSubAgents([]);
     setConfig(DEFAULT_CONFIG);
     setErrors({});
     setGeneralError(null);
@@ -171,6 +178,8 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
     setUseCustomConfig,
     selectedMcpTools,
     setSelectedMcpTools,
+    selectedSubAgents,
+    setSelectedSubAgents,
     errors,
     setErrors,
     generalError,

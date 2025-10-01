@@ -19,6 +19,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/language-context';
 import { buildUrl } from '@/lib/api-client';
@@ -367,7 +368,7 @@ function AgentMcpToolsSectionComponent({
   if (loading) {
     return (
       <div className="w-full rounded-lg border p-6">
-        <div className="mb-6">
+        <div>
           <h4 className="text-sm font-medium text-gray">
             {t('agents.mcpTools.title')}
           </h4>
@@ -375,6 +376,7 @@ function AgentMcpToolsSectionComponent({
             {t('agents.mcpTools.description')}
           </p>
         </div>
+        <Separator className="my-6" />
         <div className="space-y-4">
           <div className="flex items-center gap-3 py-4">
             <Skeleton className="h-4 w-4" />
@@ -408,7 +410,7 @@ function AgentMcpToolsSectionComponent({
       }}
     >
       <div className="w-full rounded-lg border p-6">
-        <div className="mb-6">
+        <div>
           <h4
             className="text-sm font-medium text-gray"
             id="mcp-tools-section-title"
@@ -422,11 +424,12 @@ function AgentMcpToolsSectionComponent({
             {t('agents.mcpTools.description')}
           </p>
         </div>
+        <Separator className="my-6" />
         <div className="space-y-4">
           {!mcpsWithTools || mcpsWithTools.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
+            <p className="text-center py-4 text-sm text-muted-foreground">
               {t('agents.mcpTools.noMcps')}
-            </div>
+            </p>
           ) : (
             <div
               className="space-y-2 w-full"

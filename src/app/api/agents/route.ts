@@ -21,6 +21,8 @@ export const GET = withErrorHandling(async () => {
       prompt: true,
       label: true,
       mcpTools: true,
+      subAgents: true,
+      parent: true,
     },
     orderBy: {
       createdAt: 'desc',
@@ -73,16 +75,25 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const { data, error } = await validateRequestBody(request, agentSchema());
   if (error) return error;
 
-  const { name, description, modelId, promptId, labelId, config, mcpTools } =
-    data as {
-      name: string;
-      description?: string;
-      modelId: string;
-      promptId: string;
-      labelId?: string;
-      config?: Record<string, unknown> | null;
-      mcpTools?: string[];
-    };
+  const {
+    name,
+    description,
+    modelId,
+    promptId,
+    labelId,
+    config,
+    mcpTools,
+    subAgents,
+  } = data as {
+    name: string;
+    description?: string;
+    modelId: string;
+    promptId: string;
+    labelId?: string;
+    config?: Record<string, unknown> | null;
+    mcpTools?: string[];
+    subAgents?: string[];
+  };
 
   // Parse MCP tool IDs if provided
   const mcpToolConnections =
@@ -91,28 +102,37 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       return { mcpId, toolName };
     }) || [];
 
-  const agent = await prisma.agent.create({
-    data: {
-      name,
-      description: description || null,
-      modelId,
-      promptId,
-      labelId,
-      config: config as Prisma.InputJsonValue,
-      mcpTools: {
-        create: mcpToolConnections.map(
-          ({ mcpId, toolName }: { mcpId: string; toolName: string }) => ({
-            mcpId,
-            toolName,
-          })
-        ),
-      },
+  const agentData = {
+    name,
+    description: description || null,
+    modelId,
+    promptId,
+    labelId,
+    config: config as Prisma.InputJsonValue,
+    mcpTools: {
+      create: mcpToolConnections.map(
+        ({ mcpId, toolName }: { mcpId: string; toolName: string }) => ({
+          mcpId,
+          toolName,
+        })
+      ),
     },
+    subAgents: subAgents
+      ? {
+          connect: subAgents.map(id => ({ id })),
+        }
+      : undefined,
+  };
+
+  const agent = await prisma.agent.create({
+    data: agentData,
     include: {
       model: true,
       prompt: true,
       label: true,
       mcpTools: true,
+      subAgents: true,
+      parent: true,
     },
   });
 
