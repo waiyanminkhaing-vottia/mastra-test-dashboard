@@ -5,16 +5,21 @@ import {
   validateRequestBody,
   withErrorHandling,
 } from '@/lib/api-utils';
+import { getTenantId } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { createPromptSchema } from '@/lib/validations/prompt';
 
 /**
  * GET /api/prompts
- * Retrieves all prompts with their versions, ordered by creation date (newest first)
+ * Retrieves all prompts for the current tenant with their versions, ordered by creation date (newest first)
  * @returns JSON array of prompts with embedded versions
  */
 export const GET = withErrorHandling(async () => {
+  const tenantId = getTenantId();
   const prompts = await prisma.prompt.findMany({
+    where: {
+      tenantId,
+    },
     include: {
       versions: {
         include: {
@@ -44,10 +49,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   if (error) return error;
 
   const { name, description, content, promptLabelId } = data;
+  const tenantId = getTenantId();
+
   const prompt = await prisma.prompt.create({
     data: {
       name,
       description,
+      tenantId,
       versions: {
         create: {
           version: 1,

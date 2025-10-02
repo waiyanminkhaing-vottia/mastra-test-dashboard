@@ -5,6 +5,7 @@ import {
   validateRequestBody,
   withErrorHandling,
 } from '@/lib/api-utils';
+import { getTenantId } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { updatePromptVersionSchema } from '@/lib/validations/prompt-version';
 
@@ -29,13 +30,24 @@ export const PUT = withErrorHandling(
     if (error) return error;
 
     const { labelId } = data;
+    const tenantId = getTenantId();
 
     const promptVersion = await prisma.$transaction(async tx => {
-      // Get the current prompt version to find the promptId
+      // Get the current prompt version and verify prompt belongs to tenant
       const currentVersion = await tx.promptVersion.findUniqueOrThrow({
         where: { id: id },
-        select: { promptId: true },
+        select: {
+          promptId: true,
+          prompt: {
+            select: { tenantId: true },
+          },
+        },
       });
+
+      // Verify the prompt belongs to the current tenant
+      if (currentVersion.prompt.tenantId !== tenantId) {
+        throw new Error('Unauthorized access to prompt version');
+      }
 
       // If setting a label, first remove that label from any other versions of the same prompt
       if (labelId) {

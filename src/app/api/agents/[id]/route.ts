@@ -6,6 +6,7 @@ import {
   validateRequestBody,
   withErrorHandling,
 } from '@/lib/api-utils';
+import { getTenantId } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { agentSchema } from '@/lib/validations/agent';
 
@@ -23,9 +24,10 @@ export const GET = withErrorHandling(
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;
+    const tenantId = getTenantId();
 
     const agent = await prisma.agent.findUniqueOrThrow({
-      where: { id },
+      where: { id, tenantId },
       include: {
         model: true,
         prompt: true,
@@ -100,6 +102,8 @@ export const PUT = withErrorHandling(
       subAgents?: string[];
     };
 
+    const tenantId = getTenantId();
+
     // Parse MCP tool IDs if provided
     const mcpToolConnections =
       mcpTools?.map((toolId: string) => {
@@ -130,9 +134,9 @@ export const PUT = withErrorHandling(
         : { set: [] },
     };
 
-    // Update the agent
+    // Update the agent (ensure it belongs to the tenant)
     const updatedAgent = await prisma.agent.update({
-      where: { id },
+      where: { id, tenantId },
       data: updateData,
       include: {
         model: true,

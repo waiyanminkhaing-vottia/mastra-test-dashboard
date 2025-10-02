@@ -5,17 +5,22 @@ import {
   validateRequestBody,
   withErrorHandling,
 } from '@/lib/api-utils';
+import { getTenantId } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { getDomainFromUrl } from '@/lib/url-utils';
 import { mcpSchema } from '@/lib/validations/mcp';
 
 /**
  * GET /api/mcps
- * Retrieves all MCPs with computed domain field
+ * Retrieves all MCPs for the current tenant with computed domain field
  * @returns JSON response with array of MCP objects with domain or error message
  */
 export const GET = withErrorHandling(async () => {
+  const tenantId = getTenantId();
   const mcps = await prisma.mcp.findMany({
+    where: {
+      tenantId,
+    },
     orderBy: {
       createdAt: 'desc',
     },
@@ -41,11 +46,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   if (error) return error;
 
   const { name, url } = data as { name: string; url: string };
+  const tenantId = getTenantId();
 
   const mcp = await prisma.mcp.create({
     data: {
       name,
       url,
+      tenantId,
     },
   });
 

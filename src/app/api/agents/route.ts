@@ -6,16 +6,21 @@ import {
   validateRequestBody,
   withErrorHandling,
 } from '@/lib/api-utils';
+import { getTenantId } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { agentSchema } from '@/lib/validations/agent';
 
 /**
  * GET /api/agents
- * Retrieves all agents with related model, prompt, and label data
+ * Retrieves all agents for the current tenant with related model, prompt, and label data
  * @returns JSON response with array of agent objects or error message
  */
 export const GET = withErrorHandling(async () => {
+  const tenantId = getTenantId();
   const agents = await prisma.agent.findMany({
+    where: {
+      tenantId,
+    },
     include: {
       model: true,
       prompt: true,
@@ -95,6 +100,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     subAgents?: string[];
   };
 
+  const tenantId = getTenantId();
+
   // Parse MCP tool IDs if provided
   const mcpToolConnections =
     mcpTools?.map((toolId: string) => {
@@ -108,6 +115,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     modelId,
     promptId,
     labelId,
+    tenantId,
     config: config as Prisma.InputJsonValue,
     mcpTools: {
       create: mcpToolConnections.map(

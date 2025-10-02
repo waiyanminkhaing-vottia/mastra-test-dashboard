@@ -5,6 +5,7 @@ import {
   validateRequestBody,
   withErrorHandling,
 } from '@/lib/api-utils';
+import { getTenantId } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { createPromptVersionSchema } from '@/lib/validations/prompt-version';
 
@@ -21,11 +22,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   if (error) return error;
 
   const { promptId, content, changeNote, labelId } = data;
+  const tenantId = getTenantId();
 
   const promptVersion = await prisma.$transaction(async tx => {
-    // Verify the prompt exists and get the highest version number
+    // Verify the prompt exists and belongs to the tenant, then get the highest version number
     const promptWithLatestVersion = await tx.prompt.findUniqueOrThrow({
-      where: { id: promptId },
+      where: { id: promptId, tenantId },
       select: {
         id: true,
         versions: {

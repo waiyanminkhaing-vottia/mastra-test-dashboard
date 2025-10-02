@@ -43,3 +43,17 @@ export const VALIDATION_LIMITS = {
   AGENT_DESCRIPTION_MAX_LENGTH: 500,
   CHANGE_NOTE_MAX_LENGTH: 500,
 } as const;
+
+// Tenant Configuration
+/**
+ * Gets the tenant ID from environment variables
+ * @returns The tenant ID
+ * @throws Error if TENANT_ID is not set in environment
+ */
+export const getTenantId = (): string => {
+  const tenantId = process.env.TENANT_ID;
+  if (!tenantId) {
+    throw new Error('TENANT_ID environment variable is not set');
+  }
+  return tenantId;
+};
