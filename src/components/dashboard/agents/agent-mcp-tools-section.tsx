@@ -431,8 +431,7 @@ function AgentMcpToolsSectionComponent({
             {t('agents.mcpTools.description')}
           </p>
         </div>
-        <Separator className="my-6" />
-        <div className="space-y-4">
+        <div className="space-y-4 mt-6">
           {!mcpsWithTools || mcpsWithTools.length === 0 ? (
             <p className="text-center py-4 text-sm text-muted-foreground">
               {t('agents.mcpTools.noMcps')}
@@ -463,7 +462,7 @@ function AgentMcpToolsSectionComponent({
                 return (
                   <Collapsible
                     key={mcp.id}
-                    className="w-full border-b last:border-b-0"
+                    className="w-full"
                     onOpenChange={open => {
                       if (
                         open &&

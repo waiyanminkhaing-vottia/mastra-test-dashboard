@@ -129,7 +129,7 @@ function AgentSubAgentsSectionComponent({
               const isSelected = selectedSubAgents.includes(agent.id);
 
               return (
-                <div key={agent.id} className="w-full border-b last:border-b-0">
+                <div key={agent.id} className="w-full">
                   <div className="flex items-center gap-3 py-4 w-full">
                     <Checkbox
                       id={`subagent-${agent.id}`}
