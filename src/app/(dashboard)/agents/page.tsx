@@ -100,6 +100,9 @@ export default function AgentsPage() {
                   <TableHead>{t('agents.table.prompt')}</TableHead>
                   <TableHead>{t('agents.table.label')}</TableHead>
                   <TableHead className="text-center">
+                    {t('agents.table.tools')}
+                  </TableHead>
+                  <TableHead className="text-center">
                     {t('agents.table.mcpTools')}
                   </TableHead>
                   <TableHead className="text-center">
@@ -132,11 +135,11 @@ export default function AgentsPage() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableSkeleton rows={3} columns={9} />
+                  <TableSkeleton rows={3} columns={10} />
                 ) : error ? (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={10}
                       className="h-24 text-center text-red-600"
                     >
                       {t('errors.somethingWentWrong')}
@@ -144,7 +147,7 @@ export default function AgentsPage() {
                   </TableRow>
                 ) : !agents || agents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center">
+                    <TableCell colSpan={10} className="h-24 text-center">
                       {t('agents.table.noAgents')}
                     </TableCell>
                   </TableRow>
@@ -170,6 +173,45 @@ export default function AgentsPage() {
                       <TableCell>
                         {agent.label ? (
                           <Badge variant="outline">{agent.label.name}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {agent.tools && agent.tools.length > 0 ? (
+                          <TooltipPrimitive.Root>
+                            <TooltipPrimitive.Trigger
+                              onMouseEnter={e => e.stopPropagation()}
+                              className="inline-flex items-center justify-center w-8 h-8 text-muted-foreground hover:text-foreground cursor-pointer"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </TooltipPrimitive.Trigger>
+                            <TooltipPrimitive.Portal>
+                              <TooltipPrimitive.Content
+                                align="center"
+                                avoidCollisions
+                                className="text-sm min-w-60 max-w-lg p-4 bg-popover text-popover-foreground border z-50 rounded-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
+                              >
+                                <div className="space-y-2">
+                                  <h4 className="font-medium mb-6">
+                                    {t('agents.table.tools')}
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {agent.tools.map(agentTool => (
+                                      <Badge
+                                        key={agentTool.id}
+                                        variant="outline"
+                                        className="text-xs break-all max-w-full"
+                                      >
+                                        {agentTool.tool.name}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                                <TooltipPrimitive.Arrow className="fill-popover" />
+                              </TooltipPrimitive.Content>
+                            </TooltipPrimitive.Portal>
+                          </TooltipPrimitive.Root>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}

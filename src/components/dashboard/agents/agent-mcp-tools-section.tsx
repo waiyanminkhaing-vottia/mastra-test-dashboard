@@ -431,7 +431,8 @@ function AgentMcpToolsSectionComponent({
             {t('agents.mcpTools.description')}
           </p>
         </div>
-        <div className="space-y-4 mt-6">
+        <Separator className="mt-6" />
+        <div className="space-y-4">
           {!mcpsWithTools || mcpsWithTools.length === 0 ? (
             <p className="text-center py-4 text-sm text-muted-foreground">
               {t('agents.mcpTools.noMcps')}

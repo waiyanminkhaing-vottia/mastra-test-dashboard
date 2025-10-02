@@ -33,6 +33,11 @@ export const GET = withErrorHandling(
         prompt: true,
         label: true,
         mcpTools: true,
+        tools: {
+          include: {
+            tool: true,
+          },
+        },
         subAgents: true,
         parent: true,
       },
@@ -90,6 +95,7 @@ export const PUT = withErrorHandling(
       labelId,
       config,
       mcpTools,
+      tools,
       subAgents,
     } = data as {
       name: string;
@@ -99,6 +105,7 @@ export const PUT = withErrorHandling(
       labelId?: string;
       config?: Record<string, unknown> | null;
       mcpTools?: string[];
+      tools?: string[];
       subAgents?: string[];
     };
 
@@ -127,6 +134,14 @@ export const PUT = withErrorHandling(
           })
         ),
       },
+      tools: tools
+        ? {
+            deleteMany: {}, // Remove all existing tool associations
+            create: tools.map(toolId => ({
+              toolId,
+            })),
+          }
+        : { deleteMany: {} }, // Remove all if no tools provided
       subAgents: subAgents
         ? {
             set: subAgents.map(agentId => ({ id: agentId })),
@@ -143,6 +158,11 @@ export const PUT = withErrorHandling(
         prompt: true,
         label: true,
         mcpTools: true,
+        tools: {
+          include: {
+            tool: true,
+          },
+        },
         subAgents: true,
         parent: true,
       },

@@ -46,10 +46,7 @@ function AgentSubAgentsSectionComponent({
 
     return agents.filter(agent => {
       // Exclude current agent (can't add itself as sub-agent)
-      if (currentAgentId && agent.id === currentAgentId) {
-        return false;
-      }
-      return true;
+      return !(currentAgentId && agent.id === currentAgentId);
     });
   }, [agents, currentAgentId]);
 

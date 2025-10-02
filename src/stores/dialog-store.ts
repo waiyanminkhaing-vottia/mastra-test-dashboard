@@ -1,4 +1,4 @@
-import type { Mcp, Model, Prompt } from '@prisma/client';
+import type { Mcp, Model, Prompt, Tool } from '@prisma/client';
 import { create } from 'zustand';
 
 /**
@@ -13,6 +13,8 @@ export const DIALOG_TYPES = {
   PROMPT_LABEL_CHANGE: 'prompt-label-change',
   MCP_CREATE: 'mcp-create',
   MCP_EDIT: 'mcp-edit',
+  TOOL_CREATE: 'tool-create',
+  TOOL_EDIT: 'tool-edit',
 } as const;
 
 type DialogType =
@@ -23,6 +25,8 @@ type DialogType =
   | typeof DIALOG_TYPES.PROMPT_LABEL_CHANGE
   | typeof DIALOG_TYPES.MCP_CREATE
   | typeof DIALOG_TYPES.MCP_EDIT
+  | typeof DIALOG_TYPES.TOOL_CREATE
+  | typeof DIALOG_TYPES.TOOL_EDIT
   | null;
 
 interface DialogData {
@@ -37,6 +41,8 @@ interface DialogData {
   };
   [DIALOG_TYPES.MCP_CREATE]: undefined;
   [DIALOG_TYPES.MCP_EDIT]: Mcp;
+  [DIALOG_TYPES.TOOL_CREATE]: undefined;
+  [DIALOG_TYPES.TOOL_EDIT]: Tool;
   null: undefined;
 }
 
@@ -172,6 +178,24 @@ export const useMcpDialog = () => {
       activeDialog === DIALOG_TYPES.MCP_EDIT ? (dialogData as Mcp) : null,
     openCreate: () => openDialog(DIALOG_TYPES.MCP_CREATE),
     openEdit: (mcp: Mcp) => openDialog(DIALOG_TYPES.MCP_EDIT, mcp),
+    close: closeDialog,
+  };
+};
+
+/**
+ * Hook for managing Tool-specific dialogs
+ */
+export const useToolDialog = () => {
+  const { activeDialog, dialogData, openDialog, closeDialog } =
+    useDialogStore();
+
+  return {
+    isCreateOpen: activeDialog === DIALOG_TYPES.TOOL_CREATE,
+    isEditOpen: activeDialog === DIALOG_TYPES.TOOL_EDIT,
+    editingTool:
+      activeDialog === DIALOG_TYPES.TOOL_EDIT ? (dialogData as Tool) : null,
+    openCreate: () => openDialog(DIALOG_TYPES.TOOL_CREATE),
+    openEdit: (tool: Tool) => openDialog(DIALOG_TYPES.TOOL_EDIT, tool),
     close: closeDialog,
   };
 };

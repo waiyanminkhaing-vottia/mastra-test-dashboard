@@ -32,7 +32,8 @@
     "models": "Models",
     "prompts": "Prompts",
     "mcps": "MCPs",
-    "agents": "Agents"
+    "agents": "Agents",
+    "tools": "Tools"
   },
   "breadcrumbs": {
     "management": "Management",
@@ -40,7 +41,8 @@
     "prompts": "Prompts",
     "mcps": "MCPs",
     "newMcp": "New MCP",
-    "agents": "Agents"
+    "agents": "Agents",
+    "tools": "Tools"
   },
   "models": {
     "title": "Models",
@@ -227,6 +229,11 @@
       "noToolsAvailable": "No tools available",
       "selected": "selected"
     },
+    "tools": {
+      "title": "Tools",
+      "description": "Select tools to add to this agent",
+      "noTools": "No tools configured"
+    },
     "subAgents": {
       "title": "Sub-Agents",
       "description": "Select agents to add as sub-agents for this agent",
@@ -237,6 +244,7 @@
       "model": "Model",
       "prompt": "Prompt",
       "label": "Label",
+      "tools": "Tools",
       "config": "LLM Config",
       "mcpTools": "MCP Tools",
       "subAgents": "Sub-Agents",
@@ -317,6 +325,46 @@
         "noDescription": "No description provided"
       },
       "totalCount": "Total tools"
+    }
+  },
+  "tools": {
+    "title": "Tools",
+    "addTool": "Add Tool",
+    "form": {
+      "title": "Add Tool",
+      "description": "Create a new tool with name and description.",
+      "editTitle": "Edit Tool",
+      "editDescription": "Update the tool configuration.",
+      "nameField": "Name",
+      "namePlaceholder": "Enter tool name",
+      "descriptionField": "Description",
+      "descriptionPlaceholder": "Enter tool description",
+      "cancelButton": "Cancel",
+      "createButton": "Create Tool",
+      "creatingButton": "Creating...",
+      "updateButton": "Update Tool",
+      "updatingButton": "Updating...",
+      "createSuccess": "Tool created successfully",
+      "updateSuccess": "Tool updated successfully"
+    },
+    "table": {
+      "name": "Name",
+      "description": "Description",
+      "created": "Created",
+      "updated": "Updated",
+      "actions": "Actions",
+      "noTools": "No data available."
+    },
+    "validation": {
+      "nameRequired": "Name is required",
+      "nameMaxLength": "Name must be less than 100 characters",
+      "nameInvalidChars": "Name can only contain letters, numbers, hyphens, underscores, and dots",
+      "descriptionMaxLength": "Description must be no more than 500 characters"
+    },
+    "errors": {
+      "toolNotFound": "Tool not found",
+      "toolAlreadyExists": "A tool with this name already exists",
+      "invalidToolReference": "Invalid reference in tool data"
     }
   }
 }

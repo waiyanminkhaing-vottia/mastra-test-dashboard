@@ -26,6 +26,11 @@ export const GET = withErrorHandling(async () => {
       prompt: true,
       label: true,
       mcpTools: true,
+      tools: {
+        include: {
+          tool: true,
+        },
+      },
       subAgents: true,
       parent: true,
     },
@@ -88,6 +93,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     labelId,
     config,
     mcpTools,
+    tools,
     subAgents,
   } = data as {
     name: string;
@@ -97,6 +103,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     labelId?: string;
     config?: Record<string, unknown> | null;
     mcpTools?: string[];
+    tools?: string[];
     subAgents?: string[];
   };
 
@@ -125,6 +132,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         })
       ),
     },
+    tools: tools
+      ? {
+          create: tools.map(toolId => ({
+            toolId,
+          })),
+        }
+      : undefined,
     subAgents: subAgents
       ? {
           connect: subAgents.map(id => ({ id })),
@@ -139,6 +153,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       prompt: true,
       label: true,
       mcpTools: true,
+      tools: {
+        include: {
+          tool: true,
+        },
+      },
       subAgents: true,
       parent: true,
     },

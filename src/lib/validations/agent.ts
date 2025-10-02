@@ -12,6 +12,7 @@ const agentValidation = createEntityValidation<{
   labelId?: string;
   config?: Record<string, unknown> | null;
   mcpTools?: string[];
+  tools?: string[];
   subAgents?: string[];
   parentId?: string;
 }>({
@@ -31,6 +32,7 @@ const agentValidation = createEntityValidation<{
     labelId: z.string().optional(),
     config: z.record(z.string(), z.unknown()).nullable().optional(),
     mcpTools: z.array(z.string()).optional(),
+    tools: z.array(z.string()).optional(),
     subAgents: z.array(z.string()).optional(),
     parentId: z.string().optional(),
   }),

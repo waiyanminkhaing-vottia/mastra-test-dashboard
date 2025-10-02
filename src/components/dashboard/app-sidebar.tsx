@@ -1,6 +1,6 @@
 'use client';
 
-import { Bot, Cpu, FileText, Plug } from 'lucide-react';
+import { Bot, Cpu, FileText, Plug, Wrench } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -68,6 +68,17 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
                   <Link href="/models">
                     <Cpu className="size-4" />
                     <span>{t('menu.models')}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith('/tools')}
+                >
+                  <Link href="/tools">
+                    <Wrench className="size-4" />
+                    <span>{t('menu.tools')}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

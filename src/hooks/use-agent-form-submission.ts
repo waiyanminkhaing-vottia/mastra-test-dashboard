@@ -17,6 +17,7 @@ interface UseAgentFormSubmissionProps {
   config: LLMConfig;
   useCustomConfig: boolean;
   selectedMcpTools: string[];
+  selectedTools: string[];
   selectedSubAgents: string[];
   createAgent: (data: {
     name: string;
@@ -26,6 +27,7 @@ interface UseAgentFormSubmissionProps {
     labelId?: string;
     config?: Record<string, unknown> | null;
     mcpTools?: string[];
+    tools?: string[];
     subAgents?: string[];
   }) => Promise<AgentWithRelations>;
   updateAgent: (
@@ -38,6 +40,7 @@ interface UseAgentFormSubmissionProps {
       labelId?: string;
       config?: Record<string, unknown> | null;
       mcpTools?: string[];
+      tools?: string[];
       subAgents?: string[];
     }
   ) => Promise<AgentWithRelations>;
@@ -60,6 +63,7 @@ export function useAgentFormSubmission({
   config,
   useCustomConfig,
   selectedMcpTools,
+  selectedTools,
   selectedSubAgents,
   createAgent,
   updateAgent,
@@ -83,6 +87,7 @@ export function useAgentFormSubmission({
         labelId: labelId && labelId !== 'none' ? labelId : undefined,
         config: useCustomConfig ? config : isEditing ? null : undefined,
         mcpTools: selectedMcpTools.length > 0 ? selectedMcpTools : undefined,
+        tools: selectedTools.length > 0 ? selectedTools : undefined,
         subAgents: selectedSubAgents.length > 0 ? selectedSubAgents : undefined,
       });
 
@@ -103,6 +108,7 @@ export function useAgentFormSubmission({
               labelId?: string;
               config?: Record<string, unknown> | null;
               mcpTools?: string[];
+              tools?: string[];
               subAgents?: string[];
             }
           );
@@ -116,6 +122,7 @@ export function useAgentFormSubmission({
               labelId?: string;
               config?: Record<string, unknown> | null;
               mcpTools?: string[];
+              tools?: string[];
               subAgents?: string[];
             }
           );
@@ -139,6 +146,7 @@ export function useAgentFormSubmission({
       config,
       useCustomConfig,
       selectedMcpTools,
+      selectedTools,
       selectedSubAgents,
       createAgent,
       updateAgent,
