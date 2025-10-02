@@ -67,7 +67,7 @@ importers:
         version: 0.544.0(react@19.2.0)
       mastra-test-common:
         specifier: git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git
-        version: git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#37a45994acc0ac60a7e37def0a886216bc854410(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3)
+        version: git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#115aa21ae9047c74f0460cc0fdf1c6d9afb2e534(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3)
       monaco-editor:
         specifier: ^0.53.0
         version: 0.53.0
@@ -3183,8 +3183,8 @@ packages:
   magic-string@0.30.19:
     resolution: {integrity: sha512-2N21sPY9Ws53PZvsEpVtNuSW+ScYbQdp4b9qUaL+9QkHUrGFKo56Lg9Emg5s9V/qrtNBmiR01sYhUOwu3H+VOw==}
 
-  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#37a45994acc0ac60a7e37def0a886216bc854410:
-    resolution: {commit: 37a45994acc0ac60a7e37def0a886216bc854410, repo: https://github.com/waiyanminkhaing-vottia/mastra-test-common.git, type: git}
+  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#115aa21ae9047c74f0460cc0fdf1c6d9afb2e534:
+    resolution: {commit: 115aa21ae9047c74f0460cc0fdf1c6d9afb2e534, repo: https://github.com/waiyanminkhaing-vottia/mastra-test-common.git, type: git}
     version: 1.0.0
     engines: {node: '>=18', pnpm: '>=8'}
 
@@ -7655,7 +7655,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#37a45994acc0ac60a7e37def0a886216bc854410(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3):
+  mastra-test-common@git+https://github.com/waiyanminkhaing-vottia/mastra-test-common.git#115aa21ae9047c74f0460cc0fdf1c6d9afb2e534(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3):
     dependencies:
       '@prisma/client': 6.16.3(prisma@6.16.3(typescript@5.9.3))(typescript@5.9.3)
     transitivePeerDependencies:

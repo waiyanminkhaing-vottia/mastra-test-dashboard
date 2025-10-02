@@ -6,7 +6,6 @@ import {
   validateRequestBody,
   withErrorHandling,
 } from '@/lib/api-utils';
-import { getTenantId } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { mcpSchema } from '@/lib/validations/mcp';
 
@@ -23,10 +22,9 @@ export const GET = withErrorHandling(
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;
-    const tenantId = getTenantId();
 
     const mcp = await prisma.mcp.findUnique({
-      where: { id, tenantId },
+      where: { id },
     });
 
     if (!mcp) {
@@ -54,10 +52,9 @@ export const PUT = withErrorHandling(
     if (error) return error;
 
     const { name, url } = data as { name: string; url: string };
-    const tenantId = getTenantId();
 
     const existingMcp = await prisma.mcp.findUnique({
-      where: { id, tenantId },
+      where: { id },
     });
 
     if (!existingMcp) {
@@ -65,7 +62,7 @@ export const PUT = withErrorHandling(
     }
 
     const updatedMcp = await prisma.mcp.update({
-      where: { id, tenantId },
+      where: { id },
       data: {
         name,
         url,
