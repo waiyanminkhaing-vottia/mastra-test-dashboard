@@ -11,6 +11,14 @@ on:
         options:
           - development
           - production
+      tenant:
+        description: 'Tenant to deploy'
+        required: true
+        default: 'default'
+        type: choice
+        options:
+          - default
+          - wai
 
 jobs:
   deploy:
@@ -71,6 +79,15 @@ jobs:
           # Clone/update repository with authentication
           BRANCH="${{ github.ref_name }}"
           echo "Deploying from branch: $BRANCH"
+
+          # Set port based on tenant
+          TENANT="${{ github.event.inputs.tenant }}"
+          if [ "$TENANT" = "wai" ]; then
+            PORT=3001
+          else
+            PORT=3000
+          fi
+          echo "Using port: $PORT for tenant: $TENANT"
 
           # Configure git with token authentication
           echo "Configuring git authentication..."
@@ -178,6 +195,7 @@ jobs:
           # Next.js will read NEXT_PUBLIC_* variables from .env file
           sudo docker build \
             --secret id=github_token,src=/tmp/github_token \
+            --build-arg PORT=$PORT \
             -t mastra-test-dashboard:$ENV_FILE-latest \
             .
 
@@ -227,6 +245,17 @@ jobs:
             ENV_FILE="${{ github.event.inputs.environment }}"
             echo "Deploying with environment: $ENV_FILE"
 
+            # Set port and base path based on tenant
+            TENANT="${{ github.event.inputs.tenant }}"
+            if [ "$TENANT" = "wai" ]; then
+              PORT=3001
+              NEXT_PUBLIC_BASE_PATH="/wai/dashboard"
+            else
+              PORT=3000
+              NEXT_PUBLIC_BASE_PATH="/dashboard"
+            fi
+            echo "Using port: $PORT and base path: $NEXT_PUBLIC_BASE_PATH for tenant: $TENANT"
+
             # Get registry container IP from network
             REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
             echo "Using registry at: $REGISTRY_IP:5000"
@@ -244,9 +273,11 @@ jobs:
               --name mastra-test-dashboard \
               --network mastra-test-network \
               --restart unless-stopped \
-              -p 3000:3000 \
+              -p $PORT:$PORT \
               --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
               -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
+              -e TENANT_ID="${{ github.event.inputs.tenant }}" \
+              -e NEXT_PUBLIC_BASE_PATH="$NEXT_PUBLIC_BASE_PATH" \
               $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
 
             # Debug: Check safe environment variables in running container
@@ -320,9 +351,11 @@ jobs:
                   --name mastra-test-dashboard \
                   --network mastra-test-network \
                   --restart unless-stopped \
-                  -p 3000:3000 \
+                  -p $PORT:$PORT \
                   --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
                   -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
+                  -e TENANT_ID="${{ github.event.inputs.tenant }}" \
+                  -e NEXT_PUBLIC_BASE_PATH="$NEXT_PUBLIC_BASE_PATH" \
                   $CURRENT_IMAGE
                 echo "🔄 Rollback completed"
               else
