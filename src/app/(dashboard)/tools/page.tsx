@@ -8,16 +8,9 @@ import { toast } from 'sonner';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { ToolDialog } from '@/components/dashboard/tool-dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { TableSkeleton } from '@/components/ui/table-skeleton';
+import { TableCell, TableHead, TableRow } from '@/components/ui/table';
 import { TableSortButton } from '@/components/ui/table-sort-button';
+import { VirtualizedTable } from '@/components/ui/virtualized-table';
 import { useLanguage } from '@/contexts/language-context';
 import { useTableSort } from '@/hooks/use-table-sort';
 import { formatDate } from '@/lib/utils';
@@ -81,90 +74,73 @@ export default function ToolsPage() {
           </Button>
         </div>
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <TableSortButton
-                    field={'name' as keyof Tool}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('tools.table.name')}
-                  </TableSortButton>
-                </TableHead>
-                <TableHead>{t('tools.table.description')}</TableHead>
-                <TableHead>
-                  <TableSortButton
-                    field={'createdAt' as keyof Tool}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('tools.table.created')}
-                  </TableSortButton>
-                </TableHead>
-                <TableHead>
-                  <TableSortButton
-                    field={'updatedAt' as keyof Tool}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('tools.table.updated')}
-                  </TableSortButton>
-                </TableHead>
-                <TableHead className="w-[100px]">
-                  {t('tools.table.actions')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableSkeleton rows={3} columns={5} />
-              ) : error ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-24 text-center text-red-600"
-                  >
-                    {t('errors.somethingWentWrong')}
-                  </TableCell>
-                </TableRow>
-              ) : !tools || tools.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    {t('tools.table.noTools')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                sortedTools.map((tool: Tool) => (
-                  <TableRow key={tool.id}>
-                    <TableCell className="font-medium">{tool.name}</TableCell>
-                    <TableCell className="max-w-md">
-                      <div className="text-sm text-muted-foreground truncate">
-                        {tool.description || '-'}
-                      </div>
-                    </TableCell>
-                    <TableCell>{formatDate(tool.createdAt)}</TableCell>
-                    <TableCell>{formatDate(tool.updatedAt)}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(tool)}
-                      >
-                        <Edit className="size-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <VirtualizedTable
+          data={sortedTools}
+          loading={loading}
+          error={!!error}
+          emptyMessage={t('tools.table.noTools')}
+          errorMessage={t('errors.somethingWentWrong')}
+          columns={5}
+          headers={
+            <TableRow>
+              <TableHead>
+                <TableSortButton
+                  field={'name' as keyof Tool}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  {t('tools.table.name')}
+                </TableSortButton>
+              </TableHead>
+              <TableHead>{t('tools.table.description')}</TableHead>
+              <TableHead>
+                <TableSortButton
+                  field={'createdAt' as keyof Tool}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  {t('tools.table.created')}
+                </TableSortButton>
+              </TableHead>
+              <TableHead>
+                <TableSortButton
+                  field={'updatedAt' as keyof Tool}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  {t('tools.table.updated')}
+                </TableSortButton>
+              </TableHead>
+              <TableHead className="w-[100px]">
+                {t('tools.table.actions')}
+              </TableHead>
+            </TableRow>
+          }
+          renderRow={(tool, style) => (
+            <TableRow key={tool.id} style={style}>
+              <TableCell className="font-medium">{tool.name}</TableCell>
+              <TableCell className="max-w-md">
+                <div className="text-sm text-muted-foreground truncate">
+                  {tool.description || '-'}
+                </div>
+              </TableCell>
+              <TableCell>{formatDate(tool.createdAt)}</TableCell>
+              <TableCell>{formatDate(tool.updatedAt)}</TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openEdit(tool)}
+                >
+                  <Edit className="size-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          )}
+        />
       </div>
 
       <ToolDialog

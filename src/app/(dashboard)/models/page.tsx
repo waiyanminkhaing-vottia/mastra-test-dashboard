@@ -8,16 +8,9 @@ import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { ModelDialog } from '@/components/dashboard/model-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { TableSkeleton } from '@/components/ui/table-skeleton';
+import { TableCell, TableHead, TableRow } from '@/components/ui/table';
 import { TableSortButton } from '@/components/ui/table-sort-button';
+import { VirtualizedTable } from '@/components/ui/virtualized-table';
 import { useLanguage } from '@/contexts/language-context';
 import { useTableSort } from '@/hooks/use-table-sort';
 import { formatDate } from '@/lib/utils';
@@ -87,90 +80,73 @@ export default function ModelsPage() {
           </Button>
         </div>
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <TableSortButton
-                    field={'name' as keyof Model}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
+        <VirtualizedTable
+          data={sortedModels}
+          loading={loading}
+          error={!!error}
+          emptyMessage={t('models.table.noModels')}
+          errorMessage={t('errors.somethingWentWrong')}
+          columns={5}
+          headers={
+            <TableRow>
+              <TableHead>
+                <TableSortButton
+                  field={'name' as keyof Model}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  {t('models.table.name')}
+                </TableSortButton>
+              </TableHead>
+              <TableHead>{t('models.table.provider')}</TableHead>
+              <TableHead>
+                <TableSortButton
+                  field={'createdAt' as keyof Model}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  {t('models.table.created')}
+                </TableSortButton>
+              </TableHead>
+              <TableHead>
+                <TableSortButton
+                  field={'updatedAt' as keyof Model}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  {t('models.table.updated')}
+                </TableSortButton>
+              </TableHead>
+              <TableHead className="w-[100px]">
+                {t('models.table.actions')}
+              </TableHead>
+            </TableRow>
+          }
+          renderRow={(model, style) => (
+            <TableRow key={model.id} style={style}>
+              <TableCell className="font-medium">{model.name}</TableCell>
+              <TableCell>
+                <Badge variant="outline">{model.provider}</Badge>
+              </TableCell>
+              <TableCell>{formatDate(model.createdAt)}</TableCell>
+              <TableCell>{formatDate(model.updatedAt)}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openEdit(model)}
                   >
-                    {t('models.table.name')}
-                  </TableSortButton>
-                </TableHead>
-                <TableHead>{t('models.table.provider')}</TableHead>
-                <TableHead>
-                  <TableSortButton
-                    field={'createdAt' as keyof Model}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('models.table.created')}
-                  </TableSortButton>
-                </TableHead>
-                <TableHead>
-                  <TableSortButton
-                    field={'updatedAt' as keyof Model}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('models.table.updated')}
-                  </TableSortButton>
-                </TableHead>
-                <TableHead className="w-[100px]">
-                  {t('models.table.actions')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableSkeleton rows={3} columns={5} />
-              ) : error ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-24 text-center text-red-600"
-                  >
-                    {t('errors.somethingWentWrong')}
-                  </TableCell>
-                </TableRow>
-              ) : !models || models.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    {t('models.table.noModels')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                sortedModels.map((model: Model) => (
-                  <TableRow key={model.id}>
-                    <TableCell className="font-medium">{model.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{model.provider}</Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(model.createdAt)}</TableCell>
-                    <TableCell>{formatDate(model.updatedAt)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEdit(model)}
-                        >
-                          <Edit className="size-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                    <Edit className="size-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
+        />
       </div>
 
       <ModelDialog

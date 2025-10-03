@@ -9,16 +9,9 @@ import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { McpDialog } from '@/components/dashboard/mcp-dialog';
 import { McpToolsModal } from '@/components/dashboard/mcp-tools-modal';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { TableSkeleton } from '@/components/ui/table-skeleton';
+import { TableCell, TableHead, TableRow } from '@/components/ui/table';
 import { TableSortButton } from '@/components/ui/table-sort-button';
+import { VirtualizedTable } from '@/components/ui/virtualized-table';
 import { useLanguage } from '@/contexts/language-context';
 import { useTableSort } from '@/hooks/use-table-sort';
 import { buildUrl } from '@/lib/api-client';
@@ -135,106 +128,89 @@ export default function McpsPage() {
           </Button>
         </div>
 
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <TableSortButton
-                    field={'name' as keyof McpWithRelations}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('mcps.table.name')}
-                  </TableSortButton>
-                </TableHead>
-                <TableHead>{t('mcps.table.url')}</TableHead>
-                <TableHead className="text-center">
-                  {t('mcps.table.tools')}
-                </TableHead>
-                <TableHead>
-                  <TableSortButton
-                    field={'createdAt' as keyof McpWithRelations}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('mcps.table.created')}
-                  </TableSortButton>
-                </TableHead>
-                <TableHead>
-                  <TableSortButton
-                    field={'updatedAt' as keyof McpWithRelations}
-                    sortField={sortField}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                  >
-                    {t('mcps.table.updated')}
-                  </TableSortButton>
-                </TableHead>
-                <TableHead className="w-[100px]">
-                  {t('mcps.table.actions')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableSkeleton rows={3} columns={6} />
-              ) : error ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="h-24 text-center text-destructive"
-                  >
-                    {t('errors.somethingWentWrong')}
-                  </TableCell>
-                </TableRow>
-              ) : !mcps || mcps.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    {t('mcps.table.noMcps')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                sortedMcps.map((mcp: McpWithRelations) => (
-                  <TableRow key={mcp.id}>
-                    <TableCell className="font-medium">{mcp.name}</TableCell>
-                    <TableCell className="max-w-xs">
-                      <div className="text-sm font-medium text-foreground truncate">
-                        {mcp.domain}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleViewTools(mcp as Mcp);
-                        }}
-                        title={t('mcps.tools.viewTools')}
-                      >
-                        <Wrench className="size-4" />
-                      </Button>
-                    </TableCell>
-                    <TableCell>{formatDate(mcp.createdAt)}</TableCell>
-                    <TableCell>{formatDate(mcp.updatedAt)}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(mcp as Mcp)}
-                      >
-                        <Edit className="size-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <VirtualizedTable
+          data={sortedMcps}
+          loading={loading}
+          error={!!error}
+          emptyMessage={t('mcps.table.noMcps')}
+          errorMessage={t('errors.somethingWentWrong')}
+          columns={6}
+          headers={
+            <TableRow>
+              <TableHead>
+                <TableSortButton
+                  field={'name' as keyof McpWithRelations}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  {t('mcps.table.name')}
+                </TableSortButton>
+              </TableHead>
+              <TableHead>{t('mcps.table.url')}</TableHead>
+              <TableHead className="text-center">
+                {t('mcps.table.tools')}
+              </TableHead>
+              <TableHead>
+                <TableSortButton
+                  field={'createdAt' as keyof McpWithRelations}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  {t('mcps.table.created')}
+                </TableSortButton>
+              </TableHead>
+              <TableHead>
+                <TableSortButton
+                  field={'updatedAt' as keyof McpWithRelations}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                >
+                  {t('mcps.table.updated')}
+                </TableSortButton>
+              </TableHead>
+              <TableHead className="w-[100px]">
+                {t('mcps.table.actions')}
+              </TableHead>
+            </TableRow>
+          }
+          renderRow={(mcp, style) => (
+            <TableRow key={mcp.id} style={style}>
+              <TableCell className="font-medium">{mcp.name}</TableCell>
+              <TableCell className="max-w-xs">
+                <div className="text-sm font-medium text-foreground truncate">
+                  {mcp.domain}
+                </div>
+              </TableCell>
+              <TableCell className="text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleViewTools(mcp as Mcp);
+                  }}
+                  title={t('mcps.tools.viewTools')}
+                >
+                  <Wrench className="size-4" />
+                </Button>
+              </TableCell>
+              <TableCell>{formatDate(mcp.createdAt)}</TableCell>
+              <TableCell>{formatDate(mcp.updatedAt)}</TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openEdit(mcp as Mcp)}
+                >
+                  <Edit className="size-4" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          )}
+        />
       </div>
 
       <McpDialog
