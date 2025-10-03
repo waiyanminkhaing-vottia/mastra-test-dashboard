@@ -176,8 +176,8 @@ export default function McpsPage() {
               </TableHead>
             </TableRow>
           }
-          renderRow={(mcp, style) => (
-            <TableRow key={mcp.id} style={style}>
+          renderRow={(mcp, _index) => (
+            <TableRow key={mcp.id}>
               <TableCell className="font-medium">{mcp.name}</TableCell>
               <TableCell className="max-w-xs">
                 <div className="text-sm font-medium text-foreground truncate">

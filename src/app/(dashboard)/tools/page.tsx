@@ -119,8 +119,8 @@ export default function ToolsPage() {
               </TableHead>
             </TableRow>
           }
-          renderRow={(tool, style) => (
-            <TableRow key={tool.id} style={style}>
+          renderRow={(tool, _index) => (
+            <TableRow key={tool.id}>
               <TableCell className="font-medium">{tool.name}</TableCell>
               <TableCell className="max-w-md">
                 <div className="text-sm text-muted-foreground truncate">

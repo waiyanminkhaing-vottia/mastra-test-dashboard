@@ -116,12 +116,11 @@ export default function PromptsPage() {
               </TableHead>
             </TableRow>
           }
-          renderRow={(prompt, style) => (
+          renderRow={(prompt, _index) => (
             <TableRow
               key={prompt.id}
               className="cursor-pointer hover:bg-muted/50"
               onClick={() => router.push(`/prompts/${prompt.id}/versions`)}
-              style={style}
             >
               <TableCell className="font-medium">{prompt.name}</TableCell>
               <TableCell className="max-w-[300px] truncate">

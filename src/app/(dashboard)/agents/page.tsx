@@ -125,10 +125,8 @@ export default function AgentsPage() {
                 </TableHead>
               </TableRow>
             }
-            renderRow={(agent, style) => (
-              <div key={agent.id} style={style}>
-                <AgentTableRow agent={agent} />
-              </div>
+            renderRow={(agent, _index) => (
+              <AgentTableRow key={agent.id} agent={agent} />
             )}
           />
         </TooltipPrimitive.Provider>

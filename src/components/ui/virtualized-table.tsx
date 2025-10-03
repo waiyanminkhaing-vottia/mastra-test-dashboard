@@ -18,7 +18,7 @@ interface VirtualizedTableProps<T> {
   errorMessage: string;
   columns: number;
   headers: ReactNode;
-  renderRow: (item: T, style: React.CSSProperties) => ReactNode;
+  renderRow: (item: T, index: number) => ReactNode;
   maxHeight?: string;
 }
 
@@ -36,18 +36,13 @@ export function VirtualizedTable<T>({
   const { parentRef, virtualItems, totalSize } = useVirtualizedTable(data);
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>{headers}</TableHeader>
-      </Table>
+    <div className="rounded-md border overflow-hidden">
       <div ref={parentRef} className="overflow-auto" style={{ maxHeight }}>
         <Table>
-          <TableBody
-            style={{
-              height: `${totalSize}px`,
-              position: 'relative',
-            }}
-          >
+          <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
+            {headers}
+          </TableHeader>
+          <TableBody>
             {loading ? (
               <TableSkeleton rows={3} columns={columns} />
             ) : error ? (
@@ -66,16 +61,29 @@ export function VirtualizedTable<T>({
                 </TableCell>
               </TableRow>
             ) : (
-              virtualItems.map(virtualRow => {
-                const item = data[virtualRow.index];
-                return renderRow(item, {
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  transform: `translateY(${virtualRow.start}px)`,
-                });
-              })
+              <>
+                {/* Padding top for virtualization */}
+                {virtualItems.length > 0 && virtualItems[0].index > 0 && (
+                  <tr style={{ height: `${virtualItems[0].start}px` }} />
+                )}
+                {/* Render only visible items */}
+                {virtualItems.map(virtualRow => {
+                  const item = data[virtualRow.index];
+                  return renderRow(item, virtualRow.index);
+                })}
+                {/* Padding bottom for virtualization */}
+                {virtualItems.length > 0 &&
+                  virtualItems[virtualItems.length - 1].index <
+                    data.length - 1 && (
+                    <tr
+                      style={{
+                        height: `${
+                          totalSize - virtualItems[virtualItems.length - 1].end
+                        }px`,
+                      }}
+                    />
+                  )}
+              </>
             )}
           </TableBody>
         </Table>

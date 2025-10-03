@@ -125,8 +125,8 @@ export default function ModelsPage() {
               </TableHead>
             </TableRow>
           }
-          renderRow={(model, style) => (
-            <TableRow key={model.id} style={style}>
+          renderRow={(model, _index) => (
+            <TableRow key={model.id}>
               <TableCell className="font-medium">{model.name}</TableCell>
               <TableCell>
                 <Badge variant="outline">{model.provider}</Badge>
