@@ -37,6 +37,7 @@ export default function PromptVersionsPage() {
     currentPromptErrorStatus: errorStatus,
     fetchPromptById,
     updatePromptVersionLabel,
+    deletePromptVersion,
   } = usePromptsStore();
   const {
     pendingLabelChange,
@@ -67,6 +68,25 @@ export default function PromptVersionsPage() {
 
   const handleConfirmLabelChange = () => {
     handleConfirmLabelChangeHook(selectedVersion);
+  };
+
+  const handleDeleteVersion = async () => {
+    if (!selectedVersion) return;
+
+    const success = await deletePromptVersion(selectedVersion.id);
+
+    if (success) {
+      // If the deleted version was selected, clear the version param
+      if (selectedVersionId === selectedVersion.id) {
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete('version');
+        window.history.replaceState(
+          {},
+          '',
+          `${window.location.pathname}?${newSearchParams.toString()}`
+        );
+      }
+    }
   };
 
   useEffect(() => {
@@ -133,6 +153,7 @@ export default function PromptVersionsPage() {
               prompt={prompt}
               selectedVersion={selectedVersion}
               onLabelChange={handleLabelChange}
+              onDelete={handleDeleteVersion}
             />
           ) : (
             <div className="rounded-lg border bg-background text-card-foreground shadow-sm">

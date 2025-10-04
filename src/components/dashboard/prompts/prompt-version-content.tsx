@@ -1,10 +1,11 @@
 'use client';
 
-import { Check, Copy, Files, Info } from 'lucide-react';
+import { Check, Copy, Files, Info, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
 import { PromptLabelSelect } from '@/components/dashboard/prompts/prompt-label-select';
+import { PromptVersionDeleteDialog } from '@/components/dashboard/prompts/prompt-version-delete-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,6 +21,7 @@ interface PromptVersionContentProps {
   prompt: PromptWithVersions;
   selectedVersion: PromptVersionWithLabel;
   onLabelChange: (labelId: string, labelName: string) => void;
+  onDelete: () => void;
 }
 
 /**
@@ -29,15 +31,19 @@ interface PromptVersionContentProps {
  * @param props.prompt Prompt data with versions
  * @param props.selectedVersion Currently selected prompt version with label data
  * @param props.onLabelChange Callback function when label assignment changes
+ * @param props.onDelete Callback function when version deletion is confirmed
  */
 export function PromptVersionContent({
   prompt,
   selectedVersion,
   onLabelChange,
+  onDelete,
 }: PromptVersionContentProps) {
   const { t } = useLanguage();
   const { labels } = usePromptLabelsStore();
   const [copied, setCopied] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get the current label name from the labels store to ensure it's up-to-date
   const currentLabelName = getPromptLabelName(selectedVersion, labels);
@@ -52,6 +58,13 @@ export function PromptVersionContent({
     } catch {
       // Copy failed silently
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    await onDelete();
+    setIsDeleting(false);
+    setShowDeleteDialog(false);
   };
 
   return (
@@ -91,19 +104,30 @@ export function PromptVersionContent({
               }
             />
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="h-8 px-3 hover:text-primary"
-          >
-            <Link
-              href={`/prompts/${prompt.id}/versions/new?duplicate=${selectedVersion.id}`}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="h-8 px-3 hover:text-primary"
             >
-              <Files className="size-4" />
-              {t('common.duplicate')}
-            </Link>
-          </Button>
+              <Link
+                href={`/prompts/${prompt.id}/versions/new?duplicate=${selectedVersion.id}`}
+              >
+                <Files className="size-4" />
+                {t('common.duplicate')}
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDeleteDialog(true)}
+              className="h-8 px-3 hover:text-destructive"
+            >
+              <Trash2 className="size-4" />
+              {t('common.delete')}
+            </Button>
+          </div>
         </div>
 
         <Separator />
@@ -139,6 +163,13 @@ export function PromptVersionContent({
           </div>
         </div>
       </div>
+
+      <PromptVersionDeleteDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        isDeleting={isDeleting}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

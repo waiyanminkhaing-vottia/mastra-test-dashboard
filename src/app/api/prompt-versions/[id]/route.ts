@@ -78,3 +78,45 @@ export const PUT = withErrorHandling(
     return createSuccessResponse(promptVersion);
   }
 );
+
+/**
+ * Deletes a prompt version
+ * @param _request The incoming HTTP request (unused)
+ * @param params Route parameters object
+ * @param params.params The route parameters containing the prompt version ID
+ * @returns Success response or error response
+ */
+export const DELETE = withErrorHandling(
+  async (
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
+    const { id } = await params;
+    const tenantId = getTenantId();
+
+    await prisma.$transaction(async tx => {
+      // Get the current prompt version and verify prompt belongs to tenant
+      const currentVersion = await tx.promptVersion.findUniqueOrThrow({
+        where: { id: id },
+        select: {
+          promptId: true,
+          prompt: {
+            select: { tenantId: true },
+          },
+        },
+      });
+
+      // Verify the prompt belongs to the current tenant
+      if (currentVersion.prompt.tenantId !== tenantId) {
+        throw new Error('Unauthorized access to prompt version');
+      }
+
+      // Delete the prompt version
+      await tx.promptVersion.delete({
+        where: { id: id },
+      });
+    });
+
+    return createSuccessResponse({ success: true });
+  }
+);
