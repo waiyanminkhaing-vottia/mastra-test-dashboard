@@ -1,12 +1,12 @@
 'use client';
 
-import type { Model } from '@prisma/client';
+import type { Tool } from '@prisma/client';
 import { Edit, Plus } from 'lucide-react';
 import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
-import { ModelDialog } from '@/components/dashboard/model-dialog';
-import { Badge } from '@/components/ui/badge';
+import { ToolDialog } from '@/components/dashboard/tool-dialog';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableHead, TableRow } from '@/components/ui/table';
 import { TableSortButton } from '@/components/ui/table-sort-button';
@@ -14,39 +14,33 @@ import { VirtualizedTable } from '@/components/ui/virtualized-table';
 import { useLanguage } from '@/contexts/language-context';
 import { useTableSort } from '@/hooks/use-table-sort';
 import { formatDate } from '@/lib/utils';
-import { useModelDialog } from '@/stores/dialog-store';
-import { useModelsStore } from '@/stores/models-store';
+import { useToolDialog } from '@/stores/dialog-store';
+import { useToolsStore } from '@/stores/tools-store';
 
 /**
- * Models management page component
- * Displays a table of all models with create, edit, and view functionality
- * @returns Models page with table, dialogs, and CRUD operations
+ * Tools management page component
+ * Displays a table of all tools with create and edit functionality
+ * @returns Tools page with table, dialogs, and CRUD operations
  */
-export default function ModelsPage() {
+export default function ToolsPage() {
   const { t, isLoading: languageLoading } = useLanguage();
-  const { models, loading, error, fetchModels } = useModelsStore();
-  const {
-    isCreateOpen,
-    isEditOpen,
-    editingModel,
-    openCreate,
-    openEdit,
-    close,
-  } = useModelDialog();
+  const { tools, loading, error, fetchTools } = useToolsStore();
+  const { isCreateOpen, isEditOpen, editingTool, openCreate, openEdit, close } =
+    useToolDialog();
 
   const {
-    sortedData: sortedModels,
+    sortedData: sortedTools,
     sortField,
     sortDirection,
     handleSort,
-  } = useTableSort<Model>(models, {
+  } = useTableSort<Tool>(tools, {
     defaultSortField: 'createdAt',
-    defaultSortDirection: 'asc',
+    defaultSortDirection: 'desc',
   });
 
   useEffect(() => {
-    fetchModels();
-  }, [fetchModels]);
+    fetchTools();
+  }, [fetchTools]);
 
   if (languageLoading) {
     return null;
@@ -62,8 +56,8 @@ export default function ModelsPage() {
             href: '/',
           },
           {
-            label: 'Models',
-            translationKey: 'breadcrumbs.models',
+            label: 'Tools',
+            translationKey: 'breadcrumbs.tools',
             isCurrentPage: true,
           },
         ]}
@@ -76,88 +70,96 @@ export default function ModelsPage() {
             onClick={openCreate}
           >
             <Plus className="size-4 mr-2" />
-            {t('models.addModel')}
+            {t('tools.addTool')}
           </Button>
         </div>
 
         <VirtualizedTable
-          data={sortedModels}
+          data={sortedTools}
           loading={loading}
           error={!!error}
-          emptyMessage={t('models.table.noModels')}
+          emptyMessage={t('tools.table.noTools')}
           errorMessage={t('errors.somethingWentWrong')}
           columns={5}
           headers={
             <TableRow>
               <TableHead>
                 <TableSortButton
-                  field={'name' as keyof Model}
+                  field={'name' as keyof Tool}
                   sortField={sortField}
                   sortDirection={sortDirection}
                   onSort={handleSort}
                 >
-                  {t('models.table.name')}
+                  {t('tools.table.name')}
                 </TableSortButton>
               </TableHead>
-              <TableHead>{t('models.table.provider')}</TableHead>
+              <TableHead>{t('tools.table.description')}</TableHead>
               <TableHead>
                 <TableSortButton
-                  field={'createdAt' as keyof Model}
+                  field={'createdAt' as keyof Tool}
                   sortField={sortField}
                   sortDirection={sortDirection}
                   onSort={handleSort}
                 >
-                  {t('models.table.created')}
+                  {t('tools.table.created')}
                 </TableSortButton>
               </TableHead>
               <TableHead>
                 <TableSortButton
-                  field={'updatedAt' as keyof Model}
+                  field={'updatedAt' as keyof Tool}
                   sortField={sortField}
                   sortDirection={sortDirection}
                   onSort={handleSort}
                 >
-                  {t('models.table.updated')}
+                  {t('tools.table.updated')}
                 </TableSortButton>
               </TableHead>
               <TableHead className="w-[100px]">
-                {t('models.table.actions')}
+                {t('tools.table.actions')}
               </TableHead>
             </TableRow>
           }
-          renderRow={(model, _index) => (
-            <TableRow key={model.id}>
-              <TableCell className="font-medium">{model.name}</TableCell>
-              <TableCell>
-                <Badge variant="outline">{model.provider}</Badge>
-              </TableCell>
-              <TableCell>{formatDate(model.createdAt)}</TableCell>
-              <TableCell>{formatDate(model.updatedAt)}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEdit(model)}
-                  >
-                    <Edit className="size-4" />
-                  </Button>
+          renderRow={(tool, _index) => (
+            <TableRow key={tool.id}>
+              <TableCell className="font-medium">{tool.name}</TableCell>
+              <TableCell className="max-w-md">
+                <div className="text-sm text-muted-foreground truncate">
+                  {tool.description || '-'}
                 </div>
+              </TableCell>
+              <TableCell>{formatDate(tool.createdAt)}</TableCell>
+              <TableCell>{formatDate(tool.updatedAt)}</TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openEdit(tool)}
+                >
+                  <Edit className="size-4" />
+                </Button>
               </TableCell>
             </TableRow>
           )}
         />
       </div>
 
-      <ModelDialog
+      <ToolDialog
         open={isCreateOpen || isEditOpen}
         onOpenChange={open => {
           if (!open) {
             close();
           }
         }}
-        model={editingModel}
-        onSuccess={close}
+        tool={editingTool}
+        onSuccess={() => {
+          toast.success(
+            editingTool
+              ? t('tools.form.updateSuccess')
+              : t('tools.form.createSuccess')
+          );
+          close();
+          fetchTools();
+        }}
       />
     </>
   );

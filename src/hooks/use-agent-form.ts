@@ -20,13 +20,24 @@ const DEFAULT_CONFIG: LLMConfig = {
 
 /**
  * Custom hook for managing agent form state and logic
+ * Uses selective Zustand subscriptions to prevent unnecessary re-renders
  */
 export function useAgentForm(agent?: AgentWithRelations | null) {
   const { t } = useLanguage();
-  const { createAgent, updateAgent, isCreating, isUpdating } = useAgentsStore();
-  const { models, fetchModels } = useModelsStore();
-  const { prompts, fetchPrompts } = usePromptsStore();
-  const { fetchLabels: fetchPromptLabels } = usePromptLabelsStore();
+
+  // Selective store subscriptions to avoid unnecessary re-renders
+  const createAgent = useAgentsStore(state => state.createAgent);
+  const updateAgent = useAgentsStore(state => state.updateAgent);
+  const isCreating = useAgentsStore(state => state.isCreating);
+  const isUpdating = useAgentsStore(state => state.isUpdating);
+
+  const models = useModelsStore(state => state.models);
+  const fetchModels = useModelsStore(state => state.fetchModels);
+
+  const prompts = usePromptsStore(state => state.prompts);
+  const fetchPrompts = usePromptsStore(state => state.fetchPrompts);
+
+  const fetchPromptLabels = usePromptLabelsStore(state => state.fetchLabels);
 
   // Form state
   const [name, setName] = useState('');
@@ -38,6 +49,8 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
   const [config, setConfig] = useState<LLMConfig>(DEFAULT_CONFIG);
   const [useCustomConfig, setUseCustomConfig] = useState(false);
   const [selectedMcpTools, setSelectedMcpTools] = useState<string[]>([]);
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [selectedSubAgents, setSelectedSubAgents] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
 
@@ -70,12 +83,14 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
     return Array.from(uniqueLabels.values());
   }, [promptId, prompts]);
 
-  // Data fetching
+  // Fetch initial data on mount
   useEffect(() => {
     fetchModels();
     fetchPrompts();
     fetchPromptLabels();
-  }, [fetchModels, fetchPrompts, fetchPromptLabels]);
+    // Zustand functions are stable, don't need to be in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Form initialization
   useEffect(() => {
@@ -97,6 +112,14 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
           agentMcpTool => `${agentMcpTool.mcpId}:${agentMcpTool.toolName}`
         ) || [];
       setSelectedMcpTools(mcpToolIds);
+
+      // Parse and set selected tools from agent data
+      const toolIds = agent.tools?.map(agentTool => agentTool.toolId) || [];
+      setSelectedTools(toolIds);
+
+      // Parse and set selected sub-agents from agent data
+      const subAgentIds = agent.subAgents?.map(subAgent => subAgent.id) || [];
+      setSelectedSubAgents(subAgentIds);
     } else if (!agent) {
       // Add mode: clear form
       setName('');
@@ -107,6 +130,8 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
       setLabelId('none');
       setUseCustomConfig(false);
       setSelectedMcpTools([]);
+      setSelectedTools([]);
+      setSelectedSubAgents([]);
       setConfig(DEFAULT_CONFIG);
     }
     setErrors({});
@@ -146,6 +171,8 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
     setLabelId('none');
     setUseCustomConfig(false);
     setSelectedMcpTools([]);
+    setSelectedTools([]);
+    setSelectedSubAgents([]);
     setConfig(DEFAULT_CONFIG);
     setErrors({});
     setGeneralError(null);
@@ -171,6 +198,10 @@ export function useAgentForm(agent?: AgentWithRelations | null) {
     setUseCustomConfig,
     selectedMcpTools,
     setSelectedMcpTools,
+    selectedTools,
+    setSelectedTools,
+    selectedSubAgents,
+    setSelectedSubAgents,
     errors,
     setErrors,
     generalError,

@@ -3,7 +3,7 @@
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { AgentForm } from '@/components/dashboard/agent-form';
 import { DashboardHeader } from '@/components/dashboard/dashboard-header';
@@ -17,7 +17,6 @@ interface EditAgentPageProps {
   params: Promise<{ id: string }>;
 }
 
-// Constants to avoid duplicate literals
 const AGENTS_PATH = '/agents';
 const BACK_TRANSLATION_KEY = 'common.back';
 const MANAGEMENT_BREADCRUMB_KEY = 'breadcrumbs.management';
@@ -25,47 +24,65 @@ const AGENTS_BREADCRUMB_KEY = 'breadcrumbs.agents';
 
 /**
  * Page component for editing an existing agent
- * @returns JSX element containing the agent edit form
+ * Uses selective Zustand subscriptions to prevent unnecessary re-renders
  */
 export default function EditAgentPage({ params }: EditAgentPageProps) {
   const { t, isLoading: languageLoading } = useLanguage();
   const router = useRouter();
-  const { fetchAgent, loading } = useAgentsStore();
-  const [agent, setAgent] = useState<AgentWithRelations | null>(null);
-  const [agentId, setAgentId] = useState<string>('');
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const fetchAgent = useAgentsStore(state => state.fetchAgent);
 
-  // Resolve params
+  const [agent, setAgent] = useState<AgentWithRelations | null>(null);
+  const [agentId, setAgentId] = useState('');
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Resolve params promise
   useEffect(() => {
     params.then(resolvedParams => {
       setAgentId(resolvedParams.id);
     });
   }, [params]);
 
-  // Fetch agent data
+  // Fetch agent data when agentId changes
   useEffect(() => {
     if (!agentId) return;
 
+    let mounted = true;
+
     const loadAgent = async () => {
       try {
+        setLoading(true);
         setFetchError(null);
         const fetchedAgent = await fetchAgent(agentId);
-        setAgent(fetchedAgent);
+
+        if (mounted) {
+          setAgent(fetchedAgent);
+          setLoading(false);
+        }
       } catch {
-        setFetchError('agents.errors.agentNotFound');
+        if (mounted) {
+          setFetchError('agents.errors.agentNotFound');
+          setLoading(false);
+        }
       }
     };
 
     loadAgent();
-  }, [agentId, fetchAgent]);
 
-  const handleSuccess = () => {
-    router.push(AGENTS_PATH);
-  };
+    return () => {
+      mounted = false;
+    };
+    // Zustand functions are stable, don't need to be in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agentId]);
 
-  const handleCancel = () => {
+  const handleSuccess = useCallback(() => {
     router.push(AGENTS_PATH);
-  };
+  }, [router]);
+
+  const handleCancel = useCallback(() => {
+    router.push(AGENTS_PATH);
+  }, [router]);
 
   if (languageLoading) {
     return null;

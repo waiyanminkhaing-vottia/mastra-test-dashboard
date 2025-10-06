@@ -6,6 +6,8 @@ import { AgentBasicInfo } from '@/components/dashboard/agents/agent-basic-info';
 import { AgentConfigEditor } from '@/components/dashboard/agents/agent-config-editor';
 import { AgentMcpToolsSection } from '@/components/dashboard/agents/agent-mcp-tools-section';
 import { AgentPromptSection } from '@/components/dashboard/agents/agent-prompt-section';
+import { AgentSubAgentsSection } from '@/components/dashboard/agents/agent-subagents-section';
+import { AgentToolsSection } from '@/components/dashboard/agents/agent-tools-section';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/language-context';
 import { useAgentForm } from '@/hooks/use-agent-form';
@@ -56,6 +58,10 @@ export function AgentForm({
     setUseCustomConfig,
     selectedMcpTools,
     setSelectedMcpTools,
+    selectedTools,
+    setSelectedTools,
+    selectedSubAgents,
+    setSelectedSubAgents,
     errors,
     setErrors,
     generalError,
@@ -79,6 +85,8 @@ export function AgentForm({
     config,
     useCustomConfig,
     selectedMcpTools,
+    selectedTools,
+    selectedSubAgents,
     createAgent,
     updateAgent,
     handleFormError,
@@ -116,6 +124,17 @@ export function AgentForm({
           prompts={prompts}
           filteredLabels={filteredLabels}
           errors={errors}
+        />
+
+        <AgentSubAgentsSection
+          selectedSubAgents={selectedSubAgents}
+          onSelectedSubAgentsChange={setSelectedSubAgents}
+          currentAgentId={agent?.id}
+        />
+
+        <AgentToolsSection
+          selectedTools={selectedTools}
+          onSelectedToolsChange={setSelectedTools}
         />
 
         <AgentMcpToolsSection

@@ -17,6 +17,8 @@ interface UseAgentFormSubmissionProps {
   config: LLMConfig;
   useCustomConfig: boolean;
   selectedMcpTools: string[];
+  selectedTools: string[];
+  selectedSubAgents: string[];
   createAgent: (data: {
     name: string;
     description?: string;
@@ -25,6 +27,8 @@ interface UseAgentFormSubmissionProps {
     labelId?: string;
     config?: Record<string, unknown> | null;
     mcpTools?: string[];
+    tools?: string[];
+    subAgents?: string[];
   }) => Promise<AgentWithRelations>;
   updateAgent: (
     id: string,
@@ -36,6 +40,8 @@ interface UseAgentFormSubmissionProps {
       labelId?: string;
       config?: Record<string, unknown> | null;
       mcpTools?: string[];
+      tools?: string[];
+      subAgents?: string[];
     }
   ) => Promise<AgentWithRelations>;
   handleFormError: (error: unknown, options?: Record<string, unknown>) => void;
@@ -57,6 +63,8 @@ export function useAgentFormSubmission({
   config,
   useCustomConfig,
   selectedMcpTools,
+  selectedTools,
+  selectedSubAgents,
   createAgent,
   updateAgent,
   handleFormError,
@@ -79,6 +87,8 @@ export function useAgentFormSubmission({
         labelId: labelId && labelId !== 'none' ? labelId : undefined,
         config: useCustomConfig ? config : isEditing ? null : undefined,
         mcpTools: selectedMcpTools.length > 0 ? selectedMcpTools : undefined,
+        tools: selectedTools.length > 0 ? selectedTools : undefined,
+        subAgents: selectedSubAgents.length > 0 ? selectedSubAgents : undefined,
       });
 
       if (!validation.success) {
@@ -98,6 +108,8 @@ export function useAgentFormSubmission({
               labelId?: string;
               config?: Record<string, unknown> | null;
               mcpTools?: string[];
+              tools?: string[];
+              subAgents?: string[];
             }
           );
         } else {
@@ -110,6 +122,8 @@ export function useAgentFormSubmission({
               labelId?: string;
               config?: Record<string, unknown> | null;
               mcpTools?: string[];
+              tools?: string[];
+              subAgents?: string[];
             }
           );
         }
@@ -132,6 +146,8 @@ export function useAgentFormSubmission({
       config,
       useCustomConfig,
       selectedMcpTools,
+      selectedTools,
+      selectedSubAgents,
       createAgent,
       updateAgent,
       handleFormError,

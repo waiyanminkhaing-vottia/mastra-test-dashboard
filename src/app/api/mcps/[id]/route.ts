@@ -18,10 +18,11 @@ import { mcpSchema } from '@/lib/validations/mcp';
  */
 export const GET = withErrorHandling(
   async (
-    request: NextRequest,
+    _request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;
+
     const mcp = await prisma.mcp.findUnique({
       where: { id },
     });

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { ApiError, apiGet, apiPost, apiPut } from '@/lib/api-client';
+import { apiDelete, ApiError, apiGet, apiPost, apiPut } from '@/lib/api-client';
 import type {
   PromptVersionWithLabel,
   PromptWithVersions,
@@ -47,6 +47,7 @@ interface PromptsActions {
     changeNote?: string;
     labelId?: string | null;
   }) => Promise<PromptVersionWithLabel>;
+  deletePromptVersion: (versionId: string) => Promise<boolean>;
   updateCurrentPrompt: (prompt: PromptWithVersions) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: boolean) => void;
@@ -205,6 +206,30 @@ export const usePromptsStore = create<PromptsStore>((set, get) => ({
       return newVersion;
     } catch (error) {
       throw error; // Re-throw to allow component to handle specific errors
+    }
+  },
+
+  deletePromptVersion: async (versionId: string) => {
+    try {
+      await apiDelete(`${API_ENDPOINTS.PROMPT_VERSIONS}/${versionId}`);
+
+      // Update the current prompt in store to remove the deleted version
+      set(state => {
+        if (state.currentPrompt) {
+          const updatedPrompt = {
+            ...state.currentPrompt,
+            versions: state.currentPrompt.versions.filter(
+              v => v.id !== versionId
+            ),
+          };
+          return { currentPrompt: updatedPrompt };
+        }
+        return state;
+      });
+
+      return true;
+    } catch {
+      return false;
     }
   },
 }));

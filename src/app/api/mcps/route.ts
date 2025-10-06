@@ -11,7 +11,7 @@ import { mcpSchema } from '@/lib/validations/mcp';
 
 /**
  * GET /api/mcps
- * Retrieves all MCPs with computed domain field
+ * Retrieves all MCPs for the current tenant with computed domain field
  * @returns JSON response with array of MCP objects with domain or error message
  */
 export const GET = withErrorHandling(async () => {

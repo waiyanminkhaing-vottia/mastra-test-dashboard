@@ -19,6 +19,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/language-context';
 import { buildUrl } from '@/lib/api-client';
@@ -101,14 +102,19 @@ interface AgentMcpToolsSectionProps {
 
 /**
  * Component for selecting MCP tools in agent forms
- * Optimized with React.memo and comprehensive caching
+ * Optimized with React.memo, selective Zustand subscriptions, and comprehensive caching
  */
 function AgentMcpToolsSectionComponent({
   selectedTools,
   onSelectedToolsChange,
 }: AgentMcpToolsSectionProps) {
   const { t } = useLanguage();
-  const { mcps, loading, fetchMcps } = useMcpsStore();
+
+  // Selective store subscriptions to avoid unnecessary re-renders
+  const mcps = useMcpsStore(state => state.mcps);
+  const loading = useMcpsStore(state => state.loading);
+  const fetchMcps = useMcpsStore(state => state.fetchMcps);
+
   const [mcpsWithTools, setMcpsWithTools] = useState<McpWithTools[]>([]);
   const resourcesRef = useRef<ResourceManager>({
     controllers: new Map(),
@@ -117,12 +123,14 @@ function AgentMcpToolsSectionComponent({
   });
   const lruCacheRef = useRef<LRUCache<string, McpTool[]>>(new LRUCache(50));
 
-  // Cache TTL in milliseconds (5 minutes)
-  const CACHE_TTL = 5 * 60 * 1000;
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+  // Fetch MCPs on mount
   useEffect(() => {
     fetchMcps();
-  }, [fetchMcps]);
+    // Zustand functions are stable, don't need to be in dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Centralized cleanup effect with error handling
   useEffect(() => {
@@ -367,7 +375,7 @@ function AgentMcpToolsSectionComponent({
   if (loading) {
     return (
       <div className="w-full rounded-lg border p-6">
-        <div className="mb-6">
+        <div>
           <h4 className="text-sm font-medium text-gray">
             {t('agents.mcpTools.title')}
           </h4>
@@ -375,6 +383,7 @@ function AgentMcpToolsSectionComponent({
             {t('agents.mcpTools.description')}
           </p>
         </div>
+        <Separator className="my-6" />
         <div className="space-y-4">
           <div className="flex items-center gap-3 py-4">
             <Skeleton className="h-4 w-4" />
@@ -408,7 +417,7 @@ function AgentMcpToolsSectionComponent({
       }}
     >
       <div className="w-full rounded-lg border p-6">
-        <div className="mb-6">
+        <div>
           <h4
             className="text-sm font-medium text-gray"
             id="mcp-tools-section-title"
@@ -422,11 +431,12 @@ function AgentMcpToolsSectionComponent({
             {t('agents.mcpTools.description')}
           </p>
         </div>
+        <Separator className="mt-6" />
         <div className="space-y-4">
           {!mcpsWithTools || mcpsWithTools.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
+            <p className="text-center py-4 text-sm text-muted-foreground">
               {t('agents.mcpTools.noMcps')}
-            </div>
+            </p>
           ) : (
             <div
               className="space-y-2 w-full"
@@ -453,7 +463,7 @@ function AgentMcpToolsSectionComponent({
                 return (
                   <Collapsible
                     key={mcp.id}
-                    className="w-full border-b last:border-b-0"
+                    className="w-full"
                     onOpenChange={open => {
                       if (
                         open &&

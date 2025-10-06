@@ -138,3 +138,26 @@ export async function apiGet<T = unknown>(url: string): Promise<T> {
 
   return response.json();
 }
+
+/**
+ * Makes a DELETE request
+ * @param url - The API endpoint
+ * @returns Promise resolving to the response data
+ */
+export async function apiDelete<T = unknown>(url: string): Promise<T> {
+  const response = await fetch(buildUrl(url), {
+    method: 'DELETE',
+    headers: DEFAULT_HEADERS,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new ApiError(
+      errorData.error || ERROR_MESSAGES.REQUEST_FAILED,
+      response.status,
+      errorData
+    );
+  }
+
+  return response.json();
+}

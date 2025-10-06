@@ -5,6 +5,7 @@ import {
   validateRequestBody,
   withErrorHandling,
 } from '@/lib/api-utils';
+import { getTenantId } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { promptLabelSchema } from '@/lib/validations/prompt-label';
 
@@ -27,9 +28,11 @@ export const PUT = withErrorHandling(
     );
     if (error) return error;
 
-    // Update the label
+    const tenantId = getTenantId();
+
+    // Update the label (ensure it belongs to the tenant)
     const updatedLabel = await prisma.promptLabel.update({
-      where: { id },
+      where: { id, tenantId },
       data,
     });
 

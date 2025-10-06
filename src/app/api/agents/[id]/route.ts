@@ -6,6 +6,7 @@ import {
   validateRequestBody,
   withErrorHandling,
 } from '@/lib/api-utils';
+import { getTenantId } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { agentSchema } from '@/lib/validations/agent';
 
@@ -23,14 +24,22 @@ export const GET = withErrorHandling(
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;
+    const tenantId = getTenantId();
 
     const agent = await prisma.agent.findUniqueOrThrow({
-      where: { id },
+      where: { id, tenantId },
       include: {
         model: true,
         prompt: true,
         label: true,
         mcpTools: true,
+        tools: {
+          include: {
+            tool: true,
+          },
+        },
+        subAgents: true,
+        parent: true,
       },
     });
 
@@ -78,16 +87,29 @@ export const PUT = withErrorHandling(
     const { data, error } = await validateRequestBody(request, agentSchema());
     if (error) return error;
 
-    const { name, description, modelId, promptId, labelId, config, mcpTools } =
-      data as {
-        name: string;
-        description?: string;
-        modelId: string;
-        promptId: string;
-        labelId?: string;
-        config?: Record<string, unknown> | null;
-        mcpTools?: string[];
-      };
+    const {
+      name,
+      description,
+      modelId,
+      promptId,
+      labelId,
+      config,
+      mcpTools,
+      tools,
+      subAgents,
+    } = data as {
+      name: string;
+      description?: string;
+      modelId: string;
+      promptId: string;
+      labelId?: string;
+      config?: Record<string, unknown> | null;
+      mcpTools?: string[];
+      tools?: string[];
+      subAgents?: string[];
+    };
+
+    const tenantId = getTenantId();
 
     // Parse MCP tool IDs if provided
     const mcpToolConnections =
@@ -96,31 +118,53 @@ export const PUT = withErrorHandling(
         return { mcpId, toolName };
       }) || [];
 
-    // Update the agent
-    const updatedAgent = await prisma.agent.update({
-      where: { id },
-      data: {
-        name,
-        description: description || null,
-        modelId,
-        promptId,
-        labelId,
-        config: config as Prisma.InputJsonValue,
-        mcpTools: {
-          deleteMany: {}, // Remove all existing MCP tool associations
-          create: mcpToolConnections.map(
-            ({ mcpId, toolName }: { mcpId: string; toolName: string }) => ({
-              mcpId,
-              toolName,
-            })
-          ),
-        },
+    const updateData = {
+      name,
+      description: description || null,
+      modelId,
+      promptId,
+      labelId,
+      config: config as Prisma.InputJsonValue,
+      mcpTools: {
+        deleteMany: {}, // Remove all existing MCP tool associations
+        create: mcpToolConnections.map(
+          ({ mcpId, toolName }: { mcpId: string; toolName: string }) => ({
+            mcpId,
+            toolName,
+          })
+        ),
       },
+      tools: tools
+        ? {
+            deleteMany: {}, // Remove all existing tool associations
+            create: tools.map(toolId => ({
+              toolId,
+            })),
+          }
+        : { deleteMany: {} }, // Remove all if no tools provided
+      subAgents: subAgents
+        ? {
+            set: subAgents.map(agentId => ({ id: agentId })),
+          }
+        : { set: [] },
+    };
+
+    // Update the agent (ensure it belongs to the tenant)
+    const updatedAgent = await prisma.agent.update({
+      where: { id, tenantId },
+      data: updateData,
       include: {
         model: true,
         prompt: true,
         label: true,
         mcpTools: true,
+        tools: {
+          include: {
+            tool: true,
+          },
+        },
+        subAgents: true,
+        parent: true,
       },
     });
 

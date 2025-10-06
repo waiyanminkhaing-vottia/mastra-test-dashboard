@@ -5,6 +5,7 @@ import {
   validateRequestBody,
   withErrorHandling,
 } from '@/lib/api-utils';
+import { getTenantId } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { updatePromptSchema } from '@/lib/validations/prompt';
 
@@ -21,10 +22,12 @@ export const GET = withErrorHandling(
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;
+    const tenantId = getTenantId();
 
     const prompt = await prisma.prompt.findUniqueOrThrow({
       where: {
         id,
+        tenantId,
       },
       include: {
         versions: {
@@ -62,10 +65,12 @@ export const PUT = withErrorHandling(
     if (error) return error;
 
     const { name, description } = data;
+    const tenantId = getTenantId();
 
     const prompt = await prisma.prompt.update({
       where: {
         id,
+        tenantId,
       },
       data: {
         name,

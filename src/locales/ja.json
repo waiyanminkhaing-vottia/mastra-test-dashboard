@@ -16,6 +16,8 @@
     "copied": "コピー済み",
     "copyUrl": "URLをコピー",
     "duplicate": "複製",
+    "delete": "削除",
+    "deleting": "削除中...",
     "cancel": "キャンセル",
     "confirm": "確認",
     "error": "エラー",
@@ -32,7 +34,8 @@
     "models": "モデル",
     "prompts": "プロンプト",
     "mcps": "MCP",
-    "agents": "エージェント"
+    "agents": "エージェント",
+    "tools": "ツール"
   },
   "breadcrumbs": {
     "management": "管理",
@@ -40,7 +43,8 @@
     "prompts": "プロンプト",
     "mcps": "MCP",
     "newMcp": "新規MCP",
-    "agents": "エージェント"
+    "agents": "エージェント",
+    "tools": "ツール"
   },
   "models": {
     "title": "モデル",
@@ -115,8 +119,12 @@
       "selectVersionMessage": "サイドバーからバージョンを選択して内容を表示してください",
       "confirmLabelChange": "ラベル変更の確認",
       "confirmLabelChangeMessage": "このバージョンのラベルを次に変更してもよろしいですか",
+      "confirmDeleteVersion": "バージョンを削除",
+      "confirmDeleteVersionMessage": "このバージョンを削除してもよろしいですか？この操作は元に戻せません。",
       "labelUpdatedSuccess": "ラベルが正常に更新されました",
       "labelUpdateFailed": "ラベルの更新に失敗しました",
+      "versionDeletedSuccess": "バージョンが正常に削除されました",
+      "versionDeleteFailed": "バージョンの削除に失敗しました",
       "noMatchingVersions": "現在のフィルターに一致するバージョンがありません",
       "changeNote": "変更メモ（オプション）",
       "changeNotePlaceholder": "このバージョンで何が変更されたかを説明してください...",
@@ -226,13 +234,25 @@
       "noToolsAvailable": "利用可能なツールがありません",
       "selected": "選択済み"
     },
+    "tools": {
+      "title": "ツール",
+      "description": "このエージェントに追加するツールを選択してください",
+      "noTools": "ツールが設定されていません"
+    },
+    "subAgents": {
+      "title": "サブエージェント",
+      "description": "このエージェントのサブエージェントとして追加するエージェントを選択してください",
+      "noAgents": "サブエージェントとして追加できるエージェントがありません"
+    },
     "table": {
       "name": "名前",
       "model": "モデル",
       "prompt": "プロンプト",
       "label": "ラベル",
+      "tools": "ツール",
       "config": "LLM設定",
       "mcpTools": "MCPツール",
+      "subAgents": "サブエージェント",
       "created": "作成日",
       "updated": "更新日",
       "actions": "操作",
@@ -310,6 +330,46 @@
         "noDescription": "説明が提供されていません"
       },
       "totalCount": "総ツール数"
+    }
+  },
+  "tools": {
+    "title": "ツール",
+    "addTool": "ツール追加",
+    "form": {
+      "title": "ツール追加",
+      "description": "名前と説明を含む新しいツールを作成します。",
+      "editTitle": "ツール編集",
+      "editDescription": "ツール設定を更新します。",
+      "nameField": "名前",
+      "namePlaceholder": "ツール名を入力",
+      "descriptionField": "説明",
+      "descriptionPlaceholder": "ツールの説明を入力",
+      "cancelButton": "キャンセル",
+      "createButton": "ツールを作成",
+      "creatingButton": "作成中...",
+      "updateButton": "ツールを更新",
+      "updatingButton": "更新中...",
+      "createSuccess": "ツールが正常に作成されました",
+      "updateSuccess": "ツールが正常に更新されました"
+    },
+    "table": {
+      "name": "名前",
+      "description": "説明",
+      "created": "作成日",
+      "updated": "更新日",
+      "actions": "操作",
+      "noTools": "データがありません。"
+    },
+    "validation": {
+      "nameRequired": "名前は必須です",
+      "nameMaxLength": "名前は100文字未満である必要があります",
+      "nameInvalidChars": "名前には文字、数字、ハイフン、アンダースコア、ドットのみ使用できます",
+      "descriptionMaxLength": "説明は500文字以下である必要があります"
+    },
+    "errors": {
+      "toolNotFound": "ツールが見つかりません",
+      "toolAlreadyExists": "この名前のツールは既に存在します",
+      "invalidToolReference": "ツールデータに無効な参照があります"
     }
   }
 }

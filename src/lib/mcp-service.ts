@@ -357,9 +357,7 @@ export class McpService {
    */
   private async cleanupUnhealthyConnections(): Promise<void> {
     const unhealthyIds = Array.from(this.connectionHealth.entries())
-      .filter(
-        ([, health]) => !this.isClientHealthy(health.lastCheck.toString())
-      )
+      .filter(([id]) => !this.isClientHealthy(id))
       .map(([id]) => id);
 
     if (unhealthyIds.length > 0) {
