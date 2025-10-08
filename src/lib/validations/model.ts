@@ -10,6 +10,14 @@ export const providerSchema = z.enum(Object.values(Provider));
 
 export type { Provider };
 
+/**
+ * Regex pattern for model names
+ * Allows:
+ * - Standard model names: alphanumeric with hyphens, underscores, and dots
+ * - Azure ML URIs: azureml://registries/.../models/.../versions/...
+ */
+const MODEL_NAME_PATTERN = /^(?:[a-zA-Z0-9\-_\.]+|azureml:\/\/[\w\-\/]+)$/;
+
 // Create validation using the helper factory
 const modelValidation = createEntityValidation<{
   name: string;
@@ -21,6 +29,13 @@ const modelValidation = createEntityValidation<{
     nameMaxLength: VALIDATION_LIMITS.MODEL_NAME_MAX_LENGTH,
   },
   customFields: getMessage => ({
+    name: z
+      .string()
+      .min(1, getMessage('nameRequired'))
+      .max(VALIDATION_LIMITS.MODEL_NAME_MAX_LENGTH, getMessage('nameMaxLength'))
+      .regex(MODEL_NAME_PATTERN, {
+        message: getMessage('nameInvalidChars'),
+      }),
     provider: providerSchema.refine(val => val, {
       message:
         getMessage('providerRequired') ||

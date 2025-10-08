@@ -18,7 +18,8 @@ on:
         type: choice
         options:
           - default
-          - wai
+          - fasthelp
+          - tusuzumi
 
 jobs:
   deploy:
@@ -82,8 +83,10 @@ jobs:
 
           # Set port based on tenant
           TENANT="${{ github.event.inputs.tenant }}"
-          if [ "$TENANT" = "wai" ]; then
+          if [ "$TENANT" = "fasthelp" ]; then
             PORT=3001
+          elif [ "$TENANT" = "tusuzumi" ]; then
+            PORT=3002
           else
             PORT=3000
           fi
@@ -247,9 +250,12 @@ jobs:
 
             # Set port and base path based on tenant
             TENANT="${{ github.event.inputs.tenant }}"
-            if [ "$TENANT" = "wai" ]; then
+            if [ "$TENANT" = "fasthelp" ]; then
               PORT=3001
-              NEXT_PUBLIC_BASE_PATH="/wai/dashboard"
+              NEXT_PUBLIC_BASE_PATH="/fasthelp/dashboard"
+            elif [ "$TENANT" = "tusuzumi" ]; then
+              PORT=3002
+              NEXT_PUBLIC_BASE_PATH="/tusuzumi/dashboard"
             else
               PORT=3000
               NEXT_PUBLIC_BASE_PATH="/dashboard"
