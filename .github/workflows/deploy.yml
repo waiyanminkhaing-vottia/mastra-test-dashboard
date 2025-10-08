@@ -199,6 +199,7 @@ jobs:
           sudo docker build \
             --secret id=github_token,src=/tmp/github_token \
             --build-arg PORT=$PORT \
+            --build-arg TENANT_ID=$TENANT \
             -t mastra-test-dashboard:$ENV_FILE-latest \
             .
 
@@ -322,8 +323,18 @@ jobs:
               BASE_PATH=""
             fi
 
-            HEALTH_URL="http://localhost:3000${BASE_PATH}/api/health"
-            echo "🔍 Using health check URL: $HEALTH_URL"
+            # Set port based on tenant for health check
+            TENANT="${{ github.event.inputs.tenant }}"
+            if [ "$TENANT" = "fasthelp" ]; then
+              PORT=3001
+            elif [ "$TENANT" = "tusuzumi" ]; then
+              PORT=3002
+            else
+              PORT=3000
+            fi
+
+            HEALTH_URL="http://localhost:${PORT}${BASE_PATH}/api/health"
+            echo "🔍 Using health check URL: $HEALTH_URL (tenant: $TENANT, port: $PORT)"
 
             # Check container status
             echo "🔍 Container status:"
@@ -353,15 +364,32 @@ jobs:
 
               if [ "$CURRENT_IMAGE" != "none" ] && [ -n "$CURRENT_IMAGE" ]; then
                 echo "🔄 Restoring previous container with image: $CURRENT_IMAGE"
+
+                # Set port and base path based on tenant for rollback
+                TENANT="${{ github.event.inputs.tenant }}"
+                if [ "$TENANT" = "fasthelp" ]; then
+                  ROLLBACK_PORT=3001
+                  ROLLBACK_BASE_PATH="/fasthelp/dashboard"
+                elif [ "$TENANT" = "tusuzumi" ]; then
+                  ROLLBACK_PORT=3002
+                  ROLLBACK_BASE_PATH="/tusuzumi/dashboard"
+                else
+                  ROLLBACK_PORT=3000
+                  ROLLBACK_BASE_PATH="/dashboard"
+                fi
+
+                # Get registry IP for rollback
+                REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+
                 sudo docker run -d \
                   --name mastra-test-dashboard \
                   --network mastra-test-network \
                   --restart unless-stopped \
-                  -p $PORT:$PORT \
+                  -p $ROLLBACK_PORT:$ROLLBACK_PORT \
                   --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
                   -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
-                  -e TENANT_ID="${{ github.event.inputs.tenant }}" \
-                  -e NEXT_PUBLIC_BASE_PATH="$NEXT_PUBLIC_BASE_PATH" \
+                  -e TENANT_ID="$TENANT" \
+                  -e NEXT_PUBLIC_BASE_PATH="$ROLLBACK_BASE_PATH" \
                   $CURRENT_IMAGE
                 echo "🔄 Rollback completed"
               else
