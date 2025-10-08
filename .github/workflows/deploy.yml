@@ -257,6 +257,12 @@ jobs:
             sudo docker stop $CONTAINER_NAME 2>/dev/null || true
             sudo docker rm $CONTAINER_NAME 2>/dev/null || true
 
+            # Clean up old container without tenant suffix if it exists (migration step)
+            if [ "$TENANT" = "default" ]; then
+              sudo docker stop mastra-test-dashboard 2>/dev/null || true
+              sudo docker rm mastra-test-dashboard 2>/dev/null || true
+            fi
+
             echo "Deploying with environment: $ENV_FILE"
 
             # Set port and base path based on tenant
@@ -353,28 +359,20 @@ jobs:
             echo "Waiting for application to be ready..."
             HEALTH_CHECK_PASSED=false
 
-            # Get basePath from environment file for health check
-            echo "🔍 Looking for basePath in: /opt/mastra-test-dashboard/.env.$ENV_FILE"
-
-            if [ -f "/opt/mastra-test-dashboard/.env.$ENV_FILE" ]; then
-              BASE_PATH=$(grep "NEXT_PUBLIC_BASE_PATH" "/opt/mastra-test-dashboard/.env.$ENV_FILE" | cut -d'=' -f2 || echo "")
-              echo "🔍 Found BASE_PATH: '$BASE_PATH'"
-            else
-              echo "❌ Environment file not found, using empty basePath"
-              BASE_PATH=""
-            fi
-
-            # Set port based on tenant for health check
+            # Set port and base path based on tenant for health check
             if [ "$TENANT" = "fasthelp" ]; then
               PORT=3001
+              BASE_PATH="/fasthelp/dashboard"
             elif [ "$TENANT" = "tsuzumi" ]; then
               PORT=3002
+              BASE_PATH="/tsuzumi/dashboard"
             else
               PORT=3000
+              BASE_PATH="/dashboard"
             fi
 
             HEALTH_URL="http://localhost:${PORT}${BASE_PATH}/api/health"
-            echo "🔍 Using health check URL: $HEALTH_URL (tenant: $TENANT, port: $PORT)"
+            echo "🔍 Using health check URL: $HEALTH_URL (tenant: $TENANT, port: $PORT, base path: $BASE_PATH)"
 
             # Check container status
             echo "🔍 Container status:"
