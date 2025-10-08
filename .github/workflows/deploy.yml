@@ -19,7 +19,7 @@ on:
         options:
           - default
           - fasthelp
-          - tusuzumi
+          - tsuzumi
 
 jobs:
   deploy:
@@ -85,7 +85,7 @@ jobs:
           TENANT="${{ github.event.inputs.tenant }}"
           if [ "$TENANT" = "fasthelp" ]; then
             PORT=3001
-          elif [ "$TENANT" = "tusuzumi" ]; then
+          elif [ "$TENANT" = "tsuzumi" ]; then
             PORT=3002
           else
             PORT=3000
@@ -254,9 +254,9 @@ jobs:
             if [ "$TENANT" = "fasthelp" ]; then
               PORT=3001
               NEXT_PUBLIC_BASE_PATH="/fasthelp/dashboard"
-            elif [ "$TENANT" = "tusuzumi" ]; then
+            elif [ "$TENANT" = "tsuzumi" ]; then
               PORT=3002
-              NEXT_PUBLIC_BASE_PATH="/tusuzumi/dashboard"
+              NEXT_PUBLIC_BASE_PATH="/tsuzumi/dashboard"
             else
               PORT=3000
               NEXT_PUBLIC_BASE_PATH="/dashboard"
@@ -298,7 +298,7 @@ jobs:
             echo "🧹 Cleaning up images from other tenants..."
 
             # Define all tenant options
-            ALL_TENANTS=("default" "fasthelp" "tusuzumi")
+            ALL_TENANTS=("default" "fasthelp" "tsuzumi")
 
             # Get registry IP
             REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
@@ -353,7 +353,7 @@ jobs:
             TENANT="${{ github.event.inputs.tenant }}"
             if [ "$TENANT" = "fasthelp" ]; then
               PORT=3001
-            elif [ "$TENANT" = "tusuzumi" ]; then
+            elif [ "$TENANT" = "tsuzumi" ]; then
               PORT=3002
             else
               PORT=3000
@@ -396,9 +396,9 @@ jobs:
                 if [ "$TENANT" = "fasthelp" ]; then
                   ROLLBACK_PORT=3001
                   ROLLBACK_BASE_PATH="/fasthelp/dashboard"
-                elif [ "$TENANT" = "tusuzumi" ]; then
+                elif [ "$TENANT" = "tsuzumi" ]; then
                   ROLLBACK_PORT=3002
-                  ROLLBACK_BASE_PATH="/tusuzumi/dashboard"
+                  ROLLBACK_BASE_PATH="/tsuzumi/dashboard"
                 else
                   ROLLBACK_PORT=3000
                   ROLLBACK_BASE_PATH="/dashboard"
