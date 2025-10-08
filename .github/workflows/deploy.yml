@@ -74,15 +74,19 @@ jobs:
           fi
           echo "✅ Using git: $GIT_CMD"
 
-          # Clean up old mastra-test-dashboard images (keep latest 3)
-          sudo docker images localhost:5000/mastra-test-dashboard --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +4 | awk '{print $1}' | xargs -r sudo docker rmi || true
+          # Set tenant for image cleanup
+          TENANT="${{ github.event.inputs.tenant }}"
+          ENV_FILE="${{ github.event.inputs.environment }}"
+
+          # Clean up old mastra-test-dashboard images for current tenant (keep latest 3)
+          echo "🧹 Cleaning up old images for tenant: $TENANT"
+          sudo docker images localhost:5000/mastra-test-dashboard --format "{{.Repository}}:{{.Tag}} {{.ID}} {{.CreatedAt}}" | grep "$ENV_FILE-$TENANT" | sort -k3 -r | tail -n +4 | awk '{print $2}' | xargs -r sudo docker rmi || true
 
           # Clone/update repository with authentication
           BRANCH="${{ github.ref_name }}"
           echo "Deploying from branch: $BRANCH"
 
           # Set port based on tenant
-          TENANT="${{ github.event.inputs.tenant }}"
           if [ "$TENANT" = "fasthelp" ]; then
             PORT=3001
           elif [ "$TENANT" = "tsuzumi" ]; then
@@ -90,7 +94,7 @@ jobs:
           else
             PORT=3000
           fi
-          echo "Using port: $PORT for tenant: $TENANT"
+          echo "Using port: $PORT for tenant: $TENANT (environment: $ENV_FILE)"
 
           # Configure git with token authentication
           echo "Configuring git authentication..."
@@ -200,7 +204,7 @@ jobs:
             --secret id=github_token,src=/tmp/github_token \
             --build-arg PORT=$PORT \
             --build-arg TENANT_ID=$TENANT \
-            -t mastra-test-dashboard:$ENV_FILE-latest \
+            -t mastra-test-dashboard:$ENV_FILE-$TENANT-latest \
             .
 
           # Configure Docker to allow insecure registry
@@ -215,13 +219,13 @@ jobs:
           sleep 10
 
           # Tag image for registry
-          sudo docker tag mastra-test-dashboard:$ENV_FILE-latest $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
+          sudo docker tag mastra-test-dashboard:$ENV_FILE-$TENANT-latest $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-$TENANT-latest
 
           # Push to local registry
-          sudo docker push $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
+          sudo docker push $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-$TENANT-latest
           rm -f /tmp/github_token
 
-          echo "✅ Image built and pushed: localhost:5000/mastra-test-dashboard:$ENV_FILE-latest"
+          echo "✅ Image built and pushed: localhost:5000/mastra-test-dashboard:$ENV_FILE-$TENANT-latest"
           SCRIPT_EOF
 
           # Copy script to remote and execute
@@ -234,23 +238,28 @@ jobs:
           ssh ${{ env.LIGHTSAIL_USER }}@${{ env.LIGHTSAIL_HOST }} << 'EOF'
             echo "🚀 Deploying Mastra Test Dashboard..."
 
+            # Set environment file and tenant first
+            ENV_FILE="${{ github.event.inputs.environment }}"
+            TENANT="${{ github.event.inputs.tenant }}"
+
+            # Set container name based on tenant
+            CONTAINER_NAME="mastra-test-dashboard-$TENANT"
+            echo "Using container name: $CONTAINER_NAME"
+
             # Ensure Docker network exists
             sudo docker network create mastra-test-network --driver bridge 2>/dev/null || true
 
             # Store current image for rollback
-            CURRENT_IMAGE=$(sudo docker inspect mastra-test-dashboard --format='{{.Image}}' 2>/dev/null || echo "none")
+            CURRENT_IMAGE=$(sudo docker inspect $CONTAINER_NAME --format='{{.Image}}' 2>/dev/null || echo "none")
             echo "Current image: $CURRENT_IMAGE"
 
-            # Stop and remove existing container
-            sudo docker stop mastra-test-dashboard 2>/dev/null || true
-            sudo docker rm mastra-test-dashboard 2>/dev/null || true
+            # Stop and remove existing container for this tenant
+            sudo docker stop $CONTAINER_NAME 2>/dev/null || true
+            sudo docker rm $CONTAINER_NAME 2>/dev/null || true
 
-            # Set environment file based on manual input
-            ENV_FILE="${{ github.event.inputs.environment }}"
             echo "Deploying with environment: $ENV_FILE"
 
             # Set port and base path based on tenant
-            TENANT="${{ github.event.inputs.tenant }}"
             if [ "$TENANT" = "fasthelp" ]; then
               PORT=3001
               NEXT_PUBLIC_BASE_PATH="/fasthelp/dashboard"
@@ -277,19 +286,19 @@ jobs:
             # Deploy container with env file and DATABASE_URL override
             # DATABASE_URL contains secrets and must be injected at runtime
             sudo docker run -d \
-              --name mastra-test-dashboard \
+              --name $CONTAINER_NAME \
               --network mastra-test-network \
               --restart unless-stopped \
               -p $PORT:$PORT \
               --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
               -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
-              -e TENANT_ID="${{ github.event.inputs.tenant }}" \
+              -e TENANT_ID="$TENANT" \
               -e NEXT_PUBLIC_BASE_PATH="$NEXT_PUBLIC_BASE_PATH" \
-              $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest
+              $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-$TENANT-latest
 
             # Debug: Check safe environment variables in running container
             echo "🔍 Safe environment variables in container:"
-            sudo docker exec mastra-test-dashboard env | grep -E "^(LOG_LEVEL|NEXT_PUBLIC_|NODE_ENV|ENABLE_)" | sort || echo "No safe env vars found"
+            sudo docker exec $CONTAINER_NAME env | grep -E "^(LOG_LEVEL|NEXT_PUBLIC_|NODE_ENV|ENABLE_)" | sort || echo "No safe env vars found"
 
             # Clean up other tenant images and keep only current tenant images
             TENANT="${{ github.event.inputs.tenant }}"
@@ -309,16 +318,16 @@ jobs:
                 echo "🗑️ Removing images for tenant: $tenant"
 
                 # Remove local images for other tenants
-                sudo docker images | grep "mastra-test-dashboard" | grep -v "$REGISTRY_IP:5000" | awk '{print $3}' | xargs -r sudo docker rmi -f 2>/dev/null || true
+                sudo docker rmi -f "mastra-test-dashboard:$ENV_FILE-$tenant-latest" 2>/dev/null || true
 
                 # Remove registry images for other tenants
-                sudo docker rmi -f "$REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-latest-$tenant" 2>/dev/null || true
+                sudo docker rmi -f "$REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-$tenant-latest" 2>/dev/null || true
               fi
             done
 
             # Clean up old images for current tenant (keep latest 2)
             echo "🧹 Cleaning up old images for current tenant: $TENANT"
-            sudo docker images "$REGISTRY_IP:5000/mastra-test-dashboard" --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | tail -n +3 | awk '{print $1}' | xargs -r sudo docker rmi || true
+            sudo docker images "$REGISTRY_IP:5000/mastra-test-dashboard" --format "{{.ID}} {{.CreatedAt}}" | grep "$ENV_FILE-$TENANT" | sort -k2 -r | tail -n +3 | awk '{print $1}' | xargs -r sudo docker rmi || true
 
             echo "✅ Application deployed successfully"
           EOF
@@ -328,17 +337,23 @@ jobs:
           ssh ${{ env.LIGHTSAIL_USER }}@${{ env.LIGHTSAIL_HOST }} << 'EOF'
             echo "🔍 Verifying deployment..."
 
-            echo "Checking container status..."
-            sudo docker ps | grep mastra-test-dashboard
+            # Set environment file and tenant
+            ENV_FILE="${{ github.event.inputs.environment }}"
+            TENANT="${{ github.event.inputs.tenant }}"
+
+            # Set container name based on tenant
+            CONTAINER_NAME="mastra-test-dashboard-$TENANT"
+
+            echo "Checking container status for: $CONTAINER_NAME"
+            sudo docker ps | grep $CONTAINER_NAME
 
             echo "Checking container logs..."
-            sudo docker logs mastra-test-dashboard --tail=20
+            sudo docker logs $CONTAINER_NAME --tail=20
 
             echo "Waiting for application to be ready..."
             HEALTH_CHECK_PASSED=false
 
             # Get basePath from environment file for health check
-            ENV_FILE="${{ github.event.inputs.environment }}"
             echo "🔍 Looking for basePath in: /opt/mastra-test-dashboard/.env.$ENV_FILE"
 
             if [ -f "/opt/mastra-test-dashboard/.env.$ENV_FILE" ]; then
@@ -350,7 +365,6 @@ jobs:
             fi
 
             # Set port based on tenant for health check
-            TENANT="${{ github.event.inputs.tenant }}"
             if [ "$TENANT" = "fasthelp" ]; then
               PORT=3001
             elif [ "$TENANT" = "tsuzumi" ]; then
@@ -385,14 +399,13 @@ jobs:
             # Rollback if health check failed
             if [ "$HEALTH_CHECK_PASSED" = "false" ]; then
               echo "❌ Health check failed. Rolling back..."
-              sudo docker stop mastra-test-dashboard 2>/dev/null || true
-              sudo docker rm mastra-test-dashboard 2>/dev/null || true
+              sudo docker stop $CONTAINER_NAME 2>/dev/null || true
+              sudo docker rm $CONTAINER_NAME 2>/dev/null || true
 
               if [ "$CURRENT_IMAGE" != "none" ] && [ -n "$CURRENT_IMAGE" ]; then
                 echo "🔄 Restoring previous container with image: $CURRENT_IMAGE"
 
                 # Set port and base path based on tenant for rollback
-                TENANT="${{ github.event.inputs.tenant }}"
                 if [ "$TENANT" = "fasthelp" ]; then
                   ROLLBACK_PORT=3001
                   ROLLBACK_BASE_PATH="/fasthelp/dashboard"
@@ -408,7 +421,7 @@ jobs:
                 REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 
                 sudo docker run -d \
-                  --name mastra-test-dashboard \
+                  --name $CONTAINER_NAME \
                   --network mastra-test-network \
                   --restart unless-stopped \
                   -p $ROLLBACK_PORT:$ROLLBACK_PORT \
