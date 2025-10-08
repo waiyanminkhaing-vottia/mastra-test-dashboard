@@ -186,11 +186,29 @@ jobs:
           # Rename environment-specific file to .env for build
           mv ".env.$ENV_FILE" .env
 
+          # Override NEXT_PUBLIC_BASE_PATH for tenant-specific builds
+          if [ "$TENANT" = "fasthelp" ]; then
+            TENANT_BASE_PATH="/fasthelp/dashboard"
+          elif [ "$TENANT" = "tsuzumi" ]; then
+            TENANT_BASE_PATH="/tsuzumi/dashboard"
+          else
+            TENANT_BASE_PATH="/dashboard"
+          fi
+
+          echo "🔧 Setting NEXT_PUBLIC_BASE_PATH=$TENANT_BASE_PATH for tenant: $TENANT"
+          # Update BASE_PATH in .env file for this tenant
+          if grep -q "^NEXT_PUBLIC_BASE_PATH=" .env; then
+            sed -i "s|^NEXT_PUBLIC_BASE_PATH=.*|NEXT_PUBLIC_BASE_PATH=$TENANT_BASE_PATH|" .env
+          else
+            echo "NEXT_PUBLIC_BASE_PATH=$TENANT_BASE_PATH" >> .env
+          fi
+
           # Verify build environment file
           echo "🔍 Build environment file verified:"
           if [ -f ".env" ]; then
             echo "✅ .env file ready for build (from $ENV_FILE)"
             echo "📄 File size: $(wc -l < ".env") lines"
+            echo "🔍 BASE_PATH setting: $(grep NEXT_PUBLIC_BASE_PATH .env)"
             echo "📁 Remaining env files:"
             ls -la .env* 2>/dev/null || echo "Only .env exists"
           else
@@ -199,7 +217,7 @@ jobs:
           fi
 
           # Build image using docker build
-          # Next.js will read NEXT_PUBLIC_* variables from .env file
+          # Next.js will read NEXT_PUBLIC_* variables from .env file (including tenant-specific BASE_PATH)
           sudo docker build \
             --secret id=github_token,src=/tmp/github_token \
             --build-arg PORT=$PORT \
@@ -297,6 +315,7 @@ jobs:
               --restart unless-stopped \
               -p $PORT:$PORT \
               --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
+              -e PORT="$PORT" \
               -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
               -e TENANT_ID="$TENANT" \
               -e NEXT_PUBLIC_BASE_PATH="$NEXT_PUBLIC_BASE_PATH" \
@@ -424,6 +443,7 @@ jobs:
                   --restart unless-stopped \
                   -p $ROLLBACK_PORT:$ROLLBACK_PORT \
                   --env-file "/opt/mastra-test-dashboard/.env.$ENV_FILE" \
+                  -e PORT="$ROLLBACK_PORT" \
                   -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
                   -e TENANT_ID="$TENANT" \
                   -e NEXT_PUBLIC_BASE_PATH="$ROLLBACK_BASE_PATH" \
