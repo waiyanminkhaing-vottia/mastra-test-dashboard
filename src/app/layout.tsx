@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { DynamicTitle } from '@/components/dynamic-title';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { HtmlLangWrapper } from '@/components/html-lang-wrapper';
+import { TenantTheme } from '@/components/tenant-theme';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ToasterProvider } from '@/components/toaster-provider';
 import { LanguageProvider } from '@/contexts/language-context';
@@ -62,6 +63,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <TenantTheme />
             <DynamicTitle />
             <ErrorBoundary>{children}</ErrorBoundary>
             <ToasterProvider />

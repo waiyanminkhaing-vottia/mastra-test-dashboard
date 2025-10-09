@@ -20,7 +20,11 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { useLanguage } from '@/contexts/language-context';
-import { getBrandImage, getBrandImageFallback } from '@/lib/tenant';
+import {
+  getBrandImage,
+  getBrandImageFallback,
+  getBrandImageHeight,
+} from '@/lib/tenant';
 
 /**
  * Main application sidebar component
@@ -32,6 +36,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const { t, isLoading: languageLoading } = useLanguage();
   const pathname = usePathname();
   const [brandImageSrc, setBrandImageSrc] = useState(getBrandImage());
+  const brandImageHeight = getBrandImageHeight();
 
   if (languageLoading) {
     return (
@@ -52,7 +57,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
               width="150"
               height="30"
               priority
-              className="w-auto h-12"
+              className={`w-auto ${brandImageHeight}`}
               onError={() => {
                 // Fallback to default brand image if tenant-specific image fails to load
                 setBrandImageSrc(getBrandImageFallback());
