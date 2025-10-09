@@ -57,3 +57,42 @@ export const getTenantId = (): string => {
   }
   return tenantId;
 };
+
+/**
+ * Tenant name mapping for display purposes
+ */
+export const TENANT_NAMES: Record<string, { en: string; ja: string }> = {
+  fasthelp: { en: 'FastHelp', ja: 'FastHelp' },
+  tsuzumi: { en: 'Tsuzumi', ja: 'Tsuzumi' },
+  default: { en: 'vottia', ja: 'vottia' },
+} as const;
+
+/**
+ * Get tenant-specific title
+ * @returns The tenant display name
+ */
+export const getTenantTitle = (): string => {
+  const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || 'default';
+  return TENANT_NAMES[tenantId]?.en || 'vottia';
+};
+
+/**
+ * Dashboard text translations
+ */
+export const DASHBOARD_TEXT = {
+  en: 'Dashboard',
+  ja: '管理画面',
+} as const;
+
+/**
+ * Get tenant-specific page title with Dashboard suffix
+ * Note: Uses English by default since metadata is static in Next.js App Router
+ * For dynamic titles based on user language, use document.title in client components
+ * @param language - The language code (defaults to 'en')
+ * @returns The formatted page title (e.g., "vottia | Dashboard")
+ */
+export const getTenantPageTitle = (language: 'en' | 'ja' = 'en'): string => {
+  const tenantName = getTenantTitle();
+  const dashboardText = DASHBOARD_TEXT[language];
+  return `${tenantName} | ${dashboardText}`;
+};

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ComponentProps } from 'react';
+import { useState } from 'react';
 
 import {
   Sidebar,
@@ -19,7 +20,7 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { useLanguage } from '@/contexts/language-context';
-import { getAssetPath } from '@/lib/utils';
+import { getBrandImage, getBrandImageFallback } from '@/lib/tenant';
 
 /**
  * Main application sidebar component
@@ -30,6 +31,7 @@ import { getAssetPath } from '@/lib/utils';
 export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
   const { t, isLoading: languageLoading } = useLanguage();
   const pathname = usePathname();
+  const [brandImageSrc, setBrandImageSrc] = useState(getBrandImage());
 
   if (languageLoading) {
     return (
@@ -45,12 +47,16 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
         <div className="p-2">
           <Link href="/">
             <Image
-              src={getAssetPath('/brand.png')}
+              src={brandImageSrc}
               alt="Vottia Brand"
               width="150"
               height="30"
               priority
               className="w-auto h-12"
+              onError={() => {
+                // Fallback to default brand image if tenant-specific image fails to load
+                setBrandImageSrc(getBrandImageFallback());
+              }}
             />
           </Link>
         </div>
