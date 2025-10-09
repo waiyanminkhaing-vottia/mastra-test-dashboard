@@ -2,12 +2,15 @@ import './globals.css';
 
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { cookies } from 'next/headers';
 
+import { DynamicTitle } from '@/components/dynamic-title';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { HtmlLangWrapper } from '@/components/html-lang-wrapper';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ToasterProvider } from '@/components/toaster-provider';
 import { LanguageProvider } from '@/contexts/language-context';
+import { getTenantPageTitle } from '@/lib/constants';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -19,11 +22,21 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-/** Metadata configuration for the application */
-export const metadata: Metadata = {
-  title: 'vottia',
-  description: 'Maintenance Screen',
-};
+/**
+ * Generate metadata based on user's language preference from cookies
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const language = cookieStore.get('language')?.value as
+    | 'en'
+    | 'ja'
+    | undefined;
+
+  return {
+    title: getTenantPageTitle(language || 'en'),
+    description: 'Maintenance Screen',
+  };
+}
 
 /**
  * Root layout component that wraps the entire application
@@ -49,6 +62,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <DynamicTitle />
             <ErrorBoundary>{children}</ErrorBoundary>
             <ToasterProvider />
           </ThemeProvider>

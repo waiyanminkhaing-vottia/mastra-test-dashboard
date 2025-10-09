@@ -203,6 +203,20 @@ jobs:
             echo "NEXT_PUBLIC_BASE_PATH=$TENANT_BASE_PATH" >> .env
           fi
 
+          # Update NEXT_PUBLIC_TENANT_ID in .env file
+          if [ "$TENANT" != "default" ]; then
+            echo "🔍 Setting NEXT_PUBLIC_TENANT_ID='$TENANT'"
+            if grep -q "^NEXT_PUBLIC_TENANT_ID=" .env; then
+              sed -i "s|^NEXT_PUBLIC_TENANT_ID=.*|NEXT_PUBLIC_TENANT_ID=$TENANT|" .env
+            else
+              echo "NEXT_PUBLIC_TENANT_ID=$TENANT" >> .env
+            fi
+          else
+            # Remove NEXT_PUBLIC_TENANT_ID for default tenant
+            echo "🔍 Removing NEXT_PUBLIC_TENANT_ID for default tenant"
+            sed -i "/^NEXT_PUBLIC_TENANT_ID=/d" .env
+          fi
+
           # Verify build environment file
           echo "🔍 Build environment file verified:"
           if [ -f ".env" ]; then
@@ -309,6 +323,13 @@ jobs:
 
             # Deploy container with env file and DATABASE_URL override
             # DATABASE_URL contains secrets and must be injected at runtime
+            # Set NEXT_PUBLIC_TENANT_ID based on tenant
+            if [ "$TENANT" != "default" ]; then
+              TENANT_ID_ENV="-e NEXT_PUBLIC_TENANT_ID=$TENANT"
+            else
+              TENANT_ID_ENV=""
+            fi
+
             sudo docker run -d \
               --name $CONTAINER_NAME \
               --network mastra-test-network \
@@ -319,6 +340,7 @@ jobs:
               -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
               -e TENANT_ID="$TENANT" \
               -e NEXT_PUBLIC_BASE_PATH="$NEXT_PUBLIC_BASE_PATH" \
+              $TENANT_ID_ENV \
               $REGISTRY_IP:5000/mastra-test-dashboard:$ENV_FILE-$TENANT-latest
 
             # Debug: Check safe environment variables in running container
@@ -437,6 +459,13 @@ jobs:
                 # Get registry IP for rollback
                 REGISTRY_IP=$(sudo docker inspect local-registry --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 
+                # Set NEXT_PUBLIC_TENANT_ID for rollback
+                if [ "$TENANT" != "default" ]; then
+                  ROLLBACK_TENANT_ID_ENV="-e NEXT_PUBLIC_TENANT_ID=$TENANT"
+                else
+                  ROLLBACK_TENANT_ID_ENV=""
+                fi
+
                 sudo docker run -d \
                   --name $CONTAINER_NAME \
                   --network mastra-test-network \
@@ -447,6 +476,7 @@ jobs:
                   -e DATABASE_URL="postgresql://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-pgvector:5432/${{ vars.POSTGRES_DB }}" \
                   -e TENANT_ID="$TENANT" \
                   -e NEXT_PUBLIC_BASE_PATH="$ROLLBACK_BASE_PATH" \
+                  $ROLLBACK_TENANT_ID_ENV \
                   $CURRENT_IMAGE
                 echo "🔄 Rollback completed"
               else
